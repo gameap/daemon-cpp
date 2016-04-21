@@ -1,0 +1,2 @@
+#define MAX_ROWS 32
+#define MAX_ROW_CONTENT 4096
