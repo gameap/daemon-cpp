@@ -1,3 +1,6 @@
+#ifndef DL_H
+#define DL_H
+
 #ifdef WIN32
     typedef HINSTANCE DLHANDLE;
     typedef FARPROC DLFUNC;
@@ -42,4 +45,16 @@
             // return("Invalid handle.");
         return(dlerror());
     }
+#endif
+
+#if defined(WIN32)
+    //  Microsoft 
+    #define DLLEXPORT __declspec(dllexport)
+    #define DLLIMPORT __declspec(dllimport)
+#else
+    //  GCC
+    #define DLLEXPORT __attribute__((visibility("default")))
+    #define DLLIMPORT
+#endif
+
 #endif
