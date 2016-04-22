@@ -14,12 +14,12 @@ struct db_elems {
 
 class Db {
 public:
-    Db();
+    //Db();
     // Db(std::string dr) : driver("mysql") { };
     
-    virtual int connect(const char *host, const char *user, const char *passwd, const char *db, unsigned int port){ };
-    virtual std::string real_escape_string(std::string str){ };
-    virtual int query(std::string query, db_elems &results){ };
+    virtual int connect(const char *host, const char *user, const char *passwd, const char *db, unsigned int port){ return -1; };
+    virtual std::string real_escape_string(std::string str){ return ""; };
+    virtual int query(std::string query, db_elems &results){ return -1; };
     virtual void close(){ };
 };
 

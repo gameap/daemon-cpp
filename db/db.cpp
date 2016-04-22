@@ -13,7 +13,7 @@ int load_db(Db* &db, char * driver)
         sprintf(lib, "./db/%s.so", driver);
     #endif
 
-    void* handle = DLOPEN(lib);
+    DLHANDLE handle = DLOPEN(lib);
 
     if (!handle) {
         std::cerr << "Cannot load library: " << DLERROR() << '\n';
