@@ -23,9 +23,12 @@ int main(int argc, char* argv[])
     }
 
     Db* db;
-    load_db(db);
+    // db->setDriver(&config.db_driver[0]);
+    if (load_db(db, &config.db_driver[0]) == -1) {
+        return -1;
+    }
 
-    if (db->connect(config.db_host.c_str(), config.db_user.c_str(), config.db_passwd.c_str(), config.db_name.c_str(), config.db_port) == -1) {
+    if (db->connect(&config.db_host[0], &config.db_user[0], &config.db_passwd[0], &config.db_name[0], config.db_port) == -1) {
         fprintf(stdout, "Error connect\n");
         return -1;
     }
@@ -37,8 +40,6 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    std::cout << "NUM ROWS:" << results.num_rows << std::endl;
-    
     for (int i = 0; i < results.num_rows; i++) {
         for (auto it = results.rows[i].begin(); it != results.rows[i].end(); ++it) {
             std::cout << it->first << " -:- "<< it->second << std::endl;

@@ -13,9 +13,10 @@ struct db_elems {
 };
 
 class Db {
-private:
-    char db[16];
 public:
+    Db();
+    // Db(std::string dr) : driver("mysql") { };
+    
     virtual int connect(const char *host, const char *user, const char *passwd, const char *db, unsigned int port){ };
     virtual std::string real_escape_string(std::string str){ };
     virtual int query(std::string query, db_elems &results){ };
@@ -25,6 +26,6 @@ public:
 typedef Db* create_t();
 typedef void destroy_t(Db*);
 
-int load_db(Db* &db);
+int load_db(Db* &db, char * driver);
 
 #endif
