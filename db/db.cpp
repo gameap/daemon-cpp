@@ -16,21 +16,21 @@ int load_db(Db* &db, char * driver)
     void* handle = DLOPEN(lib);
 
     if (!handle) {
-        std::cerr << "Cannot load library: " << dlerror() << '\n';
+        std::cerr << "Cannot load library: " << DLERROR() << '\n';
         return -1;
     }
     
-    dlerror();
+    DLERROR();
     
     create_t* create_db = (create_t*) DLSYM(handle, "create");
-    const char* dlsym_error = dlerror();
+    const char* dlsym_error = DLERROR();
     if (dlsym_error) {
         std::cerr << "Cannot load symbol create: " << dlsym_error << '\n';
         return -1;
     }
 
     destroy_t* destroy_db = (destroy_t*) DLSYM(handle, "destroy");
-    dlsym_error = dlerror();
+    dlsym_error = DLERROR();
     if (dlsym_error) {
         std::cerr << "Cannot load symbol destroy: " << dlsym_error << '\n';
         return -1;
