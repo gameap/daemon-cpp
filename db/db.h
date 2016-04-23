@@ -14,7 +14,7 @@ struct db_elems {
 
 class Db {
 public:
-    //Db();
+    // Db();
     // Db(std::string dr) : driver("mysql") { };
     
     virtual int connect(const char *host, const char *user, const char *passwd, const char *db, unsigned int port){ return -1; };

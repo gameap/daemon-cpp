@@ -2,6 +2,7 @@
 #include "db.h"
 
 #include <iostream>
+#pragma comment( lib, "netapi32.lib" )
 
 int load_db(Db* &db, char * driver)
 {

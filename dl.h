@@ -2,6 +2,8 @@
 #define DL_H
 
 #ifdef WIN32
+	#include <windows.h>
+
     typedef HINSTANCE DLHANDLE;
     typedef FARPROC DLFUNC;
     inline DLHANDLE DLOPEN(const char *filename) {
@@ -16,11 +18,17 @@
         }
         return(!FreeLibrary(handle));
     }
-    const char *str_GetLastError(void);
+
     inline const char* DLERROR(void) {
         // if (dlclose_handle_invalid)
             // return("Invalid handle.");
-        return(str_GetLastError());
+		static char buf[128];
+		FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, 
+				NULL, GetLastError(), 
+				MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+				(LPTSTR) &buf, 128-1, NULL);
+
+		return(buf);
     }
 #else
     #include <dlfcn.h>
@@ -56,5 +64,7 @@
     #define DLLEXPORT __attribute__((visibility("default")))
     #define DLLIMPORT
 #endif
+
+#define C_DLLEXPORT	extern "C" DLLEXPORT
 
 #endif

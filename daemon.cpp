@@ -1,8 +1,3 @@
-#ifdef WIN32
-#define _WIN32_WINNT 0x0501
-#include <stdio.h>
-#endif
-
 #include <sstream>
 #include <iostream>
 #include <map>
