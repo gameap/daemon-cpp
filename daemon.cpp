@@ -1,5 +1,8 @@
-#include <sstream>
+#include <stdio.h>
 #include <iostream>
+#include <unistd.h>
+
+#include <sstream>
 #include <map>
 
 #include "dl.h"
@@ -17,12 +20,19 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    Db* db;
+    Db *db;
     // db->setDriver(&config.db_driver[0]);
-    if (load_db(db, &config.db_driver[0]) == -1) {
+    if (load_db(&db, &config.db_driver[0]) == -1) {
         return -1;
     }
 
+    // Бесконечный цикл работы демона
+    // for (;;) {
+        // printf("Cicle\n");
+        // usleep(1000);
+    // }
+
+    
     if (db->connect(&config.db_host[0], &config.db_user[0], &config.db_passwd[0], &config.db_name[0], config.db_port) == -1) {
         fprintf(stdout, "Error connect\n");
         return -1;
@@ -43,6 +53,7 @@ int main(int argc, char* argv[])
         // auto it = results.rows[i].find("password");
         // std::cout << results.rows[i]["password"] << std::endl;
     }
+    
 
     return 0;
 }

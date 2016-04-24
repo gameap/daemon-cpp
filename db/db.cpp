@@ -4,7 +4,7 @@
 #include <iostream>
 #pragma comment( lib, "netapi32.lib" )
 
-int load_db(Db* &db, char * driver)
+int load_db(Db **db, char *driver)
 {
     char lib[16];
 
@@ -37,7 +37,7 @@ int load_db(Db* &db, char * driver)
         return -1;
     }
 
-    db = create_db();
+    *db = create_db();
 
     return 0;
 }

@@ -26,6 +26,6 @@ public:
 typedef Db* create_t();
 typedef void destroy_t(Db*);
 
-int load_db(Db* &db, char * driver);
+int load_db(Db **db, char *driver);
 
 #endif
