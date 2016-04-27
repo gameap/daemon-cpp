@@ -4,14 +4,14 @@
 
 using boost::asio::ip::tcp;
 
-void session::start ()
+void FileServerSess::start ()
 {
     write_binn = binn_list();
     aes_key = "12345678901234561234567890123456";
     do_read();
 }
 
-void session::do_read()
+void FileServerSess::do_read()
 {
     auto self(shared_from_this());
     socket_.async_read_some(boost::asio::buffer(read_buf, max_length),
@@ -36,24 +36,18 @@ void session::do_read()
     });
 }
 
-void session::do_write()
+void FileServerSess::do_write()
 {
     auto self(shared_from_this());
     char *msg;
 
     size_t len = 0;
     
-    std::cout << "BIN: " << (char *)binn_ptr(write_binn) << std::endl;
-    std::cout << "BLAT 1: " << msg << std::endl;
-    msg = GCrypt::aes_encrypt((char*)binn_ptr(write_binn), aes_key);
-    std::cout << "MSG 2: " << msg << std::endl;
-    
-    // sprintf(msg, "%s%s", msg, "\xFF\xFF\xFF\xFF");
-    
-    strcat(msg, "\xFF\xFF\xFF\xFF");
-    std::cout << "SEND: " << msg << std::endl;
+    // msg = GCrypt::aes_encrypt((char*)binn_ptr(write_binn), aes_key);
+    msg = (char*)binn_ptr(write_binn);
 
-    // std::cout << "DECRYPT: " << msg << std::endl;
+    strcat(msg, "\xFF\xFF\xFF\xFF");
+    // std::cout << "SEND: " << msg << std::endl;
 
     boost::asio::async_write(socket_, boost::asio::buffer(msg, strlen(msg)),
         [this, self](boost::system::error_code ec, std::size_t) {
@@ -63,12 +57,12 @@ void session::do_write()
     });
 }
 
-void server::do_accept()
+void FileServer::do_accept()
 {
     acceptor_.async_accept(socket_, [this](boost::system::error_code ec)
     {
         if (!ec) {
-            std::make_shared<session>(std::move(socket_))->start();
+            std::make_shared<FileServerSess>(std::move(socket_))->start();
         }
         
         do_accept();
@@ -80,7 +74,7 @@ int run_file_server(int port)
     try {
         boost::asio::io_service io_service;
         
-        server s(io_service, port);
+        FileServer s(io_service, port);
         
         io_service.run();
     }

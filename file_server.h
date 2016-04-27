@@ -11,9 +11,9 @@
 
 #include <binn.h>
 
-class session : public std::enable_shared_from_this<session> {
+class FileServerSess : public std::enable_shared_from_this<FileServerSess> {
 public:
-  session(boost::asio::ip::tcp::socket socket) : socket_(std::move(socket)) {};
+  FileServerSess(boost::asio::ip::tcp::socket socket) : socket_(std::move(socket)) {};
   void start();
 
 private:
@@ -30,10 +30,10 @@ private:
   char *aes_key;
 };
 
-class server
+class FileServer
 {
 public:
-server(boost::asio::io_service& io_service, short port)
+FileServer(boost::asio::io_service& io_service, short port)
     : acceptor_(io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
     socket_(io_service)
 {
