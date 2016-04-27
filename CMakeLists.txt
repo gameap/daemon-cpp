@@ -4,6 +4,9 @@
 # SET(CMAKE_C_COMPILER       /usr/bin/i686-w64-mingw32-gcc-win32 )
 # SET(CMAKE_CXX_COMPILER     /usr/bin/i686-w64-mingw32-g++-win32 )
 
+SET(CMAKE_C_COMPILER       gcc)
+SET(CMAKE_CXX_COMPILER     g++ )
+
 cmake_minimum_required(VERSION 2.8)
 
 add_definitions(-std=c++11)
@@ -13,16 +16,34 @@ add_definitions(-std=c++11)
 
 set(Boost_USE_STATIC_LIBS ON)
 
-# find_package(Boost COMPONENTS property_tree REQUIRED)
-# if(NOT Boost_FOUND)
-	# message(SEND_ERROR "Failed to find boost::property_tree.")
+find_package(Boost COMPONENTS system REQUIRED)
+if(NOT Boost_FOUND)
+	message(SEND_ERROR "Failed to find boost::system.")
+	return()
+endif()
+
+# find_library(LIBCRYPTOPP NAMES cryptopp2 libcryptopp2)
+
+# if (NOT LIBCRYPTOPP)
+	# message(SEND_ERROR "Failed to find cryptopp library")
 	# return()
-# else()
-	include_directories(${Boost_INCLUDE_DIRS})
 # endif()
 
-add_executable(daemon config.cpp daemon.cpp db/db.cpp)
-target_link_libraries (daemon dl)
+
+# find_package(Boost COMPONENTS thread REQUIRED)
+# if(NOT Boost_FOUND)
+	# message(SEND_ERROR "Failed to find boost::thread.")
+	# return()
+# endif()
+
+include_directories(${Boost_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs)
+
+add_executable(daemon config.cpp daemon.cpp db/db.cpp file_server.cpp functions/gcrypt.cpp classes/crypto.cpp classes/base64.cpp)
+target_link_libraries (daemon dl binn boost_system pthread cryptopp crypto)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC" )
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC" )
