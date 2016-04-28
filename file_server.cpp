@@ -152,17 +152,12 @@ void FileServerSess::cmd_process()
             // File send
             filename = binn_list_str(read_binn, 2);
             filesize = binn_list_uint64(read_binn, 3);
-            int chmod = binn_list_int16(read_binn, 4);
-            bool make_dir = binn_list_bool(read_binn, 5);
+            bool make_dir = binn_list_bool(read_binn, 4);
+            int chmod = binn_list_int16(read_binn, 5);
 
             // Check
             // ...
-
-            std::cout << "filename: " << filename << std::endl;
-            std::cout << "filesize: " << filesize << std::endl;
-            std::cout << "chmod: " << chmod << std::endl;
-            std::cout << "make_dir: " << make_dir << std::endl;
-
+            
             // ALL OK
             binn_list_add_uint32(write_binn, 100);
             binn_list_add_str(write_binn, "OK");
@@ -226,6 +221,8 @@ void FileServerSess::cmd_process()
 
             closedir(dp);
 
+            delete dir;
+
             binn_list_add_list(write_binn, binn_ptr(files_binn));
             do_write();
             
@@ -233,16 +230,48 @@ void FileServerSess::cmd_process()
         };
 
         case FSERV_MKDIR: {
+
+            // char *dir = binn_list_str(read_binn, 2);
+            /*
+            try { 
+                boost::filesystem::path p{binn_list_str(read_binn, 2)};
+                boost::filesystem::create_directories(p);
+            }
+            catch (boost::filesystem::filesystem_error &e) {
+                std::cout << "Error mkdir" << std::endl;
+            }
+            */
             
             break;
         };
 
         case FSERV_MOVE: {
+            char *oldfile = binn_list_str(read_binn, 2);
+            char *newfile = binn_list_str(read_binn, 3);
+            bool copy = binn_list_bool(read_binn, 4);
+            
+            if (copy) {
+                // Copy
+                // ...
+            } else {
+                // Move
+                if (!rename(oldfile, newfile)) {
+                    // OK
+                }
+            }
+
+            delete oldfile;
+            delete newfile;
             
             break;
         };
 
         case FSERV_REMOVE: {
+            char *file = binn_list_str(read_binn, 2);
+
+            remove(file);
+
+            delete file;
             
             break;
         };

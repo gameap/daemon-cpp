@@ -9,6 +9,7 @@
 #include <utility>
 #include <boost/asio.hpp>
 
+#include <boost/filesystem.hpp>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
