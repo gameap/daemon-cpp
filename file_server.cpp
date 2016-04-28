@@ -1,10 +1,18 @@
 #include "file_server.h"
+#include "fcmd_process.h"
 
 #include "functions/gcrypt.h"
 #include "config.h"
 
 using boost::asio::ip::tcp;
 
+/* SERV Commands */
+#define FSERV_SHELLCMD      2
+#define FSERV_FILESEND      3
+#define FSERV_READDIR       4
+#define FSERV_MKDIR         5
+#define FSERV_MOVE          6
+#define FSERV_REMOVE        7
 
 // ---------------------------------------------------------------------
 
@@ -16,7 +24,7 @@ void FileServerSess::start ()
     do_read();
 }
 
-size_t file_transfer;
+// size_t file_transfer;
 
 // ---------------------------------------------------------------------
 
@@ -29,18 +37,18 @@ void FileServerSess::do_read()
 
                 if (mode == 3) {
                     // std::cout << "Write File" << std::endl;
-                    file_transfer += length;
                     
-                    std::cout << "Write File: " << file_transfer << "/" << length << "/" << filesize << std::endl;
+                    // file_transfer += length;
+                    // std::cout << "Write File: " << file_transfer << "/" << length << "/" << filesize << std::endl;
                     
                     write_file(length);
                 } else {
                      read_length += length;
 
-                    // std::ofstream binbuf_file
-                    // binbuf_file.open("/home/nikita/Git/GameAP_Daemon2/binbuf.bin", std::ios_base::binary);
-                    // binbuf_file.write(read_buf, read_length);
-                    // binbuf_file.close();
+                    std::ofstream binbuf_file;
+                    binbuf_file.open("/home/nikita/Git/GameAP_Daemon2/binbuf.bin", std::ios_base::binary);
+                    binbuf_file.write(read_buf, read_length);
+                    binbuf_file.close();
 
                     if (read_complete(length)) {
                         switch (mode) {
@@ -48,7 +56,6 @@ void FileServerSess::do_read()
                                 break;
                             };
                             case 1: {
-                                file_transfer = 0;
                                 cmd_process();
                                 break;
                             };
@@ -98,6 +105,11 @@ void FileServerSess::do_write()
     len = append_end_symbols(&sendbin[0], binn_size(write_binn));
     std::cout << "SEND: " << sendbin << std::endl;
 
+    std::ofstream sendbuf_file;
+    sendbuf_file.open("/home/nikita/Git/GameAP_Daemon2/sendbuf.bin", std::ios_base::binary);
+    sendbuf_file.write(sendbin, len);
+    sendbuf_file.close();
+
     boost::asio::async_write(socket_, boost::asio::buffer(sendbin, len),
         [this, self](boost::system::error_code ec, std::size_t) {
             if (!ec) {
@@ -126,17 +138,20 @@ void FileServerSess::cmd_process()
     int command;
     command = binn_list_int16(read_binn, 1);
 
-    std::cout << "command: " << binn_list_add_int16(read_binn, 1) << std::endl;
+    std::cout << "READ: " << read_buf << std::endl;
+    std::cout << "command: " << binn_list_int16(read_binn, 1) << std::endl;
+    clear_write_vars();
 
     switch (command) {
-        case 2: {
+        case FSERV_SHELLCMD: {
             // Shell command
+            break;
         };
 
-        case 3: {
+        case FSERV_FILESEND: {
             // File send
             filename = binn_list_str(read_binn, 2);
-            filesize = binn_list_uint32(read_binn, 3);
+            filesize = binn_list_uint64(read_binn, 3);
             int chmod = binn_list_int16(read_binn, 4);
             bool make_dir = binn_list_bool(read_binn, 5);
 
@@ -148,16 +163,88 @@ void FileServerSess::cmd_process()
             std::cout << "chmod: " << chmod << std::endl;
             std::cout << "make_dir: " << make_dir << std::endl;
 
-            clear_write_vars();
-
             // ALL OK
-            binn_list_add_int16(write_binn, 100);
+            binn_list_add_uint32(write_binn, 100);
             binn_list_add_str(write_binn, "OK");
 
             mode = 3;
             open_file();
 
             do_write();
+            
+            break;
+        };
+
+        case FSERV_READDIR: {
+            // Read Dir
+            char *dir = binn_list_str(read_binn, 2);
+            uint type = binn_list_uint8(read_binn, 3);
+            
+            DIR *dp;
+            struct dirent *dirp;
+
+            if ((dp = opendir(dir)) == NULL) {
+                std::cout << "Error(" << errno << ") opening " << dir << std::endl;
+                break;
+            }
+
+            binn *files_binn = binn_list();
+            binn *file_info = binn_list();
+
+            binn_list_add_uint32(write_binn, 100);
+            binn_list_add_str(write_binn, "OK");
+
+            while ((dirp = readdir(dp)) != NULL) {
+                // std::cout << "File: " << dirp->d_name << std::endl;
+                binn_free(file_info);
+                file_info = binn_list();
+                
+                binn_list_add_str(file_info, dirp->d_name);
+
+                if (type == 1) {
+                    struct stat stat_buf;
+
+                    if (lstat(dirp->d_name, &stat_buf) == 0) {
+
+                        binn_list_add_uint64(file_info, stat_buf.st_size);
+                        binn_list_add_uint64(file_info, stat_buf.st_atime);
+                        
+                        if (stat_buf.st_mode & S_IFDIR) {
+                            binn_list_add_uint8(file_info, 1); // Dir
+                        }
+                        else {
+                            binn_list_add_uint8(file_info, 2); // File
+                        }
+
+                    } else {
+                        std::cout << "error lstat" << std::endl;
+                    }
+                }
+                
+                binn_list_add_list(files_binn, file_info);
+            }
+
+            closedir(dp);
+
+            binn_list_add_list(write_binn, binn_ptr(files_binn));
+            do_write();
+            
+            break;
+        };
+
+        case FSERV_MKDIR: {
+            
+            break;
+        };
+
+        case FSERV_MOVE: {
+            
+            break;
+        };
+
+        case FSERV_REMOVE: {
+            
+            break;
         };
     }
 }

@@ -9,6 +9,10 @@
 #include <utility>
 #include <boost/asio.hpp>
 
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <dirent.h>
+
 #include <fstream>
 
 #include <binn.h>
@@ -19,6 +23,8 @@ class FileServerSess : public std::enable_shared_from_this<FileServerSess> {
 public:
     FileServerSess(boost::asio::ip::tcp::socket socket) : socket_(std::move(socket)) {};
     void start();
+
+    uint publ = 334;
 
 private:
     void do_read();
