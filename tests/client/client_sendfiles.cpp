@@ -87,7 +87,8 @@ int main(int argc, char* argv[])
         write_binn = binn_list();
 
         // std::string path = "/home/nikita/Git/GameAP_Daemon2/tests/ubuntu-16.04-desktop-amd64.iso";
-        std::string path = "/home/nikita/Git/GameAP_Daemon2/tests/client/Makefile";
+        // std::string path = "/home/nikita/Git/GameAP_Daemon2/tests/client/ru_visual_studio_2010_professional_x86_528367.iso";
+        std::string path = "/home/nikita/Git/GameAP_Daemon2/tests/client/kopie-vs2013-ultimate-en.iso";
         std::ifstream source_file;
         source_file.open(path.c_str(), std::ios_base::binary | std::ios_base::ate);
 
@@ -97,8 +98,9 @@ int main(int argc, char* argv[])
         }
 
         binn_list_add_int16(write_binn, 3);                             // File send
-        binn_list_add_str(write_binn, "/home/nikita/Downloads/test_daemon/Makefile");   // File name
-        binn_list_add_uint32(write_binn, source_file.tellg());          // File size
+        // binn_list_add_str(write_binn, "/home/nikita/Downloads/test_daemon/ru_visual_studio_2010_professional_x86_528367.iso");   // File name
+        binn_list_add_str(write_binn, "/home/nikita/Downloads/test_daemon/kopie-vs2013-ultimate-en.iso");   // File name
+        binn_list_add_uint64(write_binn, source_file.tellg());          // File size
         binn_list_add_int16(write_binn, 777);                           // Chmod
         binn_list_add_bool(write_binn, false);                              // No mkdir
         
@@ -165,7 +167,7 @@ int main(int argc, char* argv[])
 
         binn_list_add_int16(write_binn, 3);                             // File send
         binn_list_add_str(write_binn, "/home/nikita/Downloads/test_daemon/wallpaper.jpg");   // File name
-        binn_list_add_uint32(write_binn, source_file.tellg());          // File size
+        binn_list_add_uint64(write_binn, source_file.tellg());          // File size
         binn_list_add_int16(write_binn, 777);                           // Chmod
         binn_list_add_bool(write_binn, false);                              // No mkdir
         
@@ -195,9 +197,9 @@ int main(int argc, char* argv[])
 
         read_binn = binn_open((void*)&msg[0]);
 
-        result_code = binn_list_int16(read_binn, 1);
+        result_code = binn_list_uint32(read_binn, 1);
 
-        std::cout << "Result Code: " << binn_list_int16(read_binn, 1) << std::endl;
+        std::cout << "Result Code: " << binn_list_uint32(read_binn, 1) << std::endl;
         std::cout << "Result Text: " << binn_list_str(read_binn, 2) << std::endl;
 
         // Clear buf
