@@ -24,16 +24,22 @@ private:
     void do_read();
     void do_write();
 
+    void clear_read_vars();
+    void clear_write_vars();
+
     void cmd_process();
 
     void open_file();
     void write_file(size_t length);
     void close_file();
 
+    size_t read_complete(size_t length);
+    int append_end_symbols(char * buf, size_t length);
+
     boost::asio::ip::tcp::socket socket_;
     enum { max_length = 1024 };
     
-    std::size_t read_length;
+    size_t read_length;
     char read_buf[max_length];
     
     binn *write_binn;
@@ -49,6 +55,7 @@ private:
 
     boost::asio::streambuf request_buf;
     char *filename;
+    size_t filesize;
     std::ofstream output_file;
 };
 

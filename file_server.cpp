@@ -5,6 +5,7 @@
 
 using boost::asio::ip::tcp;
 
+
 // ---------------------------------------------------------------------
 
 void FileServerSess::start ()
@@ -15,6 +16,8 @@ void FileServerSess::start ()
     do_read();
 }
 
+size_t file_transfer;
+
 // ---------------------------------------------------------------------
 
 void FileServerSess::do_read()
@@ -24,22 +27,28 @@ void FileServerSess::do_read()
         [this, self](boost::system::error_code ec, std::size_t length) {
             if (!ec) {
 
-                read_length += length;
-                // std::cout << "MODE: " << mode << std::endl;
-
                 if (mode == 3) {
                     // std::cout << "Write File" << std::endl;
+                    file_transfer += length;
+                    
+                    std::cout << "Write File: " << file_transfer << "/" << length << "/" << filesize << std::endl;
+                    
                     write_file(length);
                 } else {
+                     read_length += length;
 
-                    if (strstr(read_buf, "\xFF\xFF\xFF\xFF") != nullptr) {
-                        // std::string msg(read_buf, read_length-4);
-                        // binn_list_add_str(write_binn, &msg[0]);
+                    // std::ofstream binbuf_file
+                    // binbuf_file.open("/home/nikita/Git/GameAP_Daemon2/binbuf.bin", std::ios_base::binary);
+                    // binbuf_file.write(read_buf, read_length);
+                    // binbuf_file.close();
+
+                    if (read_complete(length)) {
                         switch (mode) {
                             case 0: {
                                 break;
                             };
                             case 1: {
+                                file_transfer = 0;
                                 cmd_process();
                                 break;
                             };
@@ -67,6 +76,9 @@ void FileServerSess::do_read()
                     // do_write();
                 // }
             }
+            else {
+                std::cout << "ERROR: " << ec << std::endl;
+            }
     });
 }
 
@@ -76,18 +88,17 @@ void FileServerSess::do_write()
     memset(read_buf, 0, max_length-1);
 
     auto self(shared_from_this());
-    char send[max_length];
+    char sendbin[max_length];
 
     size_t len = 0;
 
     // msg = GCrypt::aes_encrypt((char*)binn_ptr(write_binn), aes_key);
-    // send = (char*)binn_ptr(write_binn);
+    memcpy(sendbin, (char*)binn_ptr(write_binn), binn_size(write_binn));
 
-    strcpy(send, (char*)binn_ptr(write_binn));
-    strcat(send, "\xFF\xFF\xFF\xFF");
-    std::cout << "SEND: " << send << std::endl;
+    len = append_end_symbols(&sendbin[0], binn_size(write_binn));
+    std::cout << "SEND: " << sendbin << std::endl;
 
-    boost::asio::async_write(socket_, boost::asio::buffer(send, strlen(send)),
+    boost::asio::async_write(socket_, boost::asio::buffer(sendbin, len),
         [this, self](boost::system::error_code ec, std::size_t) {
             if (!ec) {
                 do_read();
@@ -95,14 +106,27 @@ void FileServerSess::do_write()
     });
 }
 
+void FileServerSess::clear_read_vars()
+{
+    read_length = 0;
+    memset(read_buf, 0, max_length-1);
+}
+
+void FileServerSess::clear_write_vars()
+{
+    binn_free(write_binn);
+    write_binn = binn_list();
+}
+
 void FileServerSess::cmd_process()
 {
     binn *read_binn;
-    std::string msg(read_buf, read_length-4);
-    read_binn = binn_open((void*)msg.c_str());
+    read_binn = binn_open((void*)&read_buf[0]);
 
     int command;
     command = binn_list_int16(read_binn, 1);
+
+    std::cout << "command: " << binn_list_add_int16(read_binn, 1) << std::endl;
 
     switch (command) {
         case 2: {
@@ -112,7 +136,7 @@ void FileServerSess::cmd_process()
         case 3: {
             // File send
             filename = binn_list_str(read_binn, 2);
-            size_t filesize = binn_list_int16(read_binn, 3);
+            filesize = binn_list_uint32(read_binn, 3);
             int chmod = binn_list_int16(read_binn, 4);
             bool make_dir = binn_list_bool(read_binn, 5);
 
@@ -124,8 +148,7 @@ void FileServerSess::cmd_process()
             std::cout << "chmod: " << chmod << std::endl;
             std::cout << "make_dir: " << make_dir << std::endl;
 
-            binn_release(write_binn);
-            write_binn = binn_list();
+            clear_write_vars();
 
             // ALL OK
             binn_list_add_int16(write_binn, 100);
@@ -141,7 +164,7 @@ void FileServerSess::cmd_process()
 
 void FileServerSess::open_file()
 {
-    output_file.open(filename, std::ios_base::binary | std::ios_base::ate);
+    output_file.open(filename, std::ios_base::binary);
     if (!output_file) {
         std::cout << "failed to open " << filename << std::endl;
         return;
@@ -152,11 +175,20 @@ void FileServerSess::open_file()
 
 void FileServerSess::write_file(size_t length)
 {
-    if (output_file.eof() == false) {
-        // std::cout << "writed bytes: " << length << std::endl;
+    if (output_file.eof() == false && output_file.tellp() < (std::streamsize)filesize) {
         output_file.write(read_buf, length);
+        // std::cout << "Write " << output_file.tellp() << "/" << filesize << std::endl;
+
+        if (output_file.tellp() >= (std::streamsize)filesize) {
+            std::cout << "File sended" << std::endl;
+            read_length = 0;
+            memset(read_buf, 0, max_length-1);
+            
+            close_file();
+        }
+        
     } else {
-        std::cout << "CLOSE FILE" << std::endl;
+        clear_read_vars();
         close_file();
     }
 
@@ -170,6 +202,32 @@ void FileServerSess::close_file()
 }
 
 // ---------------------------------------------------------------------
+
+size_t FileServerSess::read_complete(size_t length) 
+{
+    if (read_length <= 4) return 0;
+
+    int found = 0;
+    for (int i = read_length; i < read_length-4-length; i--) {
+        if (read_buf[i] == '\xFF') found++;
+    }
+
+    return (found >= 4) ?  1: 0;
+}
+
+// ---------------------------------------------------------------------
+
+int FileServerSess::append_end_symbols(char * buf, size_t length)
+{
+    if (length == 0) return -1;
+
+    for (int i = length; i < length+4 && i < max_length; i++) {
+        buf[i] = '\xFF';
+    }
+    
+    buf[length+4] = '\x00';
+    return length+4;
+}
 
 // ---------------------------------------------------------------------
 
