@@ -43,7 +43,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs)
 
 add_executable(daemon config.cpp daemon.cpp db/db.cpp file_server.cpp functions/gcrypt.cpp classes/crypto.cpp classes/base64.cpp)
-target_link_libraries (daemon dl binn boost_system pthread cryptopp crypto)
+target_link_libraries (daemon dl binn boost_system boost_filesystem pthread cryptopp crypto)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC" )
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC" )
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -g" )
