@@ -247,15 +247,19 @@ void FileServerSess::cmd_process()
             char *oldfile = binn_list_str(read_binn, 2);
             char *newfile = binn_list_str(read_binn, 3);
             bool copy = binn_list_bool(read_binn, 4);
+
             
-            if (copy) {
-                // Copy
-                // ...
-            } else {
-                // Move
-                if (!rename(oldfile, newfile)) {
-                    // OK
+            try {
+                if (copy) {
+                    // Copy
+                    boost::filesystem::copy(oldfile, newfile);
+                } else {
+                    // Move
+                    boost::filesystem::rename(oldfile, newfile);
                 }
+            }
+            catch (boost::filesystem::filesystem_error &e) {
+                std::cout << "Error move" << std::endl;
             }
 
             // delete oldfile;
@@ -267,7 +271,12 @@ void FileServerSess::cmd_process()
         case FSERV_REMOVE: {
             char *file = binn_list_str(read_binn, 2);
 
-            remove(file);
+            try {
+                boost::filesystem::remove(file);
+            }
+            catch (boost::filesystem::filesystem_error &e) {
+                std::cout << "Error rename" << std::endl;
+            }
 
             // delete file;
             
