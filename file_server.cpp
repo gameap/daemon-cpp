@@ -221,7 +221,7 @@ void FileServerSess::cmd_process()
 
             closedir(dp);
 
-            delete dir;
+            // delete dir;
 
             binn_list_add_list(write_binn, binn_ptr(files_binn));
             do_write();
@@ -231,8 +231,6 @@ void FileServerSess::cmd_process()
 
         case FSERV_MKDIR: {
 
-            // char *dir = binn_list_str(read_binn, 2);
-            /*
             try { 
                 boost::filesystem::path p{binn_list_str(read_binn, 2)};
                 boost::filesystem::create_directories(p);
@@ -240,7 +238,7 @@ void FileServerSess::cmd_process()
             catch (boost::filesystem::filesystem_error &e) {
                 std::cout << "Error mkdir" << std::endl;
             }
-            */
+            
             
             break;
         };
@@ -260,8 +258,8 @@ void FileServerSess::cmd_process()
                 }
             }
 
-            delete oldfile;
-            delete newfile;
+            // delete oldfile;
+            // delete newfile;
             
             break;
         };
@@ -271,10 +269,15 @@ void FileServerSess::cmd_process()
 
             remove(file);
 
-            delete file;
+            // delete file;
             
             break;
         };
+
+        default : {
+            std::cout << "Unknown Command" << std::endl;
+            do_read();
+        }
     }
 }
 
