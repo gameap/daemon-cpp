@@ -291,10 +291,16 @@ void FileServerSess::cmd_process()
         };
 
         case FSERV_REMOVE: {
-            char *file = binn_list_str(read_binn, 2);
+            char *file      = binn_list_str(read_binn, 2);
+            bool recursive  = binn_list_bool(read_binn, 3);
 
             try {
-                boost::filesystem::remove(file);
+                if (recursive) {
+                    boost::filesystem::remove_all(file);
+                }
+                else {
+                    boost::filesystem::remove(file);
+                }
             }
             catch (boost::filesystem::filesystem_error &e) {
                 std::cout << "Error remove: " << e.what() << std::endl;
