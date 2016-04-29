@@ -89,6 +89,21 @@ void FileServerSess::do_read()
     });
 }
 
+void FileServerSess::write_ok()
+{
+    response_msg(100, "OK", true);
+}
+
+void FileServerSess::response_msg(int snum, const char * sdesc, bool write)
+{
+    binn_list_add_uint32(write_binn, snum);
+    binn_list_add_str(write_binn, (char *)sdesc);
+
+    if (write) {
+        do_write();
+    }
+}
+
 void FileServerSess::do_write()
 {
     read_length = 0;
@@ -159,13 +174,13 @@ void FileServerSess::cmd_process()
             // ...
             
             // ALL OK
-            binn_list_add_uint32(write_binn, 100);
-            binn_list_add_str(write_binn, "OK");
+            // binn_list_add_uint32(write_binn, 100);
+            // binn_list_add_str(write_binn, "OK");
 
             mode = 3;
             open_file();
 
-            do_write();
+            write_ok();
             
             break;
         };
@@ -186,8 +201,7 @@ void FileServerSess::cmd_process()
             binn *files_binn = binn_list();
             binn *file_info = binn_list();
 
-            binn_list_add_uint32(write_binn, 100);
-            binn_list_add_str(write_binn, "OK");
+            response_msg(100, "OK");
 
             while ((dirp = readdir(dp)) != NULL) {
                 // std::cout << "File: " << dirp->d_name << std::endl;
@@ -236,8 +250,12 @@ void FileServerSess::cmd_process()
                 boost::filesystem::create_directories(p);
             }
             catch (boost::filesystem::filesystem_error &e) {
-                std::cout << "Error mkdir" << std::endl;
+                std::cout << "Error mkdir: " << e.what() << std::endl;
+                response_msg(1, e.what(), true);
+                return;
             }
+
+            write_ok();
             
             
             break;
@@ -259,8 +277,12 @@ void FileServerSess::cmd_process()
                 }
             }
             catch (boost::filesystem::filesystem_error &e) {
-                std::cout << "Error move" << std::endl;
+                std::cout << "Error move: " << e.what() << std::endl;
+                response_msg(1, e.what(), true);
+                return;
             }
+
+            write_ok();
 
             // delete oldfile;
             // delete newfile;
@@ -275,8 +297,12 @@ void FileServerSess::cmd_process()
                 boost::filesystem::remove(file);
             }
             catch (boost::filesystem::filesystem_error &e) {
-                std::cout << "Error rename" << std::endl;
+                std::cout << "Error remove: " << e.what() << std::endl;
+                response_msg(1, e.what(), true);
+                return;
             }
+
+            write_ok();
 
             // delete file;
             
@@ -285,7 +311,8 @@ void FileServerSess::cmd_process()
 
         default : {
             std::cout << "Unknown Command" << std::endl;
-            do_read();
+            response_msg(3, "Unknown command", true);
+            return;
         }
     }
 }
