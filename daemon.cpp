@@ -13,9 +13,13 @@
 #include "db/db.h"
 #include "config.h"
 
+#include "classes/dedicated_server.h"
+
 // #include "functions/gcrypt.h"
 
 // #include <string>
+
+using namespace GameAP;
 
 int main(int argc, char* argv[])
 {
@@ -62,7 +66,7 @@ int main(int argc, char* argv[])
     }
     */
 
-    unsigned int start_time =  clock();
+    // unsigned int start_time =  clock();
 
     // int i = 0;
     // while (i < 1000000) {
@@ -102,8 +106,19 @@ int main(int argc, char* argv[])
 
     // std::cout << "TIME: " << clock()-start_time << std::endl;
 
-    run_file_server(6789);
-    
+    // run_file_server(6789);
+
+    DedicatedServer deds;
+
+    deds.stats_process();
+
+    unsigned int start_time =  clock();
+    int i = 0;
+    while (i < 1000000) {
+        deds.stats_process();
+        i++;
+    }
+    std::cout << "TIME: " << (((float)clock()-start_time)/1000000.000) << std::endl;
 
     return 0;
 }
