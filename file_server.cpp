@@ -389,35 +389,3 @@ int FileServerSess::append_end_symbols(char * buf, size_t length)
     buf[length+4] = '\x00';
     return length+4;
 }
-
-// ---------------------------------------------------------------------
-
-void FileServer::do_accept()
-{
-    acceptor_.async_accept(socket_, [this](boost::system::error_code ec)
-    {
-        if (!ec) {
-            std::make_shared<FileServerSess>(std::move(socket_))->start();
-        }
-
-        do_accept();
-    });
-}
-
-// ---------------------------------------------------------------------
-
-int run_file_server(int port)
-{
-    try {
-        boost::asio::io_service io_service;
-
-        FileServer s(io_service, port);
-
-        io_service.run();
-    }
-    catch (std::exception& e) {
-        std::cerr << "Exception: " << e.what() << "\n";
-    }
-
-    return 0;
-}
