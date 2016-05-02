@@ -7,7 +7,7 @@
 
 #include <ctime>
 
-#include "file_server.h"
+#include "daemon_server.h"
 #include "dl.h"
 
 #include "db/db.h"
@@ -106,19 +106,19 @@ int main(int argc, char* argv[])
 
     // std::cout << "TIME: " << clock()-start_time << std::endl;
 
-    // run_file_server(6789);
+    run_server(6789);
 
     DedicatedServer deds;
 
     deds.stats_process();
 
-    unsigned int start_time =  clock();
-    int i = 0;
-    while (i < 1000000) {
-        deds.stats_process();
-        i++;
-    }
-    std::cout << "TIME: " << (((float)clock()-start_time)/1000000.000) << std::endl;
+    // unsigned int start_time =  clock();
+    // int i = 0;
+    // while (i < 100000) {
+        // deds.stats_process();
+        // i++;
+    // }
+    // std::cout << "TIME: " << (((float)clock()-start_time)/1000000.000) << std::endl;
 
     return 0;
 }
