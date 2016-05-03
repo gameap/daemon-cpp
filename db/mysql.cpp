@@ -38,14 +38,14 @@ public:
         return 0;
     }
     
-    virtual std::string real_escape_string(std::string str)
+    virtual std::string real_escape_string(const char * str)
     {
-        char* from = new char[strlen(str.c_str()) * 3 + 1];
-        mysql_real_escape_string(&conn, from, &str[0], str.size());
+        char* from = new char[strlen(&str[0]) * 3 + 1];
+        mysql_real_escape_string(&conn, from, &str[0], strlen(str));
         return std::string(from);
     }
     
-    virtual int query(std::string query, db_elems &results)
+    virtual int query(const char * query)
     {
         if (mysql_query(&conn, &query[0]) != 0) {
             return -1;
@@ -56,7 +56,7 @@ public:
         if(res == NULL) {
             // puterror("Error: can't get the result description\n");
         }
-        
+
         // Получаем первую строку из результирующей таблицы
         // row = mysql_fetch_row(res);
         // if(mysql_errno(&conn) > 0) puterror("Error: can't fetch result\n");
@@ -69,31 +69,48 @@ public:
         results.num_rows = mysql_num_rows(res);
         results.num_fields = mysql_num_fields(res);
 
-        int i = 0;
         MYSQL_FIELD *fields;
-        
+
         fields = mysql_fetch_fields(res);
+        
+        db_row * dbrow = new db_row;
         while ((row = mysql_fetch_row(res)) != NULL) {
-            
+
+            // dbrow = new db_row;
             for (int j = 0; j < results.num_fields; j++) {
-                // results.rows.insert(results.rows.end(), row[i]);
-                // results.rows[0].insert (row[j]);
-                
-                results.rows[i][fields[j].name] = row[j];
-                // std::cout << fields[j].name << " : " << results.rows[i][fields[j].name] << std::endl;
+                // std::cout << fields[j].name << " : " << row[j] << std::endl;
+                dbrow->row.insert(std::pair<std::string,std::string>(fields[j].name, row[j]));
             }
             
-            i++;
+            results.rows.insert(results.rows.end(), *dbrow);
+            dbrow = nullptr;
+            
         }
 
-        // for (int i = 0; i < results.count; i++) {
-            // results.rows.insert(results.rows.end(), row[i]);
+        for (int i = 0; i < results.num_rows; i++) {
+                std::cout << 
+                    results.
+                    rows[i].
+                    row["password"] << std::endl;
+        }
+
+        // for (auto itv = results.rows.begin(); itv != results.rows.end(); ++itv) {
+            // for (auto itr = itv->row.begin(); itr != itv->row.end(); ++itr) {
+                // std::cout << (*itr).first << ": " << (*itr).second << std::endl;
+            // }
         // }
-        
-        // fprintf(stdout, "Version2: %s\n", results);
+
+        delete dbrow;
+        // dbrow = nullptr;
 
         // Освобождаем память, занятую результирующей таблицей
         mysql_free_result(res);
+
+        // for (auto itv = results.rows.begin(); itv != results.rows.end(); ++itv) {
+            // for (auto itr = itv->row.begin(); itr != itv->row.end(); ++itr) {
+                // std::cout << (*itr).first << ": " << (*itr).second << std::endl;
+            // }
+        // }
 
         return 0;
     }
