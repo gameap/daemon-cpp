@@ -12,7 +12,7 @@ void DaemonServerSess::start ()
 
 void DaemonServerSess::do_read()
 {
-    std::make_shared<FileServerSess>(std::move(socket_))->start();
+    std::make_shared<FileServerSess>(std::move(socket_))->start(this);
 }
 
 // ---------------------------------------------------------------------

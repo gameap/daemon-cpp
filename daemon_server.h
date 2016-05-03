@@ -18,7 +18,7 @@
 class DaemonServerSess : public std::enable_shared_from_this<DaemonServerSess> {
 public:
     DaemonServerSess(boost::asio::ip::tcp::socket socket) : socket_(std::move(socket)) {};
-    
+
     void start();
 
 private:
