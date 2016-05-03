@@ -4,8 +4,8 @@
 # SET(CMAKE_C_COMPILER       /usr/bin/i686-w64-mingw32-gcc-win32 )
 # SET(CMAKE_CXX_COMPILER     /usr/bin/i686-w64-mingw32-g++-win32 )
 
-SET(CMAKE_C_COMPILER       gcc)
-SET(CMAKE_CXX_COMPILER     g++ )
+SET(CMAKE_C_COMPILER       gcc-4.9 )
+SET(CMAKE_CXX_COMPILER     g++-4.9 )
 
 cmake_minimum_required(VERSION 2.8)
 
@@ -42,7 +42,19 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs)
 
-add_executable(daemon config.cpp daemon.cpp db/db.cpp file_server.cpp functions/gcrypt.cpp classes/crypto.cpp classes/base64.cpp)
+add_executable(daemon
+    config.cpp
+    daemon.cpp
+    db/db.cpp
+    daemon_server.cpp
+    file_server.cpp
+    functions/gcrypt.cpp
+    classes/crypto.cpp
+    classes/base64.cpp
+    classes/dedicated_server.cpp
+    models/tasks.cpp
+)
+
 target_link_libraries (daemon dl binn boost_system boost_filesystem pthread cryptopp crypto)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
