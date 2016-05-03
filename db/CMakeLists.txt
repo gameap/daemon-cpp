@@ -22,6 +22,6 @@ endif()
 
 # CMAKE_IMPORT_LIBRARY_PREFIX
 
-add_library(mysql SHARED mysql.cpp)
+add_library(mysql SHARED mysql.cpp ../functions/gstring.cpp)
 target_link_libraries (mysql mysqlcppconn)
 set_target_properties(mysql PROPERTIES PREFIX "")

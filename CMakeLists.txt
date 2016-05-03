@@ -49,9 +49,11 @@ add_executable(daemon
     daemon_server.cpp
     file_server.cpp
     functions/gcrypt.cpp
+    functions/gstring.cpp
     classes/crypto.cpp
     classes/base64.cpp
     classes/dedicated_server.cpp
+    classes/game_server.cpp
     models/tasks.cpp
 )
 
