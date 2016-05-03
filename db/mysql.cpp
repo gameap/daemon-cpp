@@ -15,6 +15,7 @@
 
 // #include <boost/any.hpp>
 #include "db.h"
+#include "../functions/gstring.h"
 
 MYSQL conn, mysql;
 MYSQL_RES *res;
@@ -47,7 +48,12 @@ public:
     
     virtual int query(const char * query, db_elems *results)
     {
-        if (mysql_query(&conn, &query[0]) != 0) {
+        std::string qstr = str_replace("{pref}", db_prefix, query);
+
+        std::cout << "query: " << qstr << std::endl;
+        
+        if (mysql_query(&conn, &qstr[0]) != 0) {
+            std::cerr << "Query error: " << qstr << std::endl;
             return -1;
         }
 

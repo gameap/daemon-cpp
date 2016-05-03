@@ -4,6 +4,11 @@
 #include <iostream>
 #pragma comment( lib, "netapi32.lib" )
 
+// virtual int query(const char * query, db_elems *results)
+// {
+    // std::string qstr = str_replace("{db_prefix}", db_prefix, query);
+// }
+
 int load_db(Db **db, char *driver)
 {
     char lib[16];
