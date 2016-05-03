@@ -45,7 +45,7 @@ public:
         return std::string(from);
     }
     
-    virtual int query(const char * query)
+    virtual int query(const char * query, db_elems *results)
     {
         if (mysql_query(&conn, &query[0]) != 0) {
             return -1;
@@ -66,8 +66,8 @@ public:
         // const char *rw = row[0];
         // rows[0] = row[0];
         
-        results.num_rows = mysql_num_rows(res);
-        results.num_fields = mysql_num_fields(res);
+        results->num_rows = mysql_num_rows(res);
+        results->num_fields = mysql_num_fields(res);
 
         MYSQL_FIELD *fields;
 
@@ -77,21 +77,14 @@ public:
         while ((row = mysql_fetch_row(res)) != NULL) {
 
             // dbrow = new db_row;
-            for (int j = 0; j < results.num_fields; j++) {
+            for (int j = 0; j < results->num_fields; j++) {
                 // std::cout << fields[j].name << " : " << row[j] << std::endl;
                 dbrow->row.insert(std::pair<std::string,std::string>(fields[j].name, row[j]));
             }
             
-            results.rows.insert(results.rows.end(), *dbrow);
+            results->rows.insert(results->rows.end(), *dbrow);
             dbrow = nullptr;
             
-        }
-
-        for (int i = 0; i < results.num_rows; i++) {
-                std::cout << 
-                    results.
-                    rows[i].
-                    row["password"] << std::endl;
         }
 
         // for (auto itv = results.rows.begin(); itv != results.rows.end(); ++itv) {

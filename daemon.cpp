@@ -25,12 +25,13 @@ Db *db;
 
 int run_tasks()
 {
-    if (db->query("SELECT * FROM `gameap_gdaemon_tasks`") == -1) {
+    db_elems results;
+    if (db->query("SELECT * FROM `gameap_gdaemon_tasks`", &results) == -1) {
         fprintf(stdout, "Error query\n");
         return -1;
     }
 
-    for (auto itv = db->results.rows.begin(); itv != db->results.rows.end(); ++itv) {
+    for (auto itv = results.rows.begin(); itv != results.rows.end(); ++itv) {
         for (auto itr = itv->row.begin(); itr != itv->row.end(); ++itr) {
             std::cout << (*itr).first << ": " << (*itr).second << std::endl;
         }
