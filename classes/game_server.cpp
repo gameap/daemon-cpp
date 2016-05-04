@@ -38,6 +38,8 @@ int GameServers::start_server()
 }
 */
 
+// ---------------------------------------------------------------------
+
 GameServer::GameServer(ulong mserver_id)
 {
     server_id = mserver_id;
@@ -64,8 +66,6 @@ GameServer::GameServer(ulong mserver_id)
     work_path = results.rows[0].row["work_path"];   // DS dir
     work_path /= results.rows[0].row["dir"];        // Game server dir
 
-    // std::cout << "work_path: " << work_path << std::endl;
-
     ip              = results.rows[0].row["server_ip"];
     server_port     = (ulong)atoi(results.rows[0].row["server_port"].c_str());
     query_port      = (ulong)atoi(results.rows[0].row["query_port"].c_str());
@@ -77,10 +77,21 @@ GameServer::GameServer(ulong mserver_id)
     gt_remrep      = results.rows[0].row["gt_remote_repository"];
 }
 
+// ---------------------------------------------------------------------
+
+void GameServer::_append_cmd_output(std::string line)
+{
+    cmd_output = cmd_output + line + '\n';
+}
+
+// ---------------------------------------------------------------------
+
 int GameServer::start_server()
 {
     
 }
+
+// ---------------------------------------------------------------------
 
 int GameServer::update_server()
 {
@@ -146,7 +157,7 @@ int GameServer::update_server()
         boost::filesystem::create_directories(work_path);
     }
 
-    std::cout << "game_install_from: " << game_install_from << std::endl;
+    // std::cout << "game_install_from: " << game_install_from << std::endl;
 
     // Wget/Copy and unpack
     if (game_install_from == INST_FROM_LOCREP && game_source == INST_FILE) {
@@ -156,39 +167,11 @@ int GameServer::update_server()
         _copy_dir(source_path, work_path);
     }
     else if (game_install_from == INST_FROM_REMREP) {
-        std::cout << "WGET" << std::endl;
-        std::string out;
 
-        std::string cmd = str(boost::format("wget -c %1% -P %2%") % source_path.string() % work_path.string());
-        std::cout << "Wget string: " << cmd << std::endl;
-        exec(cmd, out);
-
-        std::string archive = str(boost::format("%1%/%2%") % work_path.string() % source_path.filename().string());
-        
-        _unpack_archive(archive);
-        std::cout << "Unpack success: " << archive << std::endl;
-        boost::filesystem::remove(archive);
-    }
-
-
-    return 0;
-}
-
-int GameServer::_unpack_archive(boost::filesystem::path const & archive)
-{
-    std::string cmd;
-
-    if (archive.extension() == "xz") cmd = str(boost::format("tar -xpvJf %1% -C %2%") % archive.string() % work_path.string());
-    else if (archive.extension() == "gz") cmd = str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
-    else if (archive.extension() == "bz2") cmd = str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
-    else if (archive.extension() == "tar") cmd = str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
-    else cmd = str(boost::format("unzip -o %1% -d %2%") % archive.string() % work_path.string());
-
-    std::cout << "Cmd: " << cmd << std::endl;
-
-    // cmd_output = "";
-    try {
         boost::process::pipe out = boost::process::create_pipe();
+        
+        std::string cmd = str(boost::format("wget -N -c %1% -P %2% -") % source_path.string() % work_path.string());
+        _append_cmd_output("CMD# " + cmd);
         exec(cmd, out);
 
         boost::iostreams::file_descriptor_source source(out.source, boost::iostreams::close_handle);
@@ -197,8 +180,46 @@ int GameServer::_unpack_archive(boost::filesystem::path const & archive)
 
         while (!is.eof()) {
             std::getline(is, s);
-            // cmd_output = cmd_output + s + '\n';
+            _append_cmd_output(s);
         }
+        
+        std::string archive = str(boost::format("%1%/%2%") % work_path.string() % source_path.filename().string());
+        
+        _unpack_archive(archive);
+        boost::filesystem::remove(archive);
+    }
+
+
+    return 0;
+}
+
+// ---------------------------------------------------------------------
+
+int GameServer::_unpack_archive(boost::filesystem::path const & archive)
+{
+    std::string cmd;
+
+    if (archive.extension().string() == ".xz")           cmd = str(boost::format("tar -xpvJf %1% -C %2%") % archive.string() % work_path.string());
+    else if (archive.extension().string() == ".gz")      cmd = str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
+    else if (archive.extension().string() == ".bz2")     cmd = str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
+    else if (archive.extension().string() == ".tar")     cmd = str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
+    else cmd = str(boost::format("unzip -o %1% -d %2%") % archive.string() % work_path.string());
+
+    _append_cmd_output("CMD# " + cmd);
+    
+    try {
+        boost::process::pipe out = boost::process::create_pipe();
+        exec(cmd, out);
+
+        boost::iostreams::file_descriptor_source source(out.source, boost::iostreams::close_handle);
+        boost::iostreams::stream<boost::iostreams::file_descriptor_source> is(source);
+        std::string s;
+        
+        while (!is.eof()) {
+            std::getline(is, s);
+            _append_cmd_output(s);
+        }
+
     } catch (boost::system::system_error &e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return -1;
@@ -206,6 +227,8 @@ int GameServer::_unpack_archive(boost::filesystem::path const & archive)
 
     // boost::process::execute(boost::process::initializers::run_exe(exe));
 }
+
+// ---------------------------------------------------------------------
 
 bool GameServer::_copy_dir(
     boost::filesystem::path const & source,

@@ -42,7 +42,7 @@ private:
 
     boost::filesystem::path work_path;
 
-    void *cmd_output;
+    std::string cmd_output;
 
     int _unpack_archive(boost::filesystem::path const & archive);
     
@@ -50,6 +50,8 @@ private:
         boost::filesystem::path const & source,
         boost::filesystem::path const & destination
     );
+
+    void _append_cmd_output(std::string line);
     
 public:
     GameServer(ulong mserver_id);
@@ -64,9 +66,9 @@ public:
 
     int get_game_server_load();
 
-    // std::string get_cmd_output() {
-        // return cmd_output;
-    // }
+    std::string get_cmd_output() {
+        return cmd_output;
+    }
 };
 
 /* End namespace GameAP */
