@@ -50,6 +50,7 @@ add_executable(daemon
     file_server.cpp
     functions/gcrypt.cpp
     functions/gstring.cpp
+    functions/gsystem.cpp
     classes/crypto.cpp
     classes/base64.cpp
     classes/dedicated_server.cpp
@@ -57,7 +58,7 @@ add_executable(daemon
     models/tasks.cpp
 )
 
-target_link_libraries (daemon dl binn boost_system boost_filesystem pthread cryptopp crypto)
+target_link_libraries (daemon dl binn boost_system boost_filesystem boost_iostreams pthread cryptopp crypto)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -g" )
