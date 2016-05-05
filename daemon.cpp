@@ -3,9 +3,13 @@
 #include <unistd.h>
 
 #include <sstream>
+#include <vector>
 #include <map>
 
+#include <thread>
 #include <ctime>
+
+#include <boost/format.hpp>
 
 #include "daemon_server.h"
 #include "dl.h"
@@ -13,30 +17,87 @@
 #include "db/db.h"
 #include "config.h"
 
+#include "models/tasks.h"
 #include "classes/dedicated_server.h"
 
 // #include "functions/gcrypt.h"
 
 // #include <string>
 
+#define TASK_WAITING    1
+#define TASK_WORKING    2
+#define TASK_ERROR      3
+#define TASK_SUCCESS    4
+
 using namespace GameAP;
 
 Db *db;
 
+// ---------------------------------------------------------------------
+
 int run_tasks()
 {
-    db_elems results;
-    if (db->query("SELECT * FROM `gameap_gdaemon_tasks`", &results) == -1) {
-        fprintf(stdout, "Error query\n");
-        return -1;
-    }
+    TaskList& tasks = TaskList::getInstance();
 
-    for (auto itv = results.rows.begin(); itv != results.rows.end(); ++itv) {
-        for (auto itr = itv->row.begin(); itr != itv->row.end(); ++itr) {
-            std::cout << (*itr).first << ": " << (*itr).second << std::endl;
+    tasks.update_list();
+
+    // for (std::vector<Task *>::iterator it = tasks.begin(); it != tasks.end(); ++it) {
+        // (**it).run();
+    // }
+}
+
+// ---------------------------------------------------------------------
+
+int check_tasks()
+{
+    TaskList& tasks = TaskList::getInstance();
+
+    while (true) {
+        // Delete finished
+        for (std::vector<Task *>::iterator it = tasks.begin(); !tasks.is_end(it); it = tasks.next(it)) {
+            
+            if ((**it).get_status() == TASK_WORKING
+                || (**it).get_status() == TASK_ERROR
+                || (**it).get_status() == TASK_SUCCESS
+            ) {
+                std::string output = (**it).get_output();
+                output = db->real_escape_string(&output[0]);
+                
+                std::string qstr = str(
+                    boost::format(
+                        "UPDATE `{pref}gdaemon_tasks` SET `output` = '%1%' WHERE `id` = %2%"
+                    ) % output  % (**it).get_task_id()
+                );
+                
+                db->query(&qstr[0]);
+            }
+
+            if ((**it).get_status() == TASK_ERROR || (**it).get_status() == TASK_SUCCESS) {
+                tasks.delete_task(it);
+            }
         }
+
+        sleep(5);
     }
 }
+
+// ---------------------------------------------------------------------
+
+void daemon()
+{
+    TaskList& tasks = TaskList::getInstance();
+
+    tasks.update_list();
+    for (std::vector<Task *>::iterator it = tasks.begin(); !tasks.is_end(it); it = tasks.next(it)) {
+        (**it).run();
+    }
+
+    // std::thread task_update(check_tasks);
+
+    // Task
+}
+
+// ---------------------------------------------------------------------
 
 int main(int argc, char* argv[])
 {
@@ -58,61 +119,19 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    run_tasks();
-
-    // unsigned int start_time =  clock();
-
-    // int i = 0;
-    // while (i < 1000000) {
-        // GCrypt::aes_encrypt("str", "1234567890123456");
-        // i++;
-    // }
-    /*
-    char *encrypt;
-    encrypt = GCrypt::aes_encrypt("12345678901234561234567890123456", "1234567890123456");
-    std::cout << "encrypt: " << encrypt << std::endl;
-
-
-    char *decrypt;
-    decrypt = GCrypt::aes_decrypt(encrypt, "1234567890123456");
-    std::cout << "DECrypt: " << decrypt << std::endl;
-    */
-
-    // Crypto crypto;
-
-    // unsigned char *encMsg = NULL;
-    // unsigned char *decMsg = NULL;
-    // int encMsgLen;
-    // int decMsgLen;
+    std::thread thr1(check_tasks);
+    std::thread daemon_server(run_server, 6789);
     
-    // char * msg = "12345678901234561234567890123456";
-    // char * key = "1234567890123456";
-
-    // crypto.setAESKey((unsigned char*)&key[0], 16);
-
-    // int i = 0;
-    // while (i < 1000000) {
-        // GCrypt::aes_encrypt("str", "1234567890123456");
-        // crypto.aesEncrypt((const unsigned char*)&msg[0], strlen(msg)+1, &encMsg);
-        // i++;
-    // }
-
-
-    // std::cout << "TIME: " << clock()-start_time << std::endl;
-
-    run_server(6789);
-
+    // run_server(6789);
+    
     DedicatedServer deds;
-
     deds.stats_process();
 
-    // unsigned int start_time =  clock();
-    // int i = 0;
-    // while (i < 100000) {
-        // deds.stats_process();
-        // i++;
-    // }
-    // std::cout << "TIME: " << (((float)clock()-start_time)/1000000.000) << std::endl;
+    while (true) {
+        std::cout << "CICLE START" << std::endl;
+        daemon();
+        sleep(5);
+    }
 
     return 0;
 }
