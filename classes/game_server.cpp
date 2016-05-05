@@ -1,5 +1,11 @@
 #include <boost/filesystem.hpp>
 
+#include <boost/process.hpp>
+#include <boost/iostreams/stream.hpp>
+
+#include <sys/types.h>
+#include <signal.h>
+
 #include "db/db.h"
 #include "game_server.h"
 
@@ -11,7 +17,8 @@
 using namespace GameAP;
 
 namespace bp = ::boost::process;
-
+using namespace boost::process;
+using namespace boost::process::initializers;
 /*
 
 bp::child start_child() 
@@ -61,6 +68,7 @@ GameServer::GameServer(ulong mserver_id)
     db_elems results;
     if (db->query(&qstr[0], &results) == -1) {
         fprintf(stdout, "Error query\n");
+        return;
     }
 
     work_path = results.rows[0].row["work_path"];   // DS dir
@@ -95,6 +103,8 @@ int GameServer::start_server()
 
 int GameServer::update_server()
 {
+    std::cout << "Update Start" << std::endl;
+
     ushort game_install_from = 0;
     ushort gt_install_from = 0;
 
@@ -157,8 +167,6 @@ int GameServer::update_server()
         boost::filesystem::create_directories(work_path);
     }
 
-    // std::cout << "game_install_from: " << game_install_from << std::endl;
-
     // Wget/Copy and unpack
     if (game_install_from == INST_FROM_LOCREP && game_source == INST_FILE) {
         _unpack_archive(game_localrep);
@@ -167,20 +175,10 @@ int GameServer::update_server()
         _copy_dir(source_path, work_path);
     }
     else if (game_install_from == INST_FROM_REMREP) {
+        std::string cmd = str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % work_path.string());
 
-        boost::process::pipe out = boost::process::create_pipe();
-        
-        std::string cmd = str(boost::format("wget -N -c %1% -P %2% -") % source_path.string() % work_path.string());
-        _append_cmd_output("CMD# " + cmd);
-        exec(cmd, out);
-
-        boost::iostreams::file_descriptor_source source(out.source, boost::iostreams::close_handle);
-        boost::iostreams::stream<boost::iostreams::file_descriptor_source> is(source);
-        std::string s;
-
-        while (!is.eof()) {
-            std::getline(is, s);
-            _append_cmd_output(s);
+        if (_exec(cmd) == -1) {
+            return -1;
         }
         
         std::string archive = str(boost::format("%1%/%2%") % work_path.string() % source_path.filename().string());
@@ -205,27 +203,35 @@ int GameServer::_unpack_archive(boost::filesystem::path const & archive)
     else if (archive.extension().string() == ".tar")     cmd = str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
     else cmd = str(boost::format("unzip -o %1% -d %2%") % archive.string() % work_path.string());
 
-    _append_cmd_output("CMD# " + cmd);
-    
-    try {
-        boost::process::pipe out = boost::process::create_pipe();
-        exec(cmd, out);
-
-        boost::iostreams::file_descriptor_source source(out.source, boost::iostreams::close_handle);
-        boost::iostreams::stream<boost::iostreams::file_descriptor_source> is(source);
-        std::string s;
-        
-        while (!is.eof()) {
-            std::getline(is, s);
-            _append_cmd_output(s);
-        }
-
-    } catch (boost::system::system_error &e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+    if (_exec(cmd) == -1) {
         return -1;
     }
+}
 
-    // boost::process::execute(boost::process::initializers::run_exe(exe));
+int GameServer::_exec(std::string cmd)
+{
+    _append_cmd_output("CMD# " + cmd);
+
+    boost::process::pipe out = boost::process::create_pipe();
+
+    boost::iostreams::file_descriptor_source source(out.source, boost::iostreams::close_handle);
+    boost::iostreams::stream<boost::iostreams::file_descriptor_source> is(source);
+    std::string s;
+    
+    std::cout << "Exec: " << cmd << std::endl;
+
+    size_t pid;
+
+    child c = exec(cmd, out);
+    
+    while (!is.eof()) {
+        std::getline(is, s);
+        _append_cmd_output(s);
+    }
+
+    auto exit_code = wait_for_exit(c);
+
+    return 0;
 }
 
 // ---------------------------------------------------------------------

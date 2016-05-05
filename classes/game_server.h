@@ -17,6 +17,14 @@
 #define INST_FILE 1
 #define INST_DIR 2
 
+#if defined(BOOST_POSIX_API)
+    #define PROC_SHELL "sh"
+    #define SHELL_PREF "-c"
+#elif defined(BOOST_WINDOWS_API)
+    #define PROC_SHELL "cmd"
+    #define SHELL_PREF "/c"
+#endif 
+
 namespace GameAP {
 
 class GameServer {
@@ -51,10 +59,16 @@ private:
         boost::filesystem::path const & destination
     );
 
+    int _exec(std::string cmd);
+    boost::process::child __exec(std::string cmd, boost::process::pipe &out);
+    
     void _append_cmd_output(std::string line);
     
 public:
     GameServer(ulong mserver_id);
+    ~GameServer() {
+        std::cout << "Game Server Destruct" << std::endl;
+    }
     
     int install_game_server();
     int update_server();
