@@ -122,8 +122,6 @@ int main(int argc, char* argv[])
     std::thread thr1(check_tasks);
     std::thread daemon_server(run_server, 6789);
     
-    // run_server(6789);
-    
     DedicatedServer deds;
     deds.stats_process();
 
