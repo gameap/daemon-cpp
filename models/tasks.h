@@ -9,18 +9,6 @@
 
 namespace GameAP {
 
-/*
-struct gtask {
-    ulong id;
-    ulong ds_id;
-    char task[8];
-    char * data;
-    char * cmd;
-    char * output;
-    // enum status {"waiting", "working", "error", "success"};
-};
-*/
-
 class Task {
 private:
     ulong task_id;
@@ -30,24 +18,45 @@ private:
     char * data;
     char * cmd;
     char * output;
-    enum status {waiting = 1, working, error, success};
+    
+    enum st {waiting = 1, working, error, success};
+    ushort status = waiting;
 
     time_t task_started;
 
-    GameServer *gserver;
+    GameServer *gserver = nullptr;
 public:
-    Task(ulong mtask_id, ulong mds_id, ulong mserver_id, char * mtask, char * mdata, char * mcmd) {
+    Task(ulong mtask_id, ulong mds_id, ulong mserver_id, char * mtask, char * mdata, char * mcmd, ushort mstatus) {
         task_id = mtask_id;
         ds_id = mds_id;
         server_id = mserver_id;
         task = mtask;
         data = mdata;
         cmd = mcmd;
+        status = mstatus;
     }
+
+    ~Task() {
+        std::cout << "Task destructor" << std::endl;
+
+        if (gserver != nullptr) {
+            delete gserver;
+        }
+    }
+    
     // void start(ulong task_id, ulong ds_id, ulong server_id, char task[8], char * data, char * cmd);
 
     void run();
     std::string get_output();
+    
+    ulong get_task_id() {
+        return task_id;
+    }
+
+    int get_status()
+    {
+        return status;
+    }
     
     time_t get_time_started() {
         return task_started;
@@ -58,8 +67,12 @@ public:
 
 class TaskList {
 private:
-    std::vector<Task>tasklist;
+    enum st {waiting = 1, working, error, success};
+    
+    std::vector<Task *>tasklist;
 
+    void _clear_tasklist();
+    
     TaskList() {}
     TaskList( const TaskList&);  
     TaskList& operator=( TaskList& );
@@ -70,11 +83,15 @@ public:
     }
     
     int update_list();
+    int delete_task(std::vector<Task *>::iterator it);
     
-    void insert(Task task);
-    std::vector<Task>::iterator begin();
+    void insert(Task * task);
+    std::vector<Task *>::iterator begin();
     int run_task();
-    std::vector<Task>::iterator end();
+    std::vector<Task *>::iterator end();
+
+    std::vector<Task *>::iterator next(std::vector<Task *>::iterator curit);
+    bool is_end(std::vector<Task *>::iterator curit);
 };
 
 
