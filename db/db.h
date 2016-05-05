@@ -23,6 +23,7 @@ protected:
 public:
     virtual int connect(const char *host, const char *user, const char *passwd, const char *db, unsigned int port){ return -1; };
     virtual std::string real_escape_string(const char * str){ return ""; };
+    virtual int query(const char * query){ return -1; };
     virtual int query(const char * query, db_elems * results){ return -1; };
 
     void set_prefix(std::string prefix) {

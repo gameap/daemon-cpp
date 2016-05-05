@@ -45,12 +45,23 @@ public:
         mysql_real_escape_string(&conn, from, &str[0], strlen(str));
         return std::string(from);
     }
+
+    virtual int query(const char * query)
+    {
+        std::string qstr = str_replace("{pref}", db_prefix, query);
+        if (mysql_query(&conn, &qstr[0]) != 0) {
+            std::cerr << "Query error: " << qstr << std::endl;
+            return -1;
+        }
+
+        return 0;
+    }
     
     virtual int query(const char * query, db_elems *results)
     {
         std::string qstr = str_replace("{pref}", db_prefix, query);
 
-        std::cout << "query: " << qstr << std::endl;
+        // std::cout << "query: " << qstr << std::endl;
         
         if (mysql_query(&conn, &qstr[0]) != 0) {
             std::cerr << "Query error: " << qstr << std::endl;
@@ -60,18 +71,9 @@ public:
         // Получаем дескриптор результирующей таблицы
         res = mysql_store_result(&conn);
         if(res == NULL) {
-            // puterror("Error: can't get the result description\n");
+            return -1;
         }
 
-        // Получаем первую строку из результирующей таблицы
-        // row = mysql_fetch_row(res);
-        // if(mysql_errno(&conn) > 0) puterror("Error: can't fetch result\n");
-        
-        // Выводим результат в стандартный поток
-        // fprintf(stdout, "Version1: %s\n", row[0]);
-        // const char *rw = row[0];
-        // rows[0] = row[0];
-        
         results->num_rows = mysql_num_rows(res);
         results->num_fields = mysql_num_fields(res);
 
@@ -82,7 +84,6 @@ public:
         db_row * dbrow = new db_row;
         while ((row = mysql_fetch_row(res)) != NULL) {
 
-            // dbrow = new db_row;
             for (int j = 0; j < results->num_fields; j++) {
                 // std::cout << fields[j].name << " : " << row[j] << std::endl;
                 dbrow->row.insert(std::pair<std::string,std::string>(fields[j].name, row[j]));
@@ -93,24 +94,11 @@ public:
             
         }
 
-        // for (auto itv = results.rows.begin(); itv != results.rows.end(); ++itv) {
-            // for (auto itr = itv->row.begin(); itr != itv->row.end(); ++itr) {
-                // std::cout << (*itr).first << ": " << (*itr).second << std::endl;
-            // }
-        // }
-
         delete dbrow;
         // dbrow = nullptr;
 
-        // Освобождаем память, занятую результирующей таблицей
         mysql_free_result(res);
-
-        // for (auto itv = results.rows.begin(); itv != results.rows.end(); ++itv) {
-            // for (auto itr = itv->row.begin(); itr != itv->row.end(); ++itr) {
-                // std::cout << (*itr).first << ": " << (*itr).second << std::endl;
-            // }
-        // }
-
+        
         return 0;
     }
     
