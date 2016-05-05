@@ -3,5 +3,5 @@
 
 namespace GameAP {
     int exec(const std::string &cmd, std::string &out);
-    int exec(const std::string &cmd, boost::process::pipe &out);
+    boost::process::child exec(std::string cmd, boost::process::pipe &out);
 }
