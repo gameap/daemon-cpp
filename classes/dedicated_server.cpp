@@ -1,11 +1,21 @@
+#include "config.h"
+#include "db/db.h"
 #include "dedicated_server.h"
+
+#include <boost/format.hpp>
 
 using namespace GameAP;
 
-//
-
 DedicatedServer::DedicatedServer()
 {
+    Config& config = Config::getInstance();
+
+    stats_update_period = config.stats_update_period;
+    db_update_period    = config.stats_db_update_period;
+
+    std::cout << "stats_update_period: " << stats_update_period << std::endl;
+    std::cout << "db_update_period: " << db_update_period << std::endl;
+
     // get cpu count
     cpu_count = std::thread::hardware_concurrency();
 
@@ -14,34 +24,48 @@ DedicatedServer::DedicatedServer()
 
     ram_total = sysi.totalram;
 
-    // std::cout
-        // << "totalram: " << sysi.totalram << std::endl
-        // << "freeram: " << sysi.freeram << std::endl
-        // << "bufferram: " << sysi.bufferram << std::endl
-    // << std::endl;
-
-    boost::filesystem::space_info spi;
+    // Check interfaces
+    for (std::vector<std::string>::iterator it = config.if_list.begin(); it != config.if_list.end(); ++it) {
+        if (boost::filesystem::is_directory(str(boost::format("/sys/class/net/%s") % *it))) {
+            interfaces.push_back(*it);
+        }
+    }
     
-    try {
-        spi = boost::filesystem::space("/");
-        drv_space["/"] = spi.capacity;
-    }
-    catch (boost::filesystem::filesystem_error &e) {
-        std::cout << "Error get space: " << e.what() << std::endl;
-        return;
+    boost::filesystem::space_info spi;
+
+    // Check filesystem
+    for (std::vector<std::string>::iterator it = config.drives_list.begin(); it != config.drives_list.end(); ++it) {
+        try {
+            spi = boost::filesystem::space(*it);
+            drv_space[*it] = spi.capacity;
+            std::cout << "Space capacity [" << *it << "]: " << drv_space[*it] << std::endl;
+            drives.push_back(*it);
+         } catch (boost::filesystem::filesystem_error &e) {
+            std::cout << "Error get space: " << e.what() << std::endl;
+            return;
+        }
     }
 
-    std::cout
-        << "Space capacity: " << drv_space["/"]
-        << std::endl;
+    std::vector<float> cpu_percent;
+    get_cpu_load(cpu_percent);
+
+    std::map<std::string, ds_iftstats> ifstats;
+    get_net_load(ifstats);
+
+    last_stats_update = time(0);
 }
 
 // ---------------------------------------------------------------------
 
 int DedicatedServer::stats_process()
 {
+    if (time(0) - last_stats_update < stats_update_period) {
+        return -1;
+    }
+
     ds_stats cur_stats;
     stats.reserve(1);
+    cur_stats.cpu_load.reserve(cpu_count);
 
     cur_stats.time = time(0);
     getloadavg(cur_stats.loa, 3);
@@ -50,49 +74,24 @@ int DedicatedServer::stats_process()
     sysinfo(&sysi);
     
     // Get cpu load
-
+    get_cpu_load(cur_stats.cpu_load);
+    
     // Get ram load
     cur_stats.ram_us = sysi.totalram - sysi.freeram;
     
     // Get drive space
     boost::filesystem::space_info spi;
-    spi = boost::filesystem::space("/");
+    for (std::vector<std::string>::iterator it = drives.begin(); it != drives.end(); ++it) {
+        spi = boost::filesystem::space(*it);
+        cur_stats.drv_us_space[*it] = spi.capacity-spi.free;
+        cur_stats.drv_free_space[*it] = spi.free;
+    }
+
+    // Get if stat
+    get_net_load(cur_stats.ifstats);
     
-    cur_stats.drv_us_space["/"] = spi.capacity-spi.free;
-    cur_stats.drv_free_space["/"] = spi.free;
-    
-    // Get current tx rx
-    char bufread[32];
-    
-    std::ifstream netstats;
-    netstats.open("/sys/class/net/lo/statistics/rx_bytes", std::ios::in);
-    // netstats.read(bufread, (std::streamsize)32);
-    netstats.getline(bufread, 32);
-    cur_stats.ifstats["lo"].rxb = atoi(bufread);
-    netstats.close();
-    
-    netstats.open("/sys/class/net/lo/statistics/tx_bytes", std::ios::in);
-    // netstats.read(bufread, (std::streamsize)32);
-    netstats.getline(bufread, 32);
-    cur_stats.ifstats["lo"].txb = atoi(bufread);
-    netstats.close();
-    
-    netstats.open("/sys/class/net/lo/statistics/rx_packets", std::ios::in);
-    // netstats.read(bufread, (std::streamsize)32);
-    netstats.getline(bufread, 32);
-    cur_stats.ifstats["lo"].rxp = atoi(bufread);
-    netstats.close();
-    
-    netstats.open("/sys/class/net/lo/statistics/tx_packets", std::ios::in);
-    // netstats.read(bufread, (std::streamsize)32);
-    netstats.getline(bufread, 32);
-    cur_stats.ifstats["lo"].txp = atoi(bufread);
-    netstats.close();
     
     stats.insert(stats.end(), cur_stats);
-
-    float cpu_load;
-    get_cpu_load(&cpu_load);
 
     // std::cout
         // << "cur_stats.loa: " << cur_stats.loa[0] << " " << cur_stats.loa[1] << " " << cur_stats.loa[2] << std::endl
@@ -105,11 +104,74 @@ int DedicatedServer::stats_process()
         // << "cur_stats.ifstats[lo].rxp: " << cur_stats.ifstats["lo"].txp << std::endl
         // << "cur_stats.ifstats[lo].txp: " << cur_stats.ifstats["lo"].txp << std::endl
     // << std::endl;
+
+    last_stats_update = time(0);
+    return 0;
 }
 
 // ---------------------------------------------------------------------
 
-int DedicatedServer::get_cpu_load(float *cpu_percent)
+int DedicatedServer::get_net_load(std::map<std::string, ds_iftstats> &ifstats)
+{
+    // Get current tx rx
+    char bufread[32];
+
+    std::map<std::string, ds_iftstats> current_ifstats;
+
+    for (std::vector<std::string>::iterator it = interfaces.begin(); it != interfaces.end(); ++it) {
+        std::ifstream netstats;
+        netstats.open(str(boost::format("/sys/class/net/%s/statistics/rx_bytes") % *it), std::ios::in);
+        netstats.getline(bufread, 32);
+        current_ifstats[*it].rxb = atoi(bufread);
+        netstats.close();
+        
+        netstats.open(str(boost::format("/sys/class/net/%s/statistics/tx_bytes") % *it), std::ios::in);
+        netstats.getline(bufread, 32);
+        current_ifstats[*it].txb = atoi(bufread);
+        netstats.close();
+        
+        netstats.open(str(boost::format("/sys/class/net/%s/statistics/rx_packets") % *it), std::ios::in);
+        netstats.getline(bufread, 32);
+        current_ifstats[*it].rxp = atoi(bufread);
+        netstats.close();
+        
+        netstats.open(str(boost::format("/sys/class/net/%s/statistics/tx_packets") % *it), std::ios::in);
+        netstats.getline(bufread, 32);
+        current_ifstats[*it].txp = atoi(bufread);
+        netstats.close();
+    }
+
+    time_t current_time = time(0);
+
+    if (last_ifstat_time != 0 && current_time > last_ifstat_time) {
+        
+        int time_diff = current_time - last_ifstat_time;
+        
+        for (std::vector<std::string>::iterator it = interfaces.begin(); it != interfaces.end(); ++it) {
+            if (current_ifstats.count(*it) > 0  && last_ifstats.count(*it) > 0) {
+                
+                ifstats[*it].rxb = (current_ifstats[*it].rxb - last_ifstats[*it].rxb) / time_diff;
+                ifstats[*it].txb = (current_ifstats[*it].txb - last_ifstats[*it].txb) / time_diff;
+                ifstats[*it].rxp = (current_ifstats[*it].rxp - last_ifstats[*it].rxp) / time_diff;
+                ifstats[*it].txp = (current_ifstats[*it].txp - last_ifstats[*it].txp) / time_diff;
+
+                // std::cout << "ifstats[*it].rxb: " << ifstats[*it].rxb << std::endl;
+                // std::cout << "ifstats[*it].txb: " << ifstats[*it].txb << std::endl;
+                // std::cout << "ifstats[*it].rxp: " << ifstats[*it].rxp << std::endl;
+                // std::cout << "ifstats[*it].txp: " << ifstats[*it].txp << std::endl;
+            }
+        }
+    }
+
+    last_ifstats        = current_ifstats;
+    last_ifstat_time    = time(0);
+
+    return 0;
+}
+
+// ---------------------------------------------------------------------
+
+int DedicatedServer::get_cpu_load(std::vector<float> &cpu_percent)
 {
     std::ifstream cpustat;
 
@@ -204,8 +266,13 @@ int DedicatedServer::get_cpu_load(float *cpu_percent)
                 perc[i] = 0;
             }
 
+            cpu_percent.push_back(perc[i]);
             // std::cout << "CPU #" << i << ": " << perc[i] << std::endl;
         }
+        
+        // cpu_percent = &perc;
+        // std::cout << "perc[0]: " << perc[0] << std::endl;
+        // std::cout << "cpu_percent[0]: " << (*cpu_percent)[0] << std::endl;
 
         last_cpustat_time = cpustat_time;
         return 0;
@@ -222,46 +289,80 @@ int DedicatedServer::get_cpu_load(float *cpu_percent)
     }
 }
 
-// ---------------------------------------------------------------------
-
-int DedicatedServer::get_net_load()
+int DedicatedServer::update_db()
 {
-    int sock;                                                          // дескриптор сокета
-    struct sockaddr_in *in_addr;                             // структура интернет адреса (поля)
-    struct ifreq ifdata;                                            // структура - параметр
-    struct if_nameindex*     ifNameIndex;                // структура интерфейсов и их индексов
-    sock = socket(AF_INET, SOCK_DGRAM, 0);     // открываем дескриптор сокета
-    
-    if (sock < 0) {
-        printf("Не удалось открыть сокет, ошибка: %s\n", strerror(errno));
-        return 1;
+    if (time(0) - last_db_update < db_update_period) {
+        return -1;
     }
 
-    if (sock < 0) {
-        printf("Не удалось открыть сокет, ошибка: %s\n", strerror(errno));
-        return 1;
-    }
-    
-    ifNameIndex = if_nameindex();
-    
-    if (ifNameIndex) {                                                  // если удалось получить данные
-        while (ifNameIndex->if_index) {                                 // пока имеются данные
-            memset(&ifdata, 0, sizeof(ifdata));                             // очищаем структуру
-            strncpy(ifdata.ifr_name, ifNameIndex->if_name, IFNAMSIZ);       // получаем имя следующего интерфейса
+    std::vector<std::vector<ds_stats>::iterator>insert_complete;
+
+    for (std::vector<ds_stats>::iterator it = stats.begin();
+        it != stats.end();
+        ++it
+    ) {
+        ushort ping = 0;
+
+        // Load average
+        std::string loa = str(boost::format("%.2f %.2f %.2f") % (*it).loa[0] % (*it).loa[1] % (*it).loa[2]);
+
+        // Ram
+        std::string ram = str(boost::format("%1% %2%") % (*it).ram_us % ram_total);
+
+        // Cpu
+        std::string cpu = "";
+        for (int i = 0; i < (*it).cpu_load.size(); ++i) {
+            cpu +=  str(boost::format("%.2f") % (*it).cpu_load[i]) + " ";
+        }
+
+        // If stat
+        std::string ifstat = "";
+        for (std::map<std::string, ds_iftstats>::iterator itd = (*it).ifstats.begin();
+            itd != (*it).ifstats.end();
+            ++itd
+        ) {
+            ifstat +=  str(boost::format("%1% %2% %3% %4% %5%")
+                % (*itd).first
+                % (*itd).second.rxb
+                % (*itd).second.txb
+                % (*itd).second.rxp
+                % (*itd).second.txp
+            );
             
-            // получаем IP адрес с помощью SIOCGIFADDR, одновременно проверяя результат
-            if (ioctl(sock, SIOCGIFADDR, &ifdata) < 0) {
-                // printf("Не получить IP адрес для %s, ошибка: %s\n", ifdata.ifr_name, strerror(errno));
-                // close(sock);
-                // return 1;
-            }
-            // преобразовываем из массива байт в структуру sockaddr_in
-            in_addr = (struct sockaddr_in *) &ifdata.ifr_addr;
-            // printf("Интерфейс %s индекес %i IP адрес: %s\n", ifdata.ifr_name, ifNameIndex->if_index, inet_ntoa(in_addr->sin_addr));
-            ++ifNameIndex;                                   // переходим к следующему интерфейсу
+            ifstat += "\n";
+        }
+
+        // Drive space
+        std::string drvspace = "";
+        for (std::map<std::string, ulong>::iterator itd = (*it).drv_us_space.begin();
+            itd != (*it).drv_us_space.end();
+            ++itd
+        ) {
+            drvspace +=  str(boost::format("%1% %2% %3%") % (*itd).first % (*itd).second % drv_space[(*itd).first]) + "\n";
+        }
+
+        
+        std::string qstr = str(
+            boost::format(
+                "INSERT INTO `{pref}ds_stats` (`ds_id`, `time`, `loa`, `ram`, `cpu`, `ifstat`, `ping`, `drvspace`)\
+                VALUES ('%1%', %2%, '%3%', '%4%', '%5%', '%6%', %7%, '%8%')"
+            ) % ds_id % (*it).time % loa % ram % cpu % ifstat % ping % drvspace
+        );
+        
+        if (db->query(&qstr[0]) == 0) {
+            insert_complete.push_back(it);
+        } else {
+            break;
         }
     }
-    
-    close(sock);
-    return 0;
+
+    // Clear completed
+    for (int i = 0; i < insert_complete.size(); ++i) {
+        stats.erase(insert_complete[i]);
+    }
+
+    if (insert_complete.size() > 0) {
+        insert_complete.clear();
+        last_db_update = time(0);
+    }
 }

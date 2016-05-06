@@ -48,7 +48,7 @@ struct ds_stats {
     time_t time;
 
     double loa[3];
-    std::vector<ushort> cpu_load;
+    std::vector<float> cpu_load;
     ulong ram_us;
     
     std::map<std::string, ds_iftstats> ifstats;
@@ -63,22 +63,34 @@ private:
     std::map<std::string, ulong> drv_space;
 
     std::vector<ds_stats> stats;
-    
     std::string ds_ip;
+    
+    time_t last_stats_update        = 0;
+    time_t last_db_update           = 0;
+
+    ushort stats_update_period =    300;
+    ushort db_update_period =       300;
 
     #ifdef __linux__
         time_t last_cpustat_time = 0;
         std::map<ushort, ulong> last_cpustat[4];
+
+        time_t last_ifstat_time = 0;
+        std::map<std::string, ds_iftstats> last_ifstats;
     #endif
+
+    std::vector<std::string> interfaces;
+    std::vector<std::string> drives;
+
+    ulong ds_id = 1;
 public:
     DedicatedServer();
-    int ds_id;
 
     int stats_process();
+    int update_db();
 
-    int get_cpu_load(float *cpu_percent);
-    int get_net_load();
-
+    int get_net_load(std::map<std::string, ds_iftstats> &ifstat);
+    int get_cpu_load(std::vector<float> &cpu_percent);
 };
 
 /* End namespace GameAP */
