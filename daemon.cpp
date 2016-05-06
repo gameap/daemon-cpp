@@ -35,19 +35,6 @@ Db *db;
 
 // ---------------------------------------------------------------------
 
-int run_tasks()
-{
-    TaskList& tasks = TaskList::getInstance();
-
-    tasks.update_list();
-
-    // for (std::vector<Task *>::iterator it = tasks.begin(); it != tasks.end(); ++it) {
-        // (**it).run();
-    // }
-}
-
-// ---------------------------------------------------------------------
-
 int check_tasks()
 {
     TaskList& tasks = TaskList::getInstance();
@@ -61,15 +48,18 @@ int check_tasks()
                 || (**it).get_status() == TASK_SUCCESS
             ) {
                 std::string output = (**it).get_output();
-                output = db->real_escape_string(&output[0]);
-                
-                std::string qstr = str(
-                    boost::format(
-                        "UPDATE `{pref}gdaemon_tasks` SET `output` = '%1%' WHERE `id` = %2%"
-                    ) % output  % (**it).get_task_id()
-                );
-                
-                db->query(&qstr[0]);
+
+                if (output != "") {
+                    output = db->real_escape_string(&output[0]);
+                    
+                    std::string qstr = str(
+                        boost::format(
+                            "UPDATE `{pref}gdaemon_tasks` SET `output` = '%1%' WHERE `id` = %2%"
+                        ) % output  % (**it).get_task_id()
+                    );
+                    
+                    db->query(&qstr[0]);
+                }
             }
 
             if ((**it).get_status() == TASK_ERROR || (**it).get_status() == TASK_SUCCESS) {
@@ -91,10 +81,6 @@ void daemon()
     for (std::vector<Task *>::iterator it = tasks.begin(); !tasks.is_end(it); it = tasks.next(it)) {
         (**it).run();
     }
-
-    // std::thread task_update(check_tasks);
-
-    // Task
 }
 
 // ---------------------------------------------------------------------
@@ -102,8 +88,8 @@ void daemon()
 int main(int argc, char* argv[])
 {
     std::cout << "Start" << std::endl;
-
-    Config config;
+    
+    Config& config = Config::getInstance();
 
     if (config.parse() == -1) {
         return -1;
@@ -123,11 +109,15 @@ int main(int argc, char* argv[])
     std::thread daemon_server(run_server, 6789);
     
     DedicatedServer deds;
-    deds.stats_process();
+    // deds.stats_process();
 
     while (true) {
         std::cout << "CICLE START" << std::endl;
         daemon();
+
+        deds.stats_process();
+        deds.update_db();
+        
         sleep(5);
     }
 
