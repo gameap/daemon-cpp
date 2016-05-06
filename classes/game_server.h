@@ -10,6 +10,7 @@
 
 #include "dedicated_server.h"
 
+#define INST_NO_SOURCE 0
 #define INST_FROM_LOCREP 1
 #define INST_FROM_REMREP 2
 #define INST_FROM_STEAM 3
@@ -72,7 +73,7 @@ public:
     
     int install_game_server();
     int update_server();
-    int delete_game_server();
+    int delete_server();
     int move_game_server();
 
     int start_server();

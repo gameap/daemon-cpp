@@ -105,8 +105,8 @@ int GameServer::update_server()
 {
     std::cout << "Update Start" << std::endl;
 
-    ushort game_install_from = 0;
-    ushort gt_install_from = 0;
+    ushort game_install_from =  INST_NO_SOURCE;
+    ushort gt_install_from =    INST_NO_SOURCE;
 
     // Install game
     if (game_localrep.size() > 0)       game_install_from = INST_FROM_LOCREP;
@@ -119,14 +119,14 @@ int GameServer::update_server()
     }
 
     if (gt_localrep.size() > 0)         gt_install_from = INST_FROM_LOCREP;
-    else if (gt_localrep.size() > 0)    gt_install_from = INST_FROM_REMREP;
+    else if (gt_remrep.size() > 0)      gt_install_from = INST_FROM_REMREP;
     else if (false)                     gt_install_from = INST_FROM_STEAM;
     else {
         // No Source to install. No return -1
     }
 
-    ushort game_source = 0;
-    ushort gt_source = 0;
+    ushort game_source =    INST_NO_SOURCE;
+    ushort gt_source =      INST_NO_SOURCE;
 
     boost::filesystem::path source_path;
     
@@ -149,7 +149,6 @@ int GameServer::update_server()
             source_path = game_remrep;
         }
     }
-
 
     if (game_install_from == INST_FROM_REMREP) {
         // Check rep available
@@ -187,6 +186,54 @@ int GameServer::update_server()
         boost::filesystem::remove(archive);
     }
 
+    // Game Type Install
+
+    if (gt_install_from == INST_FROM_LOCREP) {
+
+        if (boost::filesystem::is_regular_file(gt_localrep)) {
+            gt_source = INST_FILE;
+            source_path = gt_localrep;
+        }
+        else if (boost::filesystem::is_directory(gt_localrep)) {
+            gt_source = INST_DIR;
+            source_path = gt_localrep;
+        } else {
+            gt_install_from = INST_FROM_REMREP;
+        }
+
+        if (!boost::filesystem::exists(source_path)) {
+            std::cerr << "Local rep not found: " << source_path << std::endl;
+            gt_install_from = INST_FROM_REMREP;
+            source_path = gt_remrep;
+        }
+    }
+
+    if (gt_install_from == INST_FROM_REMREP) {
+        // Check rep available
+        // TODO ...
+        gt_source = INST_FILE;
+        source_path = gt_remrep;
+    }
+
+    // Wget/Copy and unpack
+    if (gt_install_from == INST_FROM_LOCREP && gt_source == INST_FILE) {
+        _unpack_archive(game_localrep);
+    }
+    else if (gt_install_from == INST_FROM_LOCREP && gt_source == INST_DIR) {
+        _copy_dir(source_path, work_path);
+    }
+    else if (gt_install_from == INST_FROM_REMREP) {
+        std::string cmd = str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % work_path.string());
+
+        if (_exec(cmd) == -1) {
+            return -1;
+        }
+        
+        std::string archive = str(boost::format("%1%/%2%") % work_path.string() % source_path.filename().string());
+        
+        _unpack_archive(archive);
+        boost::filesystem::remove(archive);
+    }
 
     return 0;
 }
@@ -283,4 +330,19 @@ bool GameServer::_copy_dir(
     }
     
     return true;
+}
+
+// ---------------------------------------------------------------------
+
+int GameServer::delete_server()
+{
+    try {
+        boost::filesystem::remove_all(work_path);
+    }
+    catch (boost::filesystem::filesystem_error &e) {
+        std::cerr << "Error remove: " << e.what() << std::endl;
+        return -1;
+    }
+
+    return 0;
 }
