@@ -29,6 +29,9 @@ class MySQL : public Db {
 public:
     virtual int connect(const char *host, const char *user, const char *passwd, const char *db, unsigned int port)
     {
+        my_bool reconnect = 1;
+        mysql_options(&conn, MYSQL_OPT_RECONNECT, &reconnect);
+
         mysql_real_connect(&conn, host, user, passwd, db, port, NULL, 0);
     
         if(mysql_errno(&conn)) {
@@ -62,7 +65,11 @@ public:
         std::string qstr = str_replace("{pref}", db_prefix, query);
 
         // std::cout << "query: " << qstr << std::endl;
-        
+
+        if (mysql_ping(&conn) != 0) {
+            std::cerr << "MySQL server has gone away" << std::endl;
+        }
+
         if (mysql_query(&conn, &qstr[0]) != 0) {
             std::cerr << "Query error: " << qstr << std::endl;
             return -1;
