@@ -36,9 +36,7 @@ void Task::run()
     int result_status;
     
     if (! strcmp(task, "gsstart")) {
-        // GameServer gserver(server_id);
-        // gserver.start_server();
-        // output = gserver.get_results_last_cmd();
+
     }
     else if (! strcmp(task, "gsstop")) {
         
@@ -58,7 +56,15 @@ void Task::run()
         }
     }
     else if (! strcmp(task, "gsdelete")) {
-        
+        try {
+            gserver = new GameServer(server_id);
+            result_status = gserver->delete_server();
+            delete gserver;
+            gserver = nullptr;
+        } catch (boost::filesystem::filesystem_error &e) {
+            status = error;
+            std::cerr << "gsinst error: " << e.what() << std::endl;
+        }
     }
     else if (! strcmp(task, "cmdexec")) {
         
