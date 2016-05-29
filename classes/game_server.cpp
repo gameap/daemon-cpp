@@ -3,6 +3,8 @@
 #include <boost/process.hpp>
 #include <boost/iostreams/stream.hpp>
 
+#include <jsoncpp/json/json.h>
+
 #include <sys/types.h>
 #include <signal.h>
 
@@ -83,6 +85,18 @@ GameServer::GameServer(ulong mserver_id)
     game_remrep    = results.rows[0].row["game_remote_repository"];
     gt_localrep    = results.rows[0].row["gt_local_repository"];
     gt_remrep      = results.rows[0].row["gt_remote_repository"];
+
+    Json::Value jaliases;
+
+    Json::Reader jreader(Json::Features::strictMode());
+    jreader.parse(results.rows[0].row["aliases"], jaliases, false);
+
+    for( Json::ValueIterator itr = jaliases.begin() ; itr != jaliases.end() ; itr++ ) {
+        aliases.insert ( std::pair<std::string, std::string>(itr.key().asString(), (*itr).asString()) );
+    }
+
+    std::cout << "ALIASES: " << std::endl;
+    std::cout << results.rows[0].row["aliases"] << std::endl;
 }
 
 // ---------------------------------------------------------------------
@@ -94,7 +108,33 @@ void GameServer::_append_cmd_output(std::string line)
 
 // ---------------------------------------------------------------------
 
+int GameServer::replace_shortcodes(std::string &cmd)
+{
+    cmd = str_replace("{id}", std::to_string(server_id), cmd);
+    cmd = str_replace("{dir}", work_dir, cmd);
+    cmd = str_replace("{name}", screen_name, cmd);
+    
+    cmd = str_replace("{ip}", ip, cmd);
+    cmd = str_replace("{port}", std::to_string(server_port), cmd);
+    cmd = str_replace("{query_port}", std::to_string(query_port), cmd);
+    cmd = str_replace("{rcon_port}", std::to_string(rcon_port), cmd);
+    
+    cmd = str_replace("{user}", user, cmd);
+
+    // Aliases
+    
+}
+
+// ---------------------------------------------------------------------
+
 int GameServer::start_server()
+{
+    
+}
+
+// ---------------------------------------------------------------------
+
+int GameServer::stop_server()
 {
     
 }
