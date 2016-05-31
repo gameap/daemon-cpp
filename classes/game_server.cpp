@@ -1,3 +1,5 @@
+#include "consts.h"
+
 #include <boost/filesystem.hpp>
 
 #include <boost/process.hpp>
@@ -80,6 +82,9 @@ GameServer::GameServer(ulong mserver_id)
     server_port     = (ulong)atoi(results.rows[0].row["server_port"].c_str());
     query_port      = (ulong)atoi(results.rows[0].row["query_port"].c_str());
     rcon_port       = (ulong)atoi(results.rows[0].row["rcon_port"].c_str());
+
+    start_command   = results.rows[0].row["start_command"];
+    stop_command    = results.rows[0].row["stop_command"];
     
     game_localrep  = results.rows[0].row["game_local_repository"];
     game_remrep    = results.rows[0].row["game_remote_repository"];
@@ -92,11 +97,8 @@ GameServer::GameServer(ulong mserver_id)
     jreader.parse(results.rows[0].row["aliases"], jaliases, false);
 
     for( Json::ValueIterator itr = jaliases.begin() ; itr != jaliases.end() ; itr++ ) {
-        aliases.insert ( std::pair<std::string, std::string>(itr.key().asString(), (*itr).asString()) );
+        aliases.insert(std::pair<std::string, std::string>(itr.key().asString(), (*itr).asString()));
     }
-
-    std::cout << "ALIASES: " << std::endl;
-    std::cout << results.rows[0].row["aliases"] << std::endl;
 }
 
 // ---------------------------------------------------------------------
@@ -108,10 +110,10 @@ void GameServer::_append_cmd_output(std::string line)
 
 // ---------------------------------------------------------------------
 
-int GameServer::replace_shortcodes(std::string &cmd)
+void GameServer::replace_shortcodes(std::string &cmd)
 {
     cmd = str_replace("{id}", std::to_string(server_id), cmd);
-    cmd = str_replace("{dir}", work_dir, cmd);
+    cmd = str_replace("{dir}", work_path.string(), cmd);
     cmd = str_replace("{name}", screen_name, cmd);
     
     cmd = str_replace("{ip}", ip, cmd);
@@ -122,21 +124,43 @@ int GameServer::replace_shortcodes(std::string &cmd)
     cmd = str_replace("{user}", user, cmd);
 
     // Aliases
-    
+    for (std::map<std::string, std::string>::iterator itr = aliases.begin(); itr != aliases.end(); ++itr) {
+        cmd = str_replace("{" + itr->first + "}", itr->second, cmd);
+    }
 }
 
 // ---------------------------------------------------------------------
 
 int GameServer::start_server()
 {
+    DedicatedServer& deds = DedicatedServer::getInstance();
+    std::string cmd  = str_replace("{command}", start_command, deds.get_script_cmd(DS_SCRIPT_START));
+    replace_shortcodes(cmd);
+
+    int result = _exec(cmd);
     
+    if (result == -1) {
+        return -1;
+    } else {
+        return 0;
+    }
 }
 
 // ---------------------------------------------------------------------
 
 int GameServer::stop_server()
 {
-    
+    DedicatedServer& deds = DedicatedServer::getInstance();
+    std::string cmd  = str_replace("{command}", stop_command, deds.get_script_cmd(DS_SCRIPT_STOP));
+    replace_shortcodes(cmd);
+
+    int result = _exec(cmd);
+
+    if (result == -1) {
+        return -1;
+    } else {
+        return 0;
+    }
 }
 
 // ---------------------------------------------------------------------

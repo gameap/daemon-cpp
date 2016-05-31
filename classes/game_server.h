@@ -40,6 +40,7 @@ private:
     uint rcon_port;
 
     std::string user;
+    std::map<std::string, std::string> aliases;
     
     std::string start_command;
     std::string stop_command;
@@ -76,6 +77,7 @@ public:
     int delete_server();
     int move_game_server();
 
+    void replace_shortcodes(std::string &cmd);
     int start_server();
     int stop_server();
 
