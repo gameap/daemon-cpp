@@ -9,6 +9,7 @@
 #include <thread>
 #include <ctime>
 
+#include <boost/thread.hpp>
 #include <boost/format.hpp>
 
 #include "daemon_server.h"
@@ -107,13 +108,18 @@ int main(int argc, char* argv[])
 
     std::thread thr1(check_tasks);
     std::thread daemon_server(run_server, 6789);
-    
-    DedicatedServer deds;
-    // deds.stats_process();
+
+    DedicatedServer& deds = DedicatedServer::getInstance();
+
+    boost::thread_group daemon_thrs;
 
     while (true) {
         std::cout << "CICLE START" << std::endl;
-        daemon();
+        // daemon();
+
+        daemon_thrs.create_thread([&]() {
+            daemon();
+        });
 
         deds.stats_process();
         deds.update_db();
