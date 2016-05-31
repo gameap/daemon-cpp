@@ -14,9 +14,9 @@ private:
     ulong task_id;
     ulong ds_id;
     ulong server_id = 0;
-    char * task;
-    char * data;
-    char * cmd;
+    const char * task;
+    const char * data;
+    const char * cmd;
     char * output;
     
     enum st {waiting = 1, working, error, success};
@@ -26,7 +26,7 @@ private:
 
     GameServer *gserver = nullptr;
 public:
-    Task(ulong mtask_id, ulong mds_id, ulong mserver_id, char * mtask, char * mdata, char * mcmd, ushort mstatus) {
+    Task(ulong mtask_id, ulong mds_id, ulong mserver_id, const char * mtask, const char * mdata, const char * mcmd, ushort mstatus) {
         task_id = mtask_id;
         ds_id = mds_id;
         server_id = mserver_id;
