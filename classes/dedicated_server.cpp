@@ -1,3 +1,5 @@
+#include "consts.h"
+
 #include "config.h"
 #include "db/db.h"
 #include "dedicated_server.h"
@@ -9,6 +11,8 @@ using namespace GameAP;
 DedicatedServer::DedicatedServer()
 {
     Config& config = Config::getInstance();
+
+    ds_id = config.ds_id;
 
     stats_update_period = config.stats_update_period;
     db_update_period    = config.stats_db_update_period;
@@ -53,6 +57,24 @@ DedicatedServer::DedicatedServer()
     get_net_load(ifstats);
 
     last_stats_update = time(0);
+
+    std::string qstr = str(boost::format("SELECT `script_start`, `script_stop`, `script_restart`, `script_status`, `script_get_console`, `script_send_command`\
+            FROM `{pref}dedicated_servers`\
+            WHERE `id` = '%1%'") % ds_id);
+
+    db_elems results;
+    if (db->query(&qstr[0], &results) == -1) {
+        fprintf(stdout, "Error query\n");
+        return;
+    }
+
+    script_start        = results.rows[0].row["script_start"];
+    script_stop         = results.rows[0].row["script_stop"];
+    script_restart      = results.rows[0].row["script_restart"];
+    script_status       = results.rows[0].row["script_status"];
+    script_get_console  = results.rows[0].row["script_get_console"];
+    script_send_command = results.rows[0].row["script_send_command"];
+            
 }
 
 // ---------------------------------------------------------------------
@@ -364,5 +386,34 @@ int DedicatedServer::update_db()
     if (insert_complete.size() > 0) {
         insert_complete.clear();
         last_db_update = time(0);
+    }
+}
+
+std::string DedicatedServer::get_script_cmd(ushort script)
+{
+    switch (script) {
+        case DS_SCRIPT_START:
+            return script_start;
+            break;
+            
+        case DS_SCRIPT_STOP:
+            return script_stop;
+            break;
+            
+        case DS_SCRIPT_RESTART:
+            return script_restart;
+            break;
+            
+        case DS_SCRIPT_STATUS:
+            return script_status;
+            break;
+            
+        case DS_SCRIPT_GET_CONSOLE:
+            return script_get_console;
+            break;
+            
+        case DS_SCRIPT_SEND_CMD:
+            return script_send_command;
+            break;
     }
 }

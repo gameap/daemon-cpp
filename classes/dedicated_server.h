@@ -83,14 +83,30 @@ private:
     std::vector<std::string> drives;
 
     ulong ds_id = 1;
-public:
+
+    std::string script_start        = "";
+    std::string script_stop         = "";
+    std::string script_restart      = "";
+    std::string script_status       = "";
+    std::string script_get_console  = "";
+    std::string script_send_command = "";
+
     DedicatedServer();
+    DedicatedServer( const DedicatedServer&);  
+    DedicatedServer& operator=( DedicatedServer& );
+public:
+    static DedicatedServer& getInstance() {
+        static DedicatedServer instance;
+        return instance;
+    }
 
     int stats_process();
     int update_db();
 
     int get_net_load(std::map<std::string, ds_iftstats> &ifstat);
     int get_cpu_load(std::vector<float> &cpu_percent);
+
+    std::string get_script_cmd(ushort script);
 };
 
 /* End namespace GameAP */
