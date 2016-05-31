@@ -58,7 +58,7 @@ add_executable(daemon
     models/tasks.cpp
 )
 
-target_link_libraries (daemon dl binn boost_system boost_filesystem boost_iostreams pthread cryptopp crypto jsoncpp)
+target_link_libraries (daemon dl binn boost_system boost_filesystem boost_iostreams boost_thread pthread cryptopp crypto jsoncpp)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -g" )
