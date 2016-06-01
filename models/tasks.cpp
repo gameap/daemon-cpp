@@ -92,6 +92,9 @@ void Task::run()
             std::cerr << "gsinst error: " << e.what() << std::endl;
         }
     }
+    else if (! strcmp(task, "gsmove")) {
+        // Move game server to other ds
+    }
     else if (! strcmp(task, "cmdexec")) {
         
     }
