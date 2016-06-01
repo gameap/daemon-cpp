@@ -34,7 +34,7 @@ private:
     void write_ok();
     
     void response_msg(int snum, const char * sdesc) {
-        response_msg(snum, sdesc);
+        response_msg(snum, sdesc, false);
     }
     
     void response_msg(int snum, const char * sdesc, bool write);

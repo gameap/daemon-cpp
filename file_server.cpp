@@ -19,6 +19,7 @@ using boost::asio::ip::tcp;
 void FileServerSess::start ()
 {
     write_binn = binn_list();
+    
     mode = 1;
     aes_key = "12345678901234561234567890123456";
     do_read();
@@ -110,7 +111,7 @@ void FileServerSess::do_write()
     memset(read_buf, 0, max_length-1);
 
     auto self(shared_from_this());
-    char sendbin[max_length];
+    char sendbin[binn_size(write_binn)+5];
 
     size_t len = 0;
 
@@ -118,7 +119,7 @@ void FileServerSess::do_write()
     memcpy(sendbin, (char*)binn_ptr(write_binn), binn_size(write_binn));
 
     len = append_end_symbols(&sendbin[0], binn_size(write_binn));
-    std::cout << "SEND: " << sendbin << std::endl;
+    // std::cout << "SEND: " << sendbin << std::endl;
 
     std::ofstream sendbuf_file;
     sendbuf_file.open("/home/nikita/Git/GameAP_Daemon2/sendbuf.bin", std::ios_base::binary);
@@ -153,7 +154,6 @@ void FileServerSess::cmd_process()
     int command;
     command = binn_list_int16(read_binn, 1);
 
-    std::cout << "READ: " << read_buf << std::endl;
     std::cout << "command: " << binn_list_int16(read_binn, 1) << std::endl;
     clear_write_vars();
 
@@ -198,10 +198,12 @@ void FileServerSess::cmd_process()
                 break;
             }
 
+            chdir(dir);
+
             binn *files_binn = binn_list();
             binn *file_info = binn_list();
 
-            response_msg(100, "OK");
+            response_msg(100, "OK", false);
 
             while ((dirp = readdir(dp)) != NULL) {
                 // std::cout << "File: " << dirp->d_name << std::endl;
@@ -212,7 +214,7 @@ void FileServerSess::cmd_process()
 
                 if (type == 1) {
                     struct stat stat_buf;
-
+                    
                     if (lstat(dirp->d_name, &stat_buf) == 0) {
 
                         binn_list_add_uint64(file_info, stat_buf.st_size);
@@ -226,8 +228,9 @@ void FileServerSess::cmd_process()
                         }
 
                     } else {
-                        std::cout << "error lstat" << std::endl;
+                        std::cout << "error lstat (" << errno << "): " << strerror(errno) << std::endl;
                     }
+                    
                 }
                 
                 binn_list_add_list(files_binn, file_info);
@@ -235,9 +238,8 @@ void FileServerSess::cmd_process()
 
             closedir(dp);
 
-            // delete dir;
-
-            binn_list_add_list(write_binn, binn_ptr(files_binn));
+            binn_list_add_list(write_binn, files_binn);
+    
             do_write();
             
             break;
@@ -382,7 +384,7 @@ int FileServerSess::append_end_symbols(char * buf, size_t length)
 {
     if (length == 0) return -1;
 
-    for (int i = length; i < length+4 && i < max_length; i++) {
+    for (int i = length; i < length+4; i++) {
         buf[i] = '\xFF';
     }
     
