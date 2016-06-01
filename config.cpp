@@ -14,13 +14,19 @@ int Config::parse()
     try {
         boost::optional<std::string> buf;
         boost::property_tree::ini_parser::read_ini("daemon.cfg", pt);
+
+        ds_id           = pt.get<uint>("ds_id");
+        listen_port     = pt.get<uint>("listen_port");
         
-        db_driver =     pt.get<std::string>("db_driver");
-        db_host =       pt.get<std::string>("db_host");
-        db_user =       pt.get<std::string>("db_user");
-        db_passwd =     pt.get<std::string>("db_passwd");
-        db_name =       pt.get<std::string>("db_name");
-        db_port =       pt.get<int>("db_port");
+        daemon_login     = pt.get<std::string>("daemon_login");
+        daemon_password  = pt.get<std::string>("daemon_password");
+        
+        db_driver       = pt.get<std::string>("db_driver");
+        db_host         = pt.get<std::string>("db_host");
+        db_user         = pt.get<std::string>("db_user");
+        db_passwd       = pt.get<std::string>("db_passwd");
+        db_name         = pt.get<std::string>("db_name");
+        db_port         = pt.get<uint>("db_port");
 
         buf = pt.get_optional<std::string>("if_list");
         if (*buf != "") {
