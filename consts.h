@@ -11,19 +11,23 @@
 #define DS_SCRIPT_GET_CONSOLE   5
 #define DS_SCRIPT_SEND_CMD      6
 
-// Daemon server 
+// Daemon server
 #define DAEMON_SERVER_MODE_NOAUTH   0
 #define DAEMON_SERVER_MODE_AUTH     1
 #define DAEMON_SERVER_MODE_CMD      2
 #define DAEMON_SERVER_MODE_FILES    3
 
 #if defined __UINT32_MAX__ or UINT32_MAX
-  #include <inttypes.h>
+    #include <inttypes.h>
 #else
 	typedef unsigned char uint8;
 	typedef unsigned short uint16;
 	typedef unsigned long uint32;
 	typedef unsigned long long uint64;
-	
+
 	typedef unsigned int uint;
 #endif
+
+#ifdef _WIN32
+    #define WINVER 0x0500
+#endif // _WIN32
