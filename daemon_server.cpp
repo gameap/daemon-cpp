@@ -35,9 +35,6 @@ void DaemonServerSess::do_read()
                             binn *read_binn;
                             read_binn = binn_open((void*)&read_buf[0]);
 
-                            std::cout << "login: " << binn_list_str(read_binn, 2) << std::endl;
-                            std::cout << "password: " << binn_list_str(read_binn, 3) << std::endl;
-
                             if (config.daemon_login == binn_list_str(read_binn, 2)
                                 && config.daemon_password == binn_list_str(read_binn, 3)
                             ) {
