@@ -13,18 +13,18 @@ class Task {
 private:
     ulong task_id;
     ulong ds_id;
-    ulong server_id = 0;
+    ulong server_id;
     const char * task;
     const char * data;
     const char * cmd;
     char * output;
     
     enum st {waiting = 1, working, error, success};
-    ushort status = waiting;
+    ushort status;
 
     time_t task_started;
 
-    GameServer *gserver = nullptr;
+    GameServer *gserver;
 public:
     Task(ulong mtask_id, ulong mds_id, ulong mserver_id, const char * mtask, const char * mdata, const char * mcmd, ushort mstatus) {
         task_id = mtask_id;

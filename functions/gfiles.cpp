@@ -129,14 +129,14 @@ namespace GFiles {
 
     // ---------------------------------------------------------------------
 
-    bool make_dir(std::string dir, std::string permissions)
+    bool make_dir(char * dir, uint permissions)
     {
         #ifdef _WIN32
             wchar_t* wdir = new wchar_t[strlen(dir.c_str()) + 1];
             mbstowcs(wdir, dir.c_str(), strlen(dir.c_str()) + 1);
             CreateDirectory(wdir, NULL);
         #else
-            mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            mkdir(dir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
             //~ mode_t mode = strtol(permissions.c_str(), NULL, 8);
             //~ mkdir(dir.c_str(), 000777);
         #endif

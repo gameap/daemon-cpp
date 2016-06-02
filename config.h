@@ -1,6 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include "typedefs.h"
 #include <vector>
 #include <string>
 
@@ -33,11 +34,11 @@ public:
     std::string allowed_ip_str;
     uint port;
 
-    std::vector<std::string> if_list = {"eth0"};
-    std::vector<std::string> drives_list = {"/"};
+    std::vector<std::string> if_list;
+    std::vector<std::string> drives_list;
 
-    ushort stats_update_period      = 300;
-    ushort stats_db_update_period   = 300;
+    ushort stats_update_period;
+    ushort stats_db_update_period;
     
     int parse();
 };

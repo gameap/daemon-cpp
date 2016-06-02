@@ -9,6 +9,7 @@
 #include <boost/format.hpp>
 
 #include "dedicated_server.h"
+#include "typedefs.h"
 
 #define INST_NO_SOURCE 0
 #define INST_FROM_LOCREP 1

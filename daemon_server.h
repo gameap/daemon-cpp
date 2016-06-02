@@ -35,7 +35,7 @@ private:
 
     boost::asio::ip::tcp::socket socket_;
 
-    ushort sessid = 0;
+    ushort sessid;
     ushort mode;
 
 };

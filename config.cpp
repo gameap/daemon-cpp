@@ -4,6 +4,7 @@
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/algorithm/string.hpp>
 
+#include "typedefs.h"
 #include "config.h"
 
 int Config::parse()

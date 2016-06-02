@@ -29,19 +29,23 @@ int load_db(Db **db, char *driver)
     DLERROR();
     
     create_t* create_db = (create_t*) DLSYM(handle, "create");
-    const char* dlsym_error = DLERROR();
-    if (dlsym_error) {
-        std::cerr << "Cannot load symbol create: " << dlsym_error << '\n';
-        return -1;
-    }
-
+	#ifndef WIN32
+		const char* dlsym_error = DLERROR();
+		if (dlsym_error) {
+			std::cerr << "Cannot load symbol create: " << dlsym_error << '\n';
+			return -1;
+		}
+	#endif
+	
     destroy_t* destroy_db = (destroy_t*) DLSYM(handle, "destroy");
-    dlsym_error = DLERROR();
-    if (dlsym_error) {
-        std::cerr << "Cannot load symbol destroy: " << dlsym_error << '\n';
-        return -1;
-    }
-
+	#ifndef WIN32
+		dlsym_error = DLERROR();
+		if (dlsym_error) {
+			std::cerr << "Cannot load symbol destroy: " << dlsym_error << '\n';
+			return -1;
+		}
+	#endif
+	
     *db = create_db();
 
     return 0;

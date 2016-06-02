@@ -84,8 +84,7 @@ GameServer::GameServer(ulong mserver_id)
     rcon_port       = (ulong)atoi(results.rows[0].row["rcon_port"].c_str());
 
     start_command   = results.rows[0].row["start_command"];
-    stop_command    = results.rows[0].row["stop_command"];
-    
+
     game_localrep  = results.rows[0].row["game_local_repository"];
     game_remrep    = results.rows[0].row["game_remote_repository"];
     gt_localrep    = results.rows[0].row["gt_local_repository"];
@@ -112,14 +111,22 @@ void GameServer::_append_cmd_output(std::string line)
 
 void GameServer::replace_shortcodes(std::string &cmd)
 {
-    cmd = str_replace("{id}", std::to_string(server_id), cmd);
     cmd = str_replace("{dir}", work_path.string(), cmd);
     cmd = str_replace("{name}", screen_name, cmd);
     
     cmd = str_replace("{ip}", ip, cmd);
-    cmd = str_replace("{port}", std::to_string(server_port), cmd);
-    cmd = str_replace("{query_port}", std::to_string(query_port), cmd);
-    cmd = str_replace("{rcon_port}", std::to_string(rcon_port), cmd);
+
+	#ifdef __GNUC__
+		cmd = str_replace("{id}", std::to_string(server_id), cmd);
+		cmd = str_replace("{port}", std::to_string(server_port), cmd);
+		cmd = str_replace("{query_port}", std::to_string(query_port), cmd);
+		cmd = str_replace("{rcon_port}", std::to_string(rcon_port), cmd);
+	#elif _WIN32
+		cmd = str_replace("{id}", std::to_string((_ULonglong)server_id), cmd);
+		cmd = str_replace("{port}", std::to_string((_ULonglong)server_port), cmd);
+		cmd = str_replace("{query_port}", std::to_string((_ULonglong)query_port), cmd);
+		cmd = str_replace("{rcon_port}", std::to_string((_ULonglong)rcon_port), cmd);
+	#endif
     
     cmd = str_replace("{user}", user, cmd);
 
@@ -151,7 +158,8 @@ int GameServer::start_server()
 int GameServer::stop_server()
 {
     DedicatedServer& deds = DedicatedServer::getInstance();
-    std::string cmd  = str_replace("{command}", stop_command, deds.get_script_cmd(DS_SCRIPT_STOP));
+    // std::string cmd  = str_replace("{command}", "", deds.get_script_cmd(DS_SCRIPT_STOP));
+    std::string cmd  = deds.get_script_cmd(DS_SCRIPT_STOP);
     replace_shortcodes(cmd);
 
     int result = _exec(cmd);

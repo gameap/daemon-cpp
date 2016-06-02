@@ -8,26 +8,33 @@
 #include <map>
 
 #include "sys/types.h"
-#include "sys/sysinfo.h"
 
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <sys/types.h>
-#include <sys/ioctl.h>
-#include <sys/time.h>
+#ifdef __linux__
+	#include "sys/sysinfo.h"
+	
+	#include <sys/socket.h>
+	#include <arpa/inet.h>
+	#include <sys/ioctl.h>
+	#include <sys/time.h>
+	
+	#include <net/if.h>
+#endif
 
 #include <string.h>
-#include <net/if.h>
 #include <errno.h>
 #include <stdio.h>
 
+#ifdef __GNUC__
 #include <unistd.h>
 #include <thread>
+#endif
 
 #include <fstream>
 
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
+
+#include "typedefs.h"
 
 namespace GameAP {
 
@@ -65,11 +72,11 @@ private:
     std::vector<ds_stats> stats;
     std::string ds_ip;
     
-    time_t last_stats_update        = 0;
-    time_t last_db_update           = 0;
+    time_t last_stats_update;
+    time_t last_db_update;
 
-    ushort stats_update_period =    300;
-    ushort db_update_period =       300;
+    ushort stats_update_period;
+    ushort db_update_period;
 
     #ifdef __linux__
         time_t last_cpustat_time = 0;
@@ -82,14 +89,14 @@ private:
     std::vector<std::string> interfaces;
     std::vector<std::string> drives;
 
-    ulong ds_id = 1;
+    ulong ds_id;
 
-    std::string script_start        = "";
-    std::string script_stop         = "";
-    std::string script_restart      = "";
-    std::string script_status       = "";
-    std::string script_get_console  = "";
-    std::string script_send_command = "";
+    std::string script_start;
+    std::string script_stop;
+    std::string script_restart;
+    std::string script_status;
+    std::string script_get_console;
+    std::string script_send_command;
 
     DedicatedServer();
     DedicatedServer( const DedicatedServer&);  

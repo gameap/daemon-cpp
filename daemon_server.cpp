@@ -120,7 +120,8 @@ void DaemonServerSess::do_write()
     memset(read_buf, 0, max_length-1);
 
     auto self(shared_from_this());
-    char sendbin[binn_size(write_binn)+5];
+    // char sendbin[binn_size(write_binn)+5];
+	char sendbin[10240];
 
     // msg = GCrypt::aes_encrypt((char*)binn_ptr(write_binn), aes_key);
     memcpy(sendbin, (char*)binn_ptr(write_binn), binn_size(write_binn));

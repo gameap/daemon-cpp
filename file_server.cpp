@@ -19,7 +19,7 @@ using boost::asio::ip::tcp;
 void FileServerSess::start ()
 {
     write_binn = binn_list();
-    
+
     mode = 1;
     aes_key = "12345678901234561234567890123456";
     do_read();
@@ -38,10 +38,10 @@ void FileServerSess::do_read()
 
                 if (mode == 3) {
                     // std::cout << "Write File" << std::endl;
-                    
+
                     // file_transfer += length;
                     // std::cout << "Write File: " << file_transfer << "/" << length << "/" << filesize << std::endl;
-                    
+
                     write_file(length);
                 } else {
                      read_length += length;
@@ -111,7 +111,8 @@ void FileServerSess::do_write()
     memset(read_buf, 0, max_length-1);
 
     auto self(shared_from_this());
-    char sendbin[binn_size(write_binn)+5];
+    // char sendbin[binn_size(write_binn)+5];
+	char sendbin[10240];
 
     size_t len = 0;
 
@@ -172,7 +173,7 @@ void FileServerSess::cmd_process()
 
             // Check
             // ...
-            
+
             // ALL OK
             // binn_list_add_uint32(write_binn, 100);
             // binn_list_add_str(write_binn, "OK");
@@ -181,7 +182,7 @@ void FileServerSess::cmd_process()
             open_file();
 
             write_ok();
-            
+
             break;
         };
 
@@ -189,7 +190,7 @@ void FileServerSess::cmd_process()
             // Read Dir
             char *dir = binn_list_str(read_binn, 2);
             uint type = binn_list_uint8(read_binn, 3);
-            
+
             DIR *dp;
             struct dirent *dirp;
 
@@ -198,7 +199,11 @@ void FileServerSess::cmd_process()
                 break;
             }
 
-            chdir(dir);
+			#ifdef __GNUC__
+				chdir(dir);
+			#elif _WIN32
+				_chdir(dir);
+			#endif
 
             binn *files_binn = binn_list();
             binn *file_info = binn_list();
@@ -209,46 +214,47 @@ void FileServerSess::cmd_process()
                 // std::cout << "File: " << dirp->d_name << std::endl;
                 binn_free(file_info);
                 file_info = binn_list();
-                
+
                 binn_list_add_str(file_info, dirp->d_name);
 
                 if (type == 1) {
                     struct stat stat_buf;
-                    
-                    if (lstat(dirp->d_name, &stat_buf) == 0) {
 
-                        binn_list_add_uint64(file_info, stat_buf.st_size);
-                        binn_list_add_uint64(file_info, stat_buf.st_atime);
-                        
-                        if (stat_buf.st_mode & S_IFDIR) {
-                            binn_list_add_uint8(file_info, 1); // Dir
-                        }
-                        else {
-                            binn_list_add_uint8(file_info, 2); // File
-                        }
+					#ifndef _WIN32
+						if (lstat(dirp->d_name, &stat_buf) == 0) {
 
-                    } else {
-                        std::cout << "error lstat (" << errno << "): " << strerror(errno) << std::endl;
-                    }
-                    
+							binn_list_add_uint64(file_info, stat_buf.st_size);
+							binn_list_add_uint64(file_info, stat_buf.st_atime);
+
+							if (stat_buf.st_mode & S_IFDIR) {
+								binn_list_add_uint8(file_info, 1); // Dir
+							}
+							else {
+								binn_list_add_uint8(file_info, 2); // File
+							}
+
+						} else {
+							std::cout << "error lstat (" << errno << "): " << strerror(errno) << std::endl;
+						}
+                    #endif
                 }
-                
+
                 binn_list_add_list(files_binn, file_info);
             }
 
             closedir(dp);
 
             binn_list_add_list(write_binn, files_binn);
-    
+
             do_write();
-            
+
             break;
         };
 
         case FSERV_MKDIR: {
 
-            try { 
-                boost::filesystem::path p{binn_list_str(read_binn, 2)};
+            try {
+                boost::filesystem::path p = binn_list_str(read_binn, 2);
                 boost::filesystem::create_directories(p);
             }
             catch (boost::filesystem::filesystem_error &e) {
@@ -258,8 +264,8 @@ void FileServerSess::cmd_process()
             }
 
             write_ok();
-            
-            
+
+
             break;
         };
 
@@ -268,7 +274,7 @@ void FileServerSess::cmd_process()
             char *newfile = binn_list_str(read_binn, 3);
             bool copy = binn_list_bool(read_binn, 4);
 
-            
+
             try {
                 if (copy) {
                     // Copy
@@ -288,7 +294,7 @@ void FileServerSess::cmd_process()
 
             // delete oldfile;
             // delete newfile;
-            
+
             break;
         };
 
@@ -313,7 +319,7 @@ void FileServerSess::cmd_process()
             write_ok();
 
             // delete file;
-            
+
             break;
         };
 
@@ -346,10 +352,10 @@ void FileServerSess::write_file(size_t length)
             std::cout << "File sended" << std::endl;
             read_length = 0;
             memset(read_buf, 0, max_length-1);
-            
+
             close_file();
         }
-        
+
     } else {
         clear_read_vars();
         close_file();
@@ -366,7 +372,7 @@ void FileServerSess::close_file()
 
 // ---------------------------------------------------------------------
 
-size_t FileServerSess::read_complete(size_t length) 
+size_t FileServerSess::read_complete(size_t length)
 {
     if (read_length <= 4) return 0;
 
@@ -387,7 +393,7 @@ int FileServerSess::append_end_symbols(char * buf, size_t length)
     for (int i = length; i < length+4; i++) {
         buf[i] = '\xFF';
     }
-    
+
     buf[length+4] = '\x00';
     return length+4;
 }

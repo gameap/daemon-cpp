@@ -19,7 +19,8 @@ DedicatedServer::DedicatedServer()
 
     std::cout << "stats_update_period: " << stats_update_period << std::endl;
     std::cout << "db_update_period: " << db_update_period << std::endl;
-
+	
+	#ifndef _WIN32
     // get cpu count
     cpu_count = std::thread::hardware_concurrency();
 
@@ -57,6 +58,7 @@ DedicatedServer::DedicatedServer()
     get_net_load(ifstats);
 
     last_stats_update = time(0);
+	#endif
 
     std::string qstr = str(boost::format("SELECT `script_start`, `script_stop`, `script_restart`, `script_status`, `script_get_console`, `script_send_command`\
             FROM `{pref}dedicated_servers`\
@@ -81,7 +83,8 @@ DedicatedServer::DedicatedServer()
 
 int DedicatedServer::stats_process()
 {
-    if (time(0) - last_stats_update < stats_update_period) {
+    #ifndef _WIN32
+	if (time(0) - last_stats_update < stats_update_period) {
         return -1;
     }
 
@@ -128,6 +131,7 @@ int DedicatedServer::stats_process()
     // << std::endl;
 
     last_stats_update = time(0);
+	#endif
     return 0;
 }
 
@@ -135,7 +139,8 @@ int DedicatedServer::stats_process()
 
 int DedicatedServer::get_net_load(std::map<std::string, ds_iftstats> &ifstats)
 {
-    // Get current tx rx
+    #ifndef _WIN32
+	// Get current tx rx
     char bufread[32];
 
     std::map<std::string, ds_iftstats> current_ifstats;
@@ -187,7 +192,8 @@ int DedicatedServer::get_net_load(std::map<std::string, ds_iftstats> &ifstats)
 
     last_ifstats        = current_ifstats;
     last_ifstat_time    = time(0);
-
+	#endif
+	
     return 0;
 }
 
@@ -195,7 +201,8 @@ int DedicatedServer::get_net_load(std::map<std::string, ds_iftstats> &ifstats)
 
 int DedicatedServer::get_cpu_load(std::vector<float> &cpu_percent)
 {
-    std::ifstream cpustat;
+    #ifndef _WIN32
+	std::ifstream cpustat;
 
     std::map<ushort, ulong> oldcpuload[4];
     std::map<ushort, ulong> cpuload[4];
@@ -309,6 +316,9 @@ int DedicatedServer::get_cpu_load(std::vector<float> &cpu_percent)
         last_cpustat_time = cpustat_time;
         return -1;
     }
+	#endif
+
+	return 0;
 }
 
 int DedicatedServer::update_db()

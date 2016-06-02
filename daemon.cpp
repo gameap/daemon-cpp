@@ -1,16 +1,21 @@
 #include <stdio.h>
 #include <iostream>
+
+#ifdef __GNUC__
 #include <unistd.h>
+#include <thread>
+#endif
 
 #include <sstream>
 #include <vector>
 #include <map>
 
-#include <thread>
 #include <ctime>
 
 #include <boost/thread.hpp>
 #include <boost/format.hpp>
+
+#include "typedefs.h"
 
 #include "daemon_server.h"
 #include "dl.h"
@@ -68,7 +73,11 @@ int check_tasks()
             }
         }
 
-        sleep(5);
+		#ifdef _WIN32
+			Sleep(5000);
+		#else
+			sleep(5);
+		#endif
     }
 }
 
@@ -93,6 +102,7 @@ int main(int argc, char* argv[])
     Config& config = Config::getInstance();
 
     if (config.parse() == -1) {
+		std::cout << "Config parse error" << std::endl;
         return -1;
     }
 
@@ -100,14 +110,17 @@ int main(int argc, char* argv[])
         std::cerr << "Db load error" << std::endl;
         return -1;
     }
-
+	
+	std::cout << "Before connect" << std::endl;
     if (db->connect(&config.db_host[0], &config.db_user[0], &config.db_passwd[0], &config.db_name[0], config.db_port) == -1) {
         std::cerr << "Connect to db error" << std::endl;
         return -1;
     }
+	
+	std::cout << "DB Connected" << std::endl;
 
-    std::thread thr1(check_tasks);
-    std::thread daemon_server(run_server, 6789);
+    boost::thread thr1(check_tasks);
+    boost::thread daemon_server(run_server, config.listen_port);
 
     DedicatedServer& deds = DedicatedServer::getInstance();
 
@@ -124,7 +137,11 @@ int main(int argc, char* argv[])
         deds.stats_process();
         deds.update_db();
         
-        sleep(5);
+		#ifdef _WIN32
+			Sleep(5000);
+		#else
+			sleep(5);
+		#endif
     }
 
     return 0;

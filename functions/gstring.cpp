@@ -36,3 +36,15 @@ std::string string_format(const std::string fmt_str, ...) {
     }
     return std::string(formatted.get());
 }
+
+// ---------------------------------------------------------------------
+
+std::string getFileExt(const std::string& s) {
+
+   size_t i = s.rfind('.', s.length());
+   if (i != std::string::npos) {
+      return(s.substr(i+1, s.length() - i));
+   }
+
+   return("");
+}

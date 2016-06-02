@@ -3,6 +3,12 @@
 
 #define FILE_SERVER_H
 
+#ifdef _WIN32
+#include <stdio.h>
+#include <stdlib.h>
+#include <direct.h>
+#endif
+
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -12,11 +18,14 @@
 #include <boost/filesystem.hpp>
 #include <sys/stat.h>
 #include <sys/types.h>
+
 #include <dirent.h>
 
 #include <fstream>
 
 #include <binn.h>
+
+#include "typedefs.h"
 
 // ---------------------------------------------------------------------
 
@@ -25,7 +34,8 @@ public:
     FileServerSess(boost::asio::ip::tcp::socket socket) : socket_(std::move(socket)) {};
     void start();
 
-    uint publ = 334;
+    uint publ;
+
 
 private:
     void do_read();

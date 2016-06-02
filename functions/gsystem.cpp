@@ -24,13 +24,25 @@ int exec(const std::string &cmd, std::string &out)
     try {
         file_descriptor_sink sinkout(pout.sink, close_handle);
         
-        child c = execute(
-            run_exe(boost::process::shell_path()),
-            set_args(std::vector<std::string>{PROC_SHELL, SHELL_PREF, cmd}),
-            bind_stderr(sinkout),
-            bind_stdout(sinkout),
-            throw_on_error()
-        );
+		#ifdef __GNUC__
+			child c = execute(
+				run_exe(boost::process::shell_path()),
+				set_args(std::vector<std::string>{PROC_SHELL, SHELL_PREF, cmd}),
+				bind_stderr(sinkout),
+				bind_stdout(sinkout),
+				throw_on_error()
+			);
+		#elif _WIN32
+			// wchar_t* szArgs = new wchar_t[strlen(cmd.c_str()) + 1];
+			// mbstowcs(szArgs, cmd.c_str(), strlen(cmd.c_str()) + 1);
+
+			child c = execute(
+				set_cmd_line(cmd),
+				bind_stderr(sinkout),
+				bind_stdout(sinkout),
+				throw_on_error()
+			);
+		#endif
     } catch (boost::system::system_error &e) {
         return -1;
     }
@@ -54,13 +66,25 @@ boost::process::child exec(std::string cmd, boost::process::pipe &out)
 {
     boost::iostreams::file_descriptor_sink sinkout(out.sink, boost::iostreams::close_handle);
 
-    return execute(
-        run_exe(boost::process::shell_path()),
-        set_args(std::vector<std::string>{PROC_SHELL, SHELL_PREF, cmd}),
-        bind_stderr(sinkout),
-        bind_stdout(sinkout),
-        throw_on_error()
-    );
+	#ifdef __GNUC__
+		return execute(
+			run_exe(boost::process::shell_path()),
+			set_args(std::vector<std::string>{PROC_SHELL, SHELL_PREF, cmd}),
+			bind_stderr(sinkout),
+			bind_stdout(sinkout),
+			throw_on_error()
+		);
+	#elif _WIN32
+        wchar_t* szArgs = new wchar_t[strlen(cmd.c_str()) + 1];
+        mbstowcs(szArgs, cmd.c_str(), strlen(cmd.c_str()) + 1);
+
+		return execute(
+            set_cmd_line(cmd),
+			bind_stderr(sinkout),
+			bind_stdout(sinkout),
+			throw_on_error()
+		);
+	#endif
 }
 
 // End GameAP namespace
