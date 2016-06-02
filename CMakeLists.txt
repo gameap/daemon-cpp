@@ -4,10 +4,15 @@ if (WIN32)
 
     SET(CMAKE_C_COMPILER       gcc)
     SET(CMAKE_CXX_COMPILER     g++)
+
+    # SET(CMAKE_C_COMPILER       /usr/bin/i686-w64-mingw32-gcc-win32 )
+    # SET(CMAKE_CXX_COMPILER     /usr/bin/i686-w64-mingw32-g++-win32 )
 endif()
 
-# SET(CMAKE_C_COMPILER       /usr/bin/i686-w64-mingw32-gcc-win32 )
-# SET(CMAKE_CXX_COMPILER     /usr/bin/i686-w64-mingw32-g++-win32 )
+if (UNIX)
+    SET(CMAKE_C_COMPILER       gcc-4.9)
+    SET(CMAKE_CXX_COMPILER     g++-4.9)
+endif()
 
 cmake_minimum_required(VERSION 2.8)
 
@@ -59,12 +64,12 @@ add_executable(daemon
 if (WIN32)
 	target_link_libraries (daemon gcc stdc++ ws2_32 wsock32 binn boost_system boost_filesystem boost_iostreams boost_thread jsoncpp)
 	
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=i686 -static" )
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -march=i686 -static" )
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -march=i686 -static" )
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -march=i686 -static" )
 endif()
 
-if (LINUX)
-	target_link_libraries (daemon dl binn boost_system boost_filesystem boost_iostreams boost_thread pthread jsoncpp)
+if (UNIX)
+	target_link_libraries (daemon dl binn boost_system boost_filesystem boost_iostreams boost_thread pthread crypto jsoncpp)
 	
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -g" )
