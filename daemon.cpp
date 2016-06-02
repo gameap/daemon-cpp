@@ -48,7 +48,7 @@ int check_tasks()
     while (true) {
         // Delete finished
         for (std::vector<Task *>::iterator it = tasks.begin(); !tasks.is_end(it); it = tasks.next(it)) {
-            
+
             if ((**it).get_status() == TASK_WORKING
                 || (**it).get_status() == TASK_ERROR
                 || (**it).get_status() == TASK_SUCCESS
@@ -57,13 +57,13 @@ int check_tasks()
 
                 if (output != "") {
                     output = db->real_escape_string(&output[0]);
-                    
+
                     std::string qstr = str(
                         boost::format(
                             "UPDATE `{pref}gdaemon_tasks` SET `output` = '%1%' WHERE `id` = %2%"
                         ) % output  % (**it).get_task_id()
                     );
-                    
+
                     db->query(&qstr[0]);
                 }
             }
@@ -98,7 +98,7 @@ void daemon()
 int main(int argc, char* argv[])
 {
     std::cout << "Start" << std::endl;
-    
+
     Config& config = Config::getInstance();
 
     if (config.parse() == -1) {
@@ -110,14 +110,13 @@ int main(int argc, char* argv[])
         std::cerr << "Db load error" << std::endl;
         return -1;
     }
-	
-	std::cout << "Before connect" << std::endl;
+
+    db->set_prefix(config.db_prefix);
+
     if (db->connect(&config.db_host[0], &config.db_user[0], &config.db_passwd[0], &config.db_name[0], config.db_port) == -1) {
         std::cerr << "Connect to db error" << std::endl;
         return -1;
     }
-	
-	std::cout << "DB Connected" << std::endl;
 
     boost::thread thr1(check_tasks);
     boost::thread daemon_server(run_server, config.listen_port);
@@ -136,7 +135,7 @@ int main(int argc, char* argv[])
 
         deds.stats_process();
         deds.update_db();
-        
+
 		#ifdef _WIN32
 			Sleep(5000);
 		#else
