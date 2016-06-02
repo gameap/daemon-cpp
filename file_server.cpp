@@ -44,12 +44,7 @@ void FileServerSess::do_read()
 
                     write_file(length);
                 } else {
-                     read_length += length;
-
-                    std::ofstream binbuf_file;
-                    binbuf_file.open("/home/nikita/Git/GameAP_Daemon2/binbuf.bin", std::ios_base::binary);
-                    binbuf_file.write(read_buf, read_length);
-                    binbuf_file.close();
+                    read_length += length;
 
                     if (read_complete(length)) {
                         switch (mode) {
@@ -111,8 +106,8 @@ void FileServerSess::do_write()
     memset(read_buf, 0, max_length-1);
 
     auto self(shared_from_this());
-    // char sendbin[binn_size(write_binn)+5];
-	char sendbin[10240];
+    char sendbin[binn_size(write_binn)+5];
+	// char sendbin[10240];
 
     size_t len = 0;
 
@@ -121,11 +116,6 @@ void FileServerSess::do_write()
 
     len = append_end_symbols(&sendbin[0], binn_size(write_binn));
     // std::cout << "SEND: " << sendbin << std::endl;
-
-    std::ofstream sendbuf_file;
-    sendbuf_file.open("/home/nikita/Git/GameAP_Daemon2/sendbuf.bin", std::ios_base::binary);
-    sendbuf_file.write(sendbin, len);
-    sendbuf_file.close();
 
     boost::asio::async_write(socket_, boost::asio::buffer(sendbin, len),
         [this, self](boost::system::error_code ec, std::size_t) {
@@ -220,7 +210,21 @@ void FileServerSess::cmd_process()
                 if (type == 1) {
                     struct stat stat_buf;
 
-					#ifndef _WIN32
+					#ifdef _WIN32
+                        if (stat(dirp->d_name, &stat_buf) == 0) {
+                            binn_list_add_uint64(file_info, stat_buf.st_size);
+							binn_list_add_uint64(file_info, stat_buf.st_atime);
+
+							if (stat_buf.st_mode & S_IFDIR) {
+								binn_list_add_uint8(file_info, 1); // Dir
+							}
+							else {
+								binn_list_add_uint8(file_info, 2); // File
+							}
+                        } else {
+							std::cout << "error stat (" << errno << "): " << strerror(errno) << std::endl;
+						}
+					#else
 						if (lstat(dirp->d_name, &stat_buf) == 0) {
 
 							binn_list_add_uint64(file_info, stat_buf.st_size);
