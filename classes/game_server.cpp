@@ -316,11 +316,15 @@ int GameServer::_unpack_archive(boost::filesystem::path const & archive)
 {
     std::string cmd;
 
-    if (archive.extension().string() == ".xz")           cmd = str(boost::format("tar -xpvJf %1% -C %2%") % archive.string() % work_path.string());
-    else if (archive.extension().string() == ".gz")      cmd = str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
-    else if (archive.extension().string() == ".bz2")     cmd = str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
-    else if (archive.extension().string() == ".tar")     cmd = str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
-    else cmd = str(boost::format("unzip -o %1% -d %2%") % archive.string() % work_path.string());
+    #ifdef __linux__
+        if (archive.extension().string() == ".xz")           cmd = str(boost::format("tar -xpvJf %1% -C %2%") % archive.string() % work_path.string());
+        else if (archive.extension().string() == ".gz")      cmd = str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
+        else if (archive.extension().string() == ".bz2")     cmd = str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
+        else if (archive.extension().string() == ".tar")     cmd = str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
+        else cmd = str(boost::format("unzip -o %1% -d %2%") % archive.string() % work_path.string());
+    #elif _WIN32
+        cmd = str(boost::format("7z x %1% -aoa -o%2%") % archive.string() % work_path.string());
+    #endif
 
     if (_exec(cmd) == -1) {
         return -1;
