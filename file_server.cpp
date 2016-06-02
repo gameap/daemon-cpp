@@ -20,6 +20,7 @@ void FileServerSess::start ()
 {
     write_binn = binn_list();
 
+    read_length = 0;
     mode = 1;
     aes_key = "12345678901234561234567890123456";
     do_read();
