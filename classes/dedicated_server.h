@@ -11,12 +11,12 @@
 
 #ifdef __linux__
 	#include "sys/sysinfo.h"
-	
+
 	#include <sys/socket.h>
 	#include <arpa/inet.h>
 	#include <sys/ioctl.h>
 	#include <sys/time.h>
-	
+
 	#include <net/if.h>
 #endif
 
@@ -31,6 +31,7 @@
 
 #include <fstream>
 
+#include <boost/thread.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -46,7 +47,7 @@ namespace GameAP {
 struct ds_iftstats {
     ulong rxb;
     ulong txb;
-    
+
     ulong rxp;
     ulong txp;
 };
@@ -57,7 +58,7 @@ struct ds_stats {
     double loa[3];
     std::vector<float> cpu_load;
     ulong ram_us;
-    
+
     std::map<std::string, ds_iftstats> ifstats;
     std::map<std::string, ulong> drv_us_space;
     std::map<std::string, ulong> drv_free_space;
@@ -71,20 +72,18 @@ private:
 
     std::vector<ds_stats> stats;
     std::string ds_ip;
-    
+
     time_t last_stats_update;
     time_t last_db_update;
 
     ushort stats_update_period;
     ushort db_update_period;
 
-    #ifdef __linux__
-        time_t last_cpustat_time = 0;
-        std::map<ushort, ulong> last_cpustat[4];
+    time_t last_cpustat_time;
+    std::map<ushort, ulong> last_cpustat[4];
 
-        time_t last_ifstat_time = 0;
-        std::map<std::string, ds_iftstats> last_ifstats;
-    #endif
+    time_t last_ifstat_time;
+    std::map<std::string, ds_iftstats> last_ifstats;
 
     std::vector<std::string> interfaces;
     std::vector<std::string> drives;
@@ -99,7 +98,7 @@ private:
     std::string script_send_command;
 
     DedicatedServer();
-    DedicatedServer( const DedicatedServer&);  
+    DedicatedServer( const DedicatedServer&);
     DedicatedServer& operator=( DedicatedServer& );
 public:
     static DedicatedServer& getInstance() {
