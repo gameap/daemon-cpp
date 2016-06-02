@@ -381,8 +381,8 @@ size_t FileServerSess::read_complete(size_t length)
     if (read_length <= 4) return 0;
 
     int found = 0;
-    for (int i = read_length; i < read_length-4-length; i--) {
-        if (read_buf[i] == '\xFF') found++;
+    for (int i = read_length; i > read_length-length && found < 4; i--) {
+        if (read_buf[i-1] == '\xFF') found++;
     }
 
     return (found >= 4) ?  1: 0;

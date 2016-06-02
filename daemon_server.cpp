@@ -10,7 +10,8 @@ void DaemonServerSess::start ()
 {
     write_binn = binn_list();
     mode = DAEMON_SERVER_MODE_NOAUTH;
-    
+
+    read_length = 0;
     do_read();
 }
 
@@ -20,7 +21,7 @@ void DaemonServerSess::do_read()
 {
     switch (mode) {
         case DAEMON_SERVER_MODE_NOAUTH: {
-            
+
             auto self(shared_from_this());
             socket_.async_read_some(boost::asio::buffer(read_buf, max_length),
                 [this, self](boost::system::error_code ec, std::size_t length) {
@@ -29,7 +30,7 @@ void DaemonServerSess::do_read()
 
                         if (read_complete(length)) {
                             Config& config = Config::getInstance();
-                            
+
                             // Check auth
                             binn *read_binn;
                             read_binn = binn_open((void*)&read_buf[0]);
@@ -59,7 +60,7 @@ void DaemonServerSess::do_read()
                         std::cout << "ERROR: " << ec << std::endl;
                     }
             });
-            
+
             std::cout << "NOAUTH" << std::endl;
             break;
         }
@@ -71,7 +72,7 @@ void DaemonServerSess::do_read()
         case DAEMON_SERVER_MODE_CMD:
             std::cout << "CMD" << std::endl;
             break;
-        
+
         case DAEMON_SERVER_MODE_FILES:
             std::cout << "DAEMON_SERVER_MODE_FILES" << std::endl;
             std::make_shared<FileServerSess>(std::move(socket_))->start();
@@ -86,13 +87,13 @@ void DaemonServerSess::do_read()
 
 // ---------------------------------------------------------------------
 
-size_t DaemonServerSess::read_complete(size_t length) 
+size_t DaemonServerSess::read_complete(size_t length)
 {
     if (read_length <= 4) return 0;
 
     int found = 0;
-    for (int i = read_length; i < read_length-4-length; i--) {
-        if (read_buf[i] == '\xFF') found++;
+    for (int i = read_length; i > read_length-length && found < 4; i--) {
+        if (read_buf[i-1] == '\xFF') found++;
     }
 
     return (found >= 4) ?  1: 0;
@@ -107,7 +108,7 @@ int DaemonServerSess::append_end_symbols(char * buf, size_t length)
     for (int i = length; i < length+4; i++) {
         buf[i] = '\xFF';
     }
-    
+
     buf[length+4] = '\x00';
     return length+4;
 }
@@ -120,8 +121,8 @@ void DaemonServerSess::do_write()
     memset(read_buf, 0, max_length-1);
 
     auto self(shared_from_this());
-    // char sendbin[binn_size(write_binn)+5];
-	char sendbin[10240];
+    char sendbin[binn_size(write_binn)+5];
+	// char sendbin[10240];
 
     // msg = GCrypt::aes_encrypt((char*)binn_ptr(write_binn), aes_key);
     memcpy(sendbin, (char*)binn_ptr(write_binn), binn_size(write_binn));
