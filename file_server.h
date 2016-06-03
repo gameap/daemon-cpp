@@ -66,10 +66,11 @@ private:
     int append_end_symbols(char * buf, size_t length);
 
     boost::asio::ip::tcp::socket socket_;
-    enum { max_length = 128 };
+    enum { max_length = 1024 };
     
     size_t read_length;
     char read_buf[max_length];
+    char write_buf[max_length];
     
     binn *write_binn;
     char *aes_key;
