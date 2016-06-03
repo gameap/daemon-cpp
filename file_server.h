@@ -54,15 +54,19 @@ private:
 
     void cmd_process();
 
-    void open_file();
+    void open_input_file();
+    void send_file();
+    void close_input_file();
+    
+    void open_output_file();
     void write_file(size_t length);
-    void close_file();
+    void close_output_file();
 
     size_t read_complete(size_t length);
     int append_end_symbols(char * buf, size_t length);
 
     boost::asio::ip::tcp::socket socket_;
-    enum { max_length = 1024 };
+    enum { max_length = 128 };
     
     size_t read_length;
     char read_buf[max_length];
@@ -79,8 +83,12 @@ private:
     int mode;
 
     boost::asio::streambuf request_buf;
-    char *filename;
+    std::string filename;
     size_t filesize;
+
+    ushort sendfile_mode;
+    
+    std::ifstream input_file;
     std::ofstream output_file;
 };
 

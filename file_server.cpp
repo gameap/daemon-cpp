@@ -7,12 +7,17 @@
 using boost::asio::ip::tcp;
 
 /* SERV Commands */
+#define FSERV_AUTH          1
+
 #define FSERV_SHELLCMD      2
 #define FSERV_FILESEND      3
 #define FSERV_READDIR       4
 #define FSERV_MKDIR         5
 #define FSERV_MOVE          6
 #define FSERV_REMOVE        7
+
+#define FSERV_FILE_DOWNLOAD 1
+#define FSERV_FILE_UPLOAD   2
 
 // ---------------------------------------------------------------------
 
@@ -21,7 +26,7 @@ void FileServerSess::start ()
     write_binn = binn_list();
 
     read_length = 0;
-    mode = 1;
+    mode = FSERV_AUTH;
     aes_key = "12345678901234561234567890123456";
     do_read();
 }
@@ -35,15 +40,28 @@ void FileServerSess::do_read()
     auto self(shared_from_this());
     socket_.async_read_some(boost::asio::buffer(read_buf, max_length),
         [this, self](boost::system::error_code ec, std::size_t length) {
+            // char temp_buf[max_length];
+            // memset(temp_buf, 0, max_length-1);
+            // memcpy(temp_buf, read_buf, length);
+            // std::cout << "|" << temp_buf << std::endl;
+
+            // std::cout << "length: " << length << std::endl;
+
             if (!ec) {
 
-                if (mode == 3) {
-                    // std::cout << "Write File" << std::endl;
+                if (mode == FSERV_FILESEND) {
 
-                    // file_transfer += length;
-                    // std::cout << "Write File: " << file_transfer << "/" << length << "/" << filesize << std::endl;
+                    if (sendfile_mode == FSERV_FILE_DOWNLOAD) {
+                        write_file(length);
+                    }
+                    else if (sendfile_mode == FSERV_FILE_UPLOAD) {
+                        send_file();
+                    } else {
+                        // Unknown mode
+                        mode = FSERV_AUTH;
+                    }
 
-                    write_file(length);
+
                 } else {
                     read_length += length;
 
@@ -64,24 +82,10 @@ void FileServerSess::do_read()
 
                     }
                 }
-
-                // read_length += length;
-
-                // if (strstr(read_buf, "\xFF\xFF\xFF\xFF") != nullptr) {
-                    // binn_free(write_binn);
-                    // write_binn = binn_list();
-
-                    // std::string msg(read_buf, read_length-4);
-                    // binn_list_add_str(write_binn, &msg[0]);
-
-                    // read_length = 0;
-                    // memset(read_buf, 0, max_length-1);
-
-                    // do_write();
-                // }
             }
             else {
-                std::cout << "ERROR: " << ec << std::endl;
+                // std::cout << "ERROR: " << ec << std::endl;
+                std::cout << "ERROR! " << ec.category().name() << ": " << ec.message() << std::endl;
             }
     });
 }
@@ -103,9 +107,6 @@ void FileServerSess::response_msg(int snum, const char * sdesc, bool write)
 
 void FileServerSess::do_write()
 {
-    read_length = 0;
-    memset(read_buf, 0, max_length-1);
-
     auto self(shared_from_this());
     char sendbin[binn_size(write_binn)+5];
 	// char sendbin[10240];
@@ -116,12 +117,26 @@ void FileServerSess::do_write()
     memcpy(sendbin, (char*)binn_ptr(write_binn), binn_size(write_binn));
 
     len = append_end_symbols(&sendbin[0], binn_size(write_binn));
-    // std::cout << "SEND: " << sendbin << std::endl;
+
+    // LOG SENDBIN
+    // sleep(1);
+    // time_t curtime = time(0);
+    // std::string binlog = std::string("sendbinn_") + std::to_string(curtime) + std::string(".bin");
+    // std::ofstream binlog_file;
+    // binlog_file.open(binlog, std::ios_base::binary | std::ios_base::trunc);
+    // binlog_file.write(sendbin, len);
+    // \LOG SENDBIN
+
+    clear_write_vars();
+    // std::cout << "length:" << length << std::endl;
 
     boost::asio::async_write(socket_, boost::asio::buffer(sendbin, len),
         [this, self](boost::system::error_code ec, std::size_t) {
             if (!ec) {
                 do_read();
+            }
+            else {
+                std::cout << "SRAN ERROR!" << std::endl;
             }
     });
 }
@@ -129,7 +144,7 @@ void FileServerSess::do_write()
 void FileServerSess::clear_read_vars()
 {
     read_length = 0;
-    memset(read_buf, 0, max_length-1);
+    // memset(read_buf, 0, max_length-1);
 }
 
 void FileServerSess::clear_write_vars()
@@ -157,10 +172,11 @@ void FileServerSess::cmd_process()
 
         case FSERV_FILESEND: {
             // File send
-            filename = binn_list_str(read_binn, 2);
-            filesize = binn_list_uint64(read_binn, 3);
-            bool make_dir = binn_list_bool(read_binn, 4);
-            int chmod = binn_list_int16(read_binn, 5);
+            sendfile_mode = binn_list_uint8(read_binn, 2);
+            filename = binn_list_str(read_binn, 3);
+            filesize = binn_list_uint64(read_binn, 4);
+            bool make_dir = binn_list_bool(read_binn, 5);
+            int chmod = binn_list_int16(read_binn, 6);
 
             // Check
             // ...
@@ -169,10 +185,23 @@ void FileServerSess::cmd_process()
             // binn_list_add_uint32(write_binn, 100);
             // binn_list_add_str(write_binn, "OK");
 
-            mode = 3;
-            open_file();
+            std::cout << "sendfile_mode: " << sendfile_mode << std::endl;
+            std::cout << "filename: " << filename << std::endl;
+            std::cout << "filesize: " << filesize << std::endl;
+            std::cout << "make_dir: " << make_dir << std::endl;
+            std::cout << "chmod: " << chmod << std::endl;
 
-            write_ok();
+            mode = FSERV_FILESEND;
+
+            if (sendfile_mode == FSERV_FILE_DOWNLOAD) {
+                open_output_file();
+                write_ok();
+            } else if (sendfile_mode == FSERV_FILE_UPLOAD) {
+                open_input_file();
+                write_ok();
+            } else {
+                response_msg(1, "Unknown sendfile mode", true);
+            }
 
             break;
         };
@@ -270,7 +299,6 @@ void FileServerSess::cmd_process()
 
             write_ok();
 
-
             break;
         };
 
@@ -323,8 +351,6 @@ void FileServerSess::cmd_process()
 
             write_ok();
 
-            // delete file;
-
             break;
         };
 
@@ -336,11 +362,47 @@ void FileServerSess::cmd_process()
     }
 }
 
-void FileServerSess::open_file()
+void FileServerSess::open_input_file()
+{
+    input_file.open(filename, std::ios_base::binary);
+    if (!input_file) {
+        std::cout << "failed to open " << filename << std::endl;
+        return;
+    }
+
+    std::cout << "File opened: " << filename << std::endl;
+}
+
+void FileServerSess::send_file()
+{
+    char write_buf[max_length];
+    memset(write_buf, 0, max_length-1);
+
+    while (!input_file.eof()) {
+        input_file.read(write_buf, (std::streamsize)max_length);
+
+        if (boost::asio::write(socket_, boost::asio::buffer(write_buf, input_file.gcount()))) {
+
+        } else {
+
+        }
+    }
+
+    close_input_file();
+}
+
+void FileServerSess::close_input_file()
+{
+    input_file.close();
+    mode = FSERV_AUTH;
+}
+
+void FileServerSess::open_output_file()
 {
     output_file.open(filename, std::ios_base::binary);
+
     if (!output_file) {
-        std::cout << "failed to open " << filename << std::endl;
+        std::cerr << "failed to open " << filename << std::endl;
         return;
     }
 
@@ -349,30 +411,40 @@ void FileServerSess::open_file()
 
 void FileServerSess::write_file(size_t length)
 {
+    auto self(shared_from_this());
+
     if (output_file.eof() == false && output_file.tellp() < (std::streamsize)filesize) {
+        // std::cout << filename << " writed: " << output_file.tellp() << "/" << length << "/" << filesize << std::endl;
         output_file.write(read_buf, length);
-        // std::cout << "Write " << output_file.tellp() << "/" << filesize << std::endl;
-
+        
         if (output_file.tellp() >= (std::streamsize)filesize) {
-            std::cout << "File sended" << std::endl;
-            read_length = 0;
-            memset(read_buf, 0, max_length-1);
+            std::cout << "File sended: " << filename << std::endl;
 
-            close_file();
+            close_output_file();
+            clear_read_vars();
+
+            write_ok(); // Ready
         } else {
             do_read();
         }
 
     } else {
+        close_output_file();
         clear_read_vars();
-        close_file();
+
+        write_ok(); // Ready
     }
 }
 
-void FileServerSess::close_file()
+void FileServerSess::close_output_file()
 {
     output_file.close();
-    mode = 1;
+    mode = FSERV_AUTH;
+
+    filename = "";
+    filesize = 0;
+
+    std::cout << "File closed" << std::endl;
 }
 
 // ---------------------------------------------------------------------
