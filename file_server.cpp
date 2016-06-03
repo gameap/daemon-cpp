@@ -359,14 +359,14 @@ void FileServerSess::write_file(size_t length)
             memset(read_buf, 0, max_length-1);
 
             close_file();
+        } else {
+            do_read();
         }
 
     } else {
         clear_read_vars();
         close_file();
     }
-
-    do_read();
 }
 
 void FileServerSess::close_file()
