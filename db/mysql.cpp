@@ -6,6 +6,10 @@
 #include <winsock2.h>
 #endif
 
+#ifdef __GNUC__
+#include <unistd.h>
+#endif
+
 #include <mysql/mysql.h>
 
 #include <cstring>
@@ -16,8 +20,11 @@
 // #include <boost/any.hpp>
 #include "db.h"
 #include "../functions/gstring.h"
+#include "../dl.h"
 
-MYSQL conn, mysql;
+#pragma comment(lib, "advapi32")
+
+MYSQL *conn, mysql;
 MYSQL_RES *res;
 MYSQL_ROW row;
 
@@ -26,57 +33,98 @@ int query_state;
 // extern "C" DbDriver dbdriver;
 
 class MySQL : public Db {
+private:
+    bool blocked = false;
+    
+    void block()
+    {
+        // Wait for unblock
+        while(blocked) {
+            usleep(100000);
+        }
+
+        blocked = true;
+    }
+
+    void unblock()
+    {
+        blocked = false;
+    }
+    
 public:
     virtual int connect(const char *host, const char *user, const char *passwd, const char *db, unsigned int port)
     {
         my_bool reconnect = 1;
-        mysql_options(&conn, MYSQL_OPT_RECONNECT, &reconnect);
+        mysql_options(&mysql, MYSQL_OPT_RECONNECT, &reconnect);
 
-        mysql_real_connect(&conn, host, user, passwd, db, port, NULL, 0);
-    
-        if(mysql_errno(&conn)) {
-            fprintf(stdout, "Error: %s\n", mysql_error(&conn));
+        conn = mysql_real_connect(&mysql, host, user, passwd, db, port, NULL, 0);
+
+        if(mysql_errno(&mysql)) {
+            fprintf(stdout, "Error: %s\n", mysql_error(&mysql));
             return -1;
         }
 
         return 0;
     }
-    
+
     virtual std::string real_escape_string(const char * str)
     {
         char* from = new char[strlen(&str[0]) * 3 + 1];
-        mysql_real_escape_string(&conn, from, &str[0], strlen(str));
+        mysql_real_escape_string(&mysql, from, &str[0], strlen(str));
         return std::string(from);
     }
 
     virtual int query(const char * query)
     {
         std::string qstr = str_replace("{pref}", db_prefix, query);
-        if (mysql_query(&conn, &qstr[0]) != 0) {
-            std::cerr << "Query error: " << qstr << std::endl;
+
+        block();
+        std::cout << "Time Query: " << time(0) << std::endl;
+
+        if (conn == 0) {
+            fprintf(stderr, "MySQL: %s (%i)", mysql_error(&mysql), mysql_errno(&mysql));
             return -1;
         }
-
+        
+        if (mysql_query(&mysql, &qstr[0]) != 0) {
+            std::cerr << "Query error (" << mysql_error(&mysql) << "): " << qstr << std::endl;
+            unblock();
+            return -1;
+        }
+        
+        unblock();
         return 0;
     }
-    
+
     virtual int query(const char * query, db_elems *results)
     {
         std::string qstr = str_replace("{pref}", db_prefix, query);
-
+        block();
+        
         // std::cout << "query: " << qstr << std::endl;
 
-        if (mysql_ping(&conn) != 0) {
-            std::cerr << "MySQL server has gone away" << std::endl;
-        }
+        std::cout << "Time Query: " << time(0) << std::endl;
 
-        if (mysql_query(&conn, &qstr[0]) != 0) {
-            std::cerr << "Query error: " << qstr << std::endl;
+        if (conn == 0) {
+            fprintf(stderr, "MySQL: %s (%i)", mysql_error(&mysql), mysql_errno(&mysql));
             return -1;
         }
 
+        if (mysql_ping(&mysql) != 0) {
+            std::cerr << "MySQL server has gone away" << std::endl;
+        }
+
+        if (mysql_query(&mysql, &qstr[0]) != 0) {
+            unblock();
+            // std::cerr << "Query error: " << qstr << std::endl;
+            std::cerr << "Query error (" << mysql_error(&mysql) << "): " << qstr << std::endl;
+            return -1;
+        }
+
+        unblock();
+
         // Получаем дескриптор результирующей таблицы
-        res = mysql_store_result(&conn);
+        res = mysql_store_result(&mysql);
         if(res == NULL) {
             return -1;
         }
@@ -87,40 +135,41 @@ public:
         MYSQL_FIELD *fields;
 
         fields = mysql_fetch_fields(res);
-        
-        db_row * dbrow = new db_row;
+
+        db_row dbrow;
         while ((row = mysql_fetch_row(res)) != NULL) {
 
             for (int j = 0; j < results->num_fields; j++) {
                 // std::cout << fields[j].name << " : " << row[j] << std::endl;
-                dbrow->row.insert(std::pair<std::string,std::string>(fields[j].name, row[j]));
+                dbrow.row.insert(std::pair<std::string,std::string>(fields[j].name, row[j]));
             }
-            
-            results->rows.insert(results->rows.end(), *dbrow);
-            dbrow = nullptr;
-            
+
+            results->rows.insert(results->rows.end(), dbrow);
+            // dbrow = nullptr;
+
         }
 
-        delete dbrow;
+        // delete dbrow;
         // dbrow = nullptr;
 
         mysql_free_result(res);
-        
+
         return 0;
     }
-    
+
     virtual void close()
     {
-        mysql_close(&conn);
+        mysql_close(&mysql);
     }
 };
 
 // the class factories
-extern "C" Db* create() {
+C_DLLEXPORT Db* create() {
+	std::cout << "Export!" << std::endl;
     return new MySQL;
 }
 
-extern "C" void destroy(Db* p) {
+C_DLLEXPORT void destroy(Db* p) {
     delete p;
 }
 
