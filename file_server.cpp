@@ -182,7 +182,7 @@ void FileServerSess::cmd_process()
             if (sendfile_mode == FSERV_FILE_DOWNLOAD) {
                 filesize = binn_list_uint64(read_binn, 4);
                 bool make_dir = binn_list_bool(read_binn, 5);
-                int chmod = binn_list_int16(read_binn, 6);
+                int chmod = binn_list_uint16(read_binn, 6);
 
                 open_output_file();
                 write_ok();
@@ -422,6 +422,8 @@ void FileServerSess::write_file(size_t length)
 {
     auto self(shared_from_this());
 
+    std::cout << "Filesize: " << (std::streamsize)filesize << std::endl;
+
     if (output_file.eof() == false && output_file.tellp() < (std::streamsize)filesize) {
         output_file.write(read_buf, length);
 
@@ -437,6 +439,7 @@ void FileServerSess::write_file(size_t length)
         }
 
     } else {
+        std::cout << "Error" << std::endl;
         close_output_file();
         clear_read_vars();
 
