@@ -69,6 +69,7 @@ private:
     
 public:
     GameServer(ulong mserver_id);
+    
     ~GameServer() {
         std::cout << "Game Server Destruct" << std::endl;
     }
@@ -84,9 +85,7 @@ public:
 
     int get_game_server_load();
 
-    std::string get_cmd_output() {
-        return cmd_output;
-    }
+    size_t get_cmd_output(std::string * output, size_t position);
 };
 
 /* End namespace GameAP */

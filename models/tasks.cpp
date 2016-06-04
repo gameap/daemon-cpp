@@ -116,7 +116,9 @@ void Task::run()
 std::string Task::get_output()
 {
     if (server_id != 0 && gserver != nullptr) {
-        return gserver->get_cmd_output();
+        std::string output;
+        cur_outpos += gserver->get_cmd_output(&output, cur_outpos);
+        return output;
     }
 
     return "";

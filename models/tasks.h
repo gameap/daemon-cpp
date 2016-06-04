@@ -14,10 +14,11 @@ private:
     ulong task_id;
     ulong ds_id;
     ulong server_id;
-    const char * task;
+    char task[8];
     const char * data;
     const char * cmd;
-    char * output;
+
+    size_t cur_outpos;
     
     enum st {waiting = 1, working, error, success};
     ushort status;
@@ -30,10 +31,18 @@ public:
         task_id = mtask_id;
         ds_id = mds_id;
         server_id = mserver_id;
-        task = mtask;
+
+        ushort mcsz = strlen(mtask);
+        if (mcsz > 8) {
+            mcsz = 8;
+        }
+        memcpy(task, mtask, mcsz);
+        
         data = mdata;
         cmd = mcmd;
         status = mstatus;
+
+        cur_outpos = 0;
     }
 
     ~Task() {

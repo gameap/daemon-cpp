@@ -109,6 +109,14 @@ void GameServer::_append_cmd_output(std::string line)
 
 // ---------------------------------------------------------------------
 
+size_t GameServer::get_cmd_output(std::string * output, size_t position)
+{
+    *output = cmd_output.substr(position, cmd_output.size()-position);
+    return output->size();
+}
+
+// ---------------------------------------------------------------------
+
 void GameServer::replace_shortcodes(std::string &cmd)
 {
     cmd = str_replace("{dir}", work_path.string(), cmd);

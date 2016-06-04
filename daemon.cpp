@@ -45,6 +45,8 @@ int check_tasks()
 {
     TaskList& tasks = TaskList::getInstance();
 
+    
+    std::string output = "";
     while (true) {
         // Delete finished
         for (std::vector<Task *>::iterator it = tasks.begin(); !tasks.is_end(it); it = tasks.next(it)) {
@@ -53,23 +55,33 @@ int check_tasks()
                 || (**it).get_status() == TASK_ERROR
                 || (**it).get_status() == TASK_SUCCESS
             ) {
-                std::string output = (**it).get_output();
+                if (output == "") {
+                    output = (**it).get_output();
+                }
 
                 if (output != "") {
                     output = db->real_escape_string(&output[0]);
 
                     std::string qstr = str(
                         boost::format(
-                            "UPDATE `{pref}gdaemon_tasks` SET `output` = '%1%' WHERE `id` = %2%"
+                            "UPDATE `{pref}gdaemon_tasks` SET `output` = CONCAT(IFNULL(output,''), '%1%') WHERE `id` = %2%"
                         ) % output  % (**it).get_task_id()
                     );
-
-                    db->query(&qstr[0]);
+                    
+                    if (db->query(&qstr[0]) == 0) {
+                        output = "";
+                    }
                 }
             }
 
             if ((**it).get_status() == TASK_ERROR || (**it).get_status() == TASK_SUCCESS) {
-                tasks.delete_task(it);
+                if (output == "") {
+                    output = (**it).get_output();
+                }
+
+                if (output == "") {
+                    tasks.delete_task(it);
+                }
             }
         }
 
