@@ -45,6 +45,7 @@ int check_tasks()
 {
     TaskList& tasks = TaskList::getInstance();
 
+    std::vector<ulong> tasks_ended;
     std::vector<ulong> tasks_runned;
     boost::thread_group tasks_thrs;
 
