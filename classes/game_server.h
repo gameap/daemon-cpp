@@ -86,6 +86,27 @@ public:
     int get_game_server_load();
 
     size_t get_cmd_output(std::string * output, size_t position);
+    void clear_cmd_output();
+};
+
+// ---------------------------------------------------------------------
+
+class GameServersList {
+private:
+    std::map<ulong, GameServer *> servers_list;
+    
+    GameServersList() {}
+    GameServersList( const GameServersList&);  
+    GameServersList& operator=( GameServersList& );
+
+    int update_list();
+public:
+    static GameServersList& getInstance() {
+        static GameServersList instance;
+        return instance;
+    }
+
+    GameServer * get_server(ulong server_id);
 };
 
 /* End namespace GameAP */

@@ -75,6 +75,10 @@ GameServer::GameServer(ulong mserver_id)
         return;
     }
 
+    if (results.rows.size() <= 0) {
+        throw std::runtime_error("Server id not found");
+    }
+
     work_path = results.rows[0].row["work_path"];   // DS dir
     work_path /= results.rows[0].row["dir"];        // Game server dir
 
@@ -117,10 +121,18 @@ size_t GameServer::get_cmd_output(std::string * output, size_t position)
 
 // ---------------------------------------------------------------------
 
+void GameServer::clear_cmd_output()
+{
+    cmd_output = "";
+}
+
+// ---------------------------------------------------------------------
+
 void GameServer::replace_shortcodes(std::string &cmd)
 {
     cmd = str_replace("{dir}", work_path.string(), cmd);
     cmd = str_replace("{name}", screen_name, cmd);
+    cmd = str_replace("{screen_name}", screen_name, cmd);
     
     cmd = str_replace("{ip}", ip, cmd);
 
@@ -429,4 +441,54 @@ int GameServer::delete_server()
     }
 
     return 0;
+}
+
+// ---------------------------------------------------------------------
+
+int GameServersList::update_list()
+{
+    db_elems results;
+
+    if (db->query("SELECT `id` FROM `{pref}servers`", &results) == -1){
+        fprintf(stdout, "Error query\n");
+        return -1;
+    }
+
+    for (auto itv = results.rows.begin(); itv != results.rows.end(); ++itv) {
+            ulong server_id = (ulong)atoi(itv->row["id"].c_str());
+            
+            if (servers_list.find(server_id) == servers_list.end()) {
+                try {
+                    servers_list.insert(
+                        servers_list.end(),
+                        std::pair<ulong, GameServer *>(server_id, new GameServer(server_id))
+                    );
+                } catch (std::exception &e) {
+                    std::cerr << "GameServer #" << server_id << " insert error: " << e.what() << std::endl;
+                }
+            }
+    }
+
+    return 0;
+}
+
+// ---------------------------------------------------------------------
+
+GameServer * GameServersList::get_server(ulong server_id)
+{
+    if (servers_list.find(server_id) == servers_list.end()) {
+        if (update_list() == -1) {
+            return nullptr;
+        }
+
+        if (servers_list.find(server_id) == servers_list.end()) {
+            return nullptr;
+        }
+    }
+
+    if (servers_list[server_id] == nullptr) {
+        return nullptr;
+    }
+    
+    return servers_list[server_id];
 }
