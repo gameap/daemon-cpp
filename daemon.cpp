@@ -45,12 +45,24 @@ int check_tasks()
 {
     TaskList& tasks = TaskList::getInstance();
 
-    
+    std::vector<ulong> tasks_runned;
+    boost::thread_group tasks_thrs;
+
     std::string output = "";
     while (true) {
-        // Delete finished
+        tasks.update_list();
         for (std::vector<Task *>::iterator it = tasks.begin(); !tasks.is_end(it); it = tasks.next(it)) {
 
+            std::vector<ulong>::iterator run_it = std::find(tasks_runned.begin(), tasks_runned.end(), (**it).get_id());
+
+            if (run_it == tasks_runned.end()) {
+                tasks_thrs.create_thread([=]() {
+                    (**it).run();
+                });
+
+                tasks_runned.push_back((**it).get_id());
+            }
+            
             if ((**it).get_status() == TASK_WORKING
                 || (**it).get_status() == TASK_ERROR
                 || (**it).get_status() == TASK_SUCCESS
@@ -81,6 +93,8 @@ int check_tasks()
 
                 if (output == "") {
                     tasks.delete_task(it);
+                    
+                    tasks_runned.erase(run_it);
                 }
             }
         }
@@ -90,18 +104,6 @@ int check_tasks()
 		#else
 			sleep(5);
 		#endif
-    }
-}
-
-// ---------------------------------------------------------------------
-
-void daemon()
-{
-    TaskList& tasks = TaskList::getInstance();
-
-    tasks.update_list();
-    for (std::vector<Task *>::iterator it = tasks.begin(); !tasks.is_end(it); it = tasks.next(it)) {
-        (**it).run();
     }
 }
 
@@ -135,15 +137,8 @@ int main(int argc, char* argv[])
 
     DedicatedServer& deds = DedicatedServer::getInstance();
 
-    boost::thread_group daemon_thrs;
-
     while (true) {
         std::cout << "CICLE START" << std::endl;
-        // daemon();
-
-        daemon_thrs.create_thread([&]() {
-            daemon();
-        });
 
         deds.stats_process();
         deds.update_db();
