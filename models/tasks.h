@@ -37,11 +37,15 @@ public:
             mcsz = 8;
         }
         memcpy(task, mtask, mcsz);
+
+        if (mcsz < 8) {
+            task[mcsz] = '\0';
+        }
         
         data = mdata;
         cmd = mcmd;
         status = mstatus;
-
+        
         cur_outpos = 0;
     }
 
@@ -65,6 +69,11 @@ public:
     int get_status()
     {
         return status;
+    }
+
+    ulong get_id()
+    {
+        return task_id;
     }
     
     time_t get_time_started() {

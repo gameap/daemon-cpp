@@ -8,10 +8,6 @@ using namespace GameAP;
 
 void Task::run()
 {
-    std::cout << "Run task" << std::endl;
-    std::cout << "this task: " << task << std::endl;
-    std::cout << "Status: " << status << std::endl;
-
     if (status != waiting) {
         return;
     }
@@ -173,7 +169,7 @@ int TaskList::update_list()
                 itv->row["cmd"].c_str(),
                 (ushort)atoi(itv->row["status"].c_str())
             );
-
+            
             insert(task);
     }
     return 0;
@@ -191,7 +187,11 @@ void TaskList::insert(Task * task)
 
 std::vector<Task *>::iterator TaskList::begin()
 {
-    return tasklist.begin();
+    if (tasklist.size() <= 0) {
+        return tasklist.end();
+    } else {
+        return tasklist.begin();
+    }
 }
 
 
@@ -200,7 +200,7 @@ std::vector<Task *>::iterator TaskList::begin()
 std::vector<Task *>::iterator TaskList::next(std::vector<Task *>::iterator curit)
 {
     if (curit == tasklist.end()) {
-        return tasklist.begin();
+        return begin();
     }
 
     return ++curit;
