@@ -31,65 +31,69 @@ void Task::run()
     // }
 
     int result_status;
+
+    GameServersList& gslist = GameServersList::getInstance();
     
     if (! strcmp(task, "gsstart")) {
         try {
-            gserver = new GameServer(server_id);
+            gserver = gslist.get_server(server_id);
+            gserver->clear_cmd_output();
             result_status = gserver->start_server();
-            delete gserver;
             gserver = nullptr;
-        } catch (boost::filesystem::filesystem_error &e) {
+        } catch (std::exception &e) {
             status = error;
             std::cerr << "gsstart error: " << e.what() << std::endl;
         }
     }
     else if (! strcmp(task, "gsstop")) {
         try {
-            gserver = new GameServer(server_id);
+            gserver = gslist.get_server(server_id);
+            gserver->clear_cmd_output();
             result_status = gserver->stop_server();
-            delete gserver;
             gserver = nullptr;
-        } catch (boost::filesystem::filesystem_error &e) {
+        } catch (std::exception &e) {
             status = error;
             std::cerr << "gsstop error: " << e.what() << std::endl;
         }
     }
     else if (! strcmp(task, "gsrest")) {
         try {
-            gserver = new GameServer(server_id);
+            gserver = gslist.get_server(server_id);
+            gserver->clear_cmd_output();
             result_status = gserver->stop_server();
             result_status = gserver->start_server();
-            delete gserver;
             gserver = nullptr;
-        } catch (boost::filesystem::filesystem_error &e) {
+        } catch (std::exception &e) {
             status = error;
             std::cerr << "gsstop error: " << e.what() << std::endl;
         }
     }
     else if (!strcmp(task, "gsinst") || !strcmp(task, "gsupdate")) {
         try {
-            gserver = new GameServer(server_id);
+            gserver = gslist.get_server(server_id);
+            gserver->clear_cmd_output();
             result_status = gserver->update_server();
-            delete gserver;
             gserver = nullptr;
-        } catch (boost::filesystem::filesystem_error &e) {
+        } catch (std::exception &e) {
             status = error;
             std::cerr << "gsinst error: " << e.what() << std::endl;
         }
     }
     else if (! strcmp(task, "gsdelete")) {
         try {
-            gserver = new GameServer(server_id);
+            gserver = gslist.get_server(server_id);
+            gserver->clear_cmd_output();
             result_status = gserver->delete_server();
-            delete gserver;
             gserver = nullptr;
-        } catch (boost::filesystem::filesystem_error &e) {
+        } catch (std::exception &e) {
             status = error;
             std::cerr << "gsinst error: " << e.what() << std::endl;
         }
     }
     else if (! strcmp(task, "gsmove")) {
         // Move game server to other ds
+        gserver = gslist.get_server(server_id);
+        gserver->clear_cmd_output();
     }
     else if (! strcmp(task, "cmdexec")) {
         
