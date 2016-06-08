@@ -31,7 +31,6 @@ namespace GameAP {
 
 class GameServer {
 private:
-    std::string work_dir;
     std::string screen_name;
 
     ulong server_id;
@@ -50,6 +49,8 @@ private:
     std::string game_remrep;
     std::string gt_localrep;
     std::string gt_remrep;
+
+    pid_t last_pid;
 
     boost::filesystem::path work_path;
 
@@ -82,9 +83,10 @@ public:
     void replace_shortcodes(std::string &cmd);
     int start_server();
     int stop_server();
+    bool status_server();
 
     int get_game_server_load();
-
+    
     size_t get_cmd_output(std::string * output, size_t position);
     void clear_cmd_output();
 };

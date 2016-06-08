@@ -360,18 +360,20 @@ int GameServer::_exec(std::string cmd)
     boost::iostreams::file_descriptor_source source(out.source, boost::iostreams::close_handle);
     boost::iostreams::stream<boost::iostreams::file_descriptor_source> is(source);
     std::string s;
-    
-    std::cout << "Exec: " << cmd << std::endl;
-
-    size_t pid;
 
     child c = exec(cmd, out);
-    
+
+    #ifdef _WIN32
+        last_pid = c.proc_info.dwProcessId;
+    #elif __linux__
+        last_pid = c.pid;
+    #endif
+
     while (!is.eof()) {
         std::getline(is, s);
         _append_cmd_output(s);
     }
-
+    
     auto exit_code = wait_for_exit(c);
 
     return 0;
@@ -441,6 +443,52 @@ int GameServer::delete_server()
     }
 
     return 0;
+}
+
+// ---------------------------------------------------------------------
+
+bool GameServer::status_server()
+{
+    boost::filesystem::path p(work_path);
+    p /= "pid.txt";
+
+    char bufread[32];
+
+    std::ifstream pidfile;
+    pidfile.open(p.string(), std::ios::in);
+
+    if (!pidfile.good()) {
+        // std::cerr << "Pidfile error open" << std::endl;
+        return false;
+    }
+    
+    pidfile.getline(bufread, 32);
+    pidfile.close();
+    
+    ulong pid = atoi(bufread);
+    // std::cout << "bufread: " << bufread << std::endl;
+    // std::cout << "atoi(bufread): " << atoi(bufread) << std::endl;
+
+    bool active = false;
+    if (pid != 0) {
+        active = (kill(pid, 0) == 0) ? 1 : 0;
+    }
+
+    // std::cout << "Active: " << active << std::endl;
+    // std::cout << "Pid: " << pid << std::endl;
+    
+    std::string qstr = str(
+        boost::format("UPDATE `{pref}servers` SET `process_active` = '%1%', `last_process_check` = '%2%' WHERE `id` = %3%")
+            % (int)active
+            % time(0)
+            % server_id
+    );
+
+    if (db->query(&qstr[0]) == -1) {
+        std::cerr << "Update db error (status_server)" << std::endl;
+    }
+
+    return (bool)active;
 }
 
 // ---------------------------------------------------------------------
