@@ -77,9 +77,10 @@ public:
     virtual int query(const char * query)
     {
         std::string qstr = str_replace("{pref}", db_prefix, query);
-
         block();
-        std::cout << "Time Query: " << time(0) << std::endl;
+        
+        // std::cout << "Time Query: " << time(0) << std::endl;
+        // std::cout << "Query: " << qstr << std::endl;
 
         if (conn == 0) {
             fprintf(stderr, "MySQL: %s (%i)", mysql_error(&mysql), mysql_errno(&mysql));
@@ -100,10 +101,9 @@ public:
     {
         std::string qstr = str_replace("{pref}", db_prefix, query);
         block();
-        
-        // std::cout << "query: " << qstr << std::endl;
 
-        std::cout << "Time Query: " << time(0) << std::endl;
+        // std::cout << "Time Query: " << time(0) << std::endl;
+        // std::cout << "Query: " << qstr << std::endl;
 
         if (conn == 0) {
             fprintf(stderr, "MySQL: %s (%i)", mysql_error(&mysql), mysql_errno(&mysql));
@@ -136,17 +136,14 @@ public:
 
         fields = mysql_fetch_fields(res);
 
-        db_row dbrow;
         while ((row = mysql_fetch_row(res)) != NULL) {
-
+            db_row dbrow;
             for (int j = 0; j < results->num_fields; j++) {
                 // std::cout << fields[j].name << " : " << row[j] << std::endl;
                 dbrow.row.insert(std::pair<std::string,std::string>(fields[j].name, row[j]));
             }
 
             results->rows.insert(results->rows.end(), dbrow);
-            // dbrow = nullptr;
-
         }
 
         // delete dbrow;
