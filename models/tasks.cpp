@@ -39,6 +39,10 @@ void Task::run()
             gserver = gslist.get_server(server_id);
             gserver->clear_cmd_output();
             result_status = gserver->start_server();
+
+            sleep(1);
+            gserver->status_server();
+            
             gserver = nullptr;
         } catch (std::exception &e) {
             status = error;
@@ -50,6 +54,10 @@ void Task::run()
             gserver = gslist.get_server(server_id);
             gserver->clear_cmd_output();
             result_status = gserver->stop_server();
+            
+            sleep(1);
+            gserver->status_server();
+            
             gserver = nullptr;
         } catch (std::exception &e) {
             status = error;
@@ -62,6 +70,10 @@ void Task::run()
             gserver->clear_cmd_output();
             result_status = gserver->stop_server();
             result_status = gserver->start_server();
+
+            sleep(1);
+            gserver->status_server();
+            
             gserver = nullptr;
         } catch (std::exception &e) {
             status = error;
@@ -84,6 +96,7 @@ void Task::run()
             gserver = gslist.get_server(server_id);
             gserver->clear_cmd_output();
             result_status = gserver->delete_server();
+            
             gserver = nullptr;
         } catch (std::exception &e) {
             status = error;
