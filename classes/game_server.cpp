@@ -94,13 +94,23 @@ GameServer::GameServer(ulong mserver_id)
     gt_localrep    = results.rows[0].row["gt_local_repository"];
     gt_remrep      = results.rows[0].row["gt_remote_repository"];
 
-    Json::Value jaliases;
+    try {
+        Json::Value jaliases;
 
-    Json::Reader jreader(Json::Features::strictMode());
-    jreader.parse(results.rows[0].row["aliases"], jaliases, false);
+        Json::Reader jreader(Json::Features::strictMode());
+        jreader.parse(results.rows[0].row["aliases"], jaliases, false);
 
-    for( Json::ValueIterator itr = jaliases.begin() ; itr != jaliases.end() ; itr++ ) {
-        aliases.insert(std::pair<std::string, std::string>(itr.key().asString(), (*itr).asString()));
+        for( Json::ValueIterator itr = jaliases.begin() ; itr != jaliases.end() ; itr++ ) {
+            if ((*itr).isString()) {
+                aliases.insert(std::pair<std::string, std::string>(itr.key().asString(), (*itr).asString()));
+            }
+            else if ((*itr).isInt()) {
+                aliases.insert(std::pair<std::string, std::string>(itr.key().asString(), std::to_string((*itr).asInt())));
+            }
+        }
+    }
+    catch (std::exception &e) {
+        std::cerr << "Aliases error: " << e.what() << std::endl;
     }
 }
 
@@ -115,7 +125,12 @@ void GameServer::_append_cmd_output(std::string line)
 
 size_t GameServer::get_cmd_output(std::string * output, size_t position)
 {
-    *output = cmd_output.substr(position, cmd_output.size()-position);
+    if (position > cmd_output.size()) {
+        std::cerr << "Incorrect position" << std::endl;
+        return 0;
+    }
+
+    output->append(cmd_output.substr(position, cmd_output.size()-position));
     return output->size();
 }
 
@@ -123,7 +138,7 @@ size_t GameServer::get_cmd_output(std::string * output, size_t position)
 
 void GameServer::clear_cmd_output()
 {
-    cmd_output = "";
+    cmd_output.clear();
 }
 
 // ---------------------------------------------------------------------
@@ -353,6 +368,7 @@ int GameServer::_unpack_archive(boost::filesystem::path const & archive)
 
 int GameServer::_exec(std::string cmd)
 {
+    std::cout << "CMD Exec: " << cmd << std::endl;
     _append_cmd_output("CMD# " + cmd);
 
     boost::process::pipe out = boost::process::create_pipe();
@@ -497,24 +513,24 @@ int GameServersList::update_list()
 {
     db_elems results;
 
-    if (db->query("SELECT `id` FROM `{pref}servers`", &results) == -1){
+    if (db->query("SELECT `id`FROM `{pref}servers`", &results) == -1) {
         fprintf(stdout, "Error query\n");
         return -1;
     }
 
     for (auto itv = results.rows.begin(); itv != results.rows.end(); ++itv) {
-            ulong server_id = (ulong)atoi(itv->row["id"].c_str());
-            
-            if (servers_list.find(server_id) == servers_list.end()) {
-                try {
-                    servers_list.insert(
-                        servers_list.end(),
-                        std::pair<ulong, GameServer *>(server_id, new GameServer(server_id))
-                    );
-                } catch (std::exception &e) {
-                    std::cerr << "GameServer #" << server_id << " insert error: " << e.what() << std::endl;
-                }
+        ulong server_id = (ulong)atoi(itv->row["id"].c_str());
+
+        if (servers_list.find(server_id) == servers_list.end()) {
+            try {
+                servers_list.insert(
+                    servers_list.end(),
+                    std::pair<ulong, GameServer *>(server_id, new GameServer(server_id))
+                );
+            } catch (std::exception &e) {
+                std::cerr << "GameServer #" << server_id << " insert error: " << e.what() << std::endl;
             }
+        }
     }
 
     return 0;
