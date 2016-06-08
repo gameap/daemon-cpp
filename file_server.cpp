@@ -225,12 +225,6 @@ void FileServerSess::cmd_process()
                 break;
             }
 
-			#ifdef __GNUC__
-				chdir(dir);
-			#elif _WIN32
-				_chdir(dir);
-			#endif
-
             binn *files_binn = binn_list();
             binn *file_info = binn_list();
 
@@ -261,7 +255,7 @@ void FileServerSess::cmd_process()
 							std::cout << "error stat (" << errno << "): " << strerror(errno) << std::endl;
 						}
 					#else
-						if (lstat(dirp->d_name, &stat_buf) == 0) {
+						if (lstat(std::string(std::string(dir) + "/" + std::string(dirp->d_name)).c_str(), &stat_buf) == 0) {
 
 							binn_list_add_uint64(file_info, stat_buf.st_size);
 							binn_list_add_uint64(file_info, stat_buf.st_atime);
