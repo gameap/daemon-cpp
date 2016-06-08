@@ -37,6 +37,11 @@ void Task::run()
     if (! strcmp(task, "gsstart")) {
         try {
             gserver = gslist.get_server(server_id);
+
+            if (gserver == nullptr) {
+                throw std::runtime_error("gslist.get_server error");
+            }
+            
             gserver->clear_cmd_output();
             result_status = gserver->start_server();
 
@@ -52,6 +57,11 @@ void Task::run()
     else if (! strcmp(task, "gsstop")) {
         try {
             gserver = gslist.get_server(server_id);
+            
+            if (gserver == nullptr) {
+                throw std::runtime_error("gslist.get_server error");
+            }
+            
             gserver->clear_cmd_output();
             result_status = gserver->stop_server();
             
@@ -67,6 +77,11 @@ void Task::run()
     else if (! strcmp(task, "gsrest")) {
         try {
             gserver = gslist.get_server(server_id);
+            
+            if (gserver == nullptr) {
+                throw std::runtime_error("gslist.get_server error");
+            }
+            
             gserver->clear_cmd_output();
             result_status = gserver->stop_server();
             result_status = gserver->start_server();
@@ -83,6 +98,11 @@ void Task::run()
     else if (!strcmp(task, "gsinst") || !strcmp(task, "gsupdate")) {
         try {
             gserver = gslist.get_server(server_id);
+            
+            if (gserver == nullptr) {
+                throw std::runtime_error("gslist.get_server error");
+            }
+            
             gserver->clear_cmd_output();
             result_status = gserver->update_server();
             gserver = nullptr;
@@ -94,6 +114,11 @@ void Task::run()
     else if (! strcmp(task, "gsdelete")) {
         try {
             gserver = gslist.get_server(server_id);
+            
+            if (gserver == nullptr) {
+                throw std::runtime_error("gslist.get_server error");
+            }
+            
             gserver->clear_cmd_output();
             result_status = gserver->delete_server();
             
