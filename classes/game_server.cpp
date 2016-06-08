@@ -123,15 +123,10 @@ void GameServer::_append_cmd_output(std::string line)
 
 // ---------------------------------------------------------------------
 
-size_t GameServer::get_cmd_output(std::string * output, size_t position)
+// size_t GameServer::get_cmd_output(std::string * output, size_t position)
+std::string * GameServer::get_cmd_output()
 {
-    if (position > cmd_output.size()) {
-        std::cerr << "Incorrect position" << std::endl;
-        return 0;
-    }
-
-    output->append(cmd_output.substr(position, cmd_output.size()-position));
-    return output->size();
+    return &cmd_output;
 }
 
 // ---------------------------------------------------------------------
@@ -387,7 +382,7 @@ int GameServer::_exec(std::string cmd)
 
     while (!is.eof()) {
         std::getline(is, s);
-        _append_cmd_output(s);
+        cmd_output.append(s + "\n");
     }
     
     auto exit_code = wait_for_exit(c);
@@ -523,9 +518,10 @@ int GameServersList::update_list()
 
         if (servers_list.find(server_id) == servers_list.end()) {
             try {
+                GameServer * gserver = new GameServer(server_id);
                 servers_list.insert(
                     servers_list.end(),
-                    std::pair<ulong, GameServer *>(server_id, new GameServer(server_id))
+                    std::pair<ulong, GameServer *>(server_id, gserver)
                 );
             } catch (std::exception &e) {
                 std::cerr << "GameServer #" << server_id << " insert error: " << e.what() << std::endl;
@@ -553,6 +549,8 @@ GameServer * GameServersList::get_server(ulong server_id)
     if (servers_list[server_id] == nullptr) {
         return nullptr;
     }
+
+    std::cout << "server ptr: " << servers_list[server_id] << std::endl;
     
     return servers_list[server_id];
 }
