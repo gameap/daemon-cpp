@@ -17,7 +17,7 @@ void Task::run()
 
     std::string qstr;
 
-    qstr = str(boost::format("UPDATE `{pref}gdaemon_tasks` SET `status` = 'working' WHERE `id` = %1%") % task_id);
+    qstr = str(boost::format("UPDATE `{pref}gdaemon_tasks` SET `status` = 'working', `time_stchange` = %1% WHERE `id` = %2%") % time(0) % task_id);
     db->query(&qstr[0]);
     
     // if (db->query(
@@ -139,12 +139,12 @@ void Task::run()
 
     if (result_status == -1) {
         status = error;
-        qstr = str(boost::format("UPDATE `{pref}gdaemon_tasks` SET `status` = 'error' WHERE `id` = %1%") % task_id);
+        qstr = str(boost::format("UPDATE `{pref}gdaemon_tasks` SET `status` = 'error', `time_stchange` = %1% WHERE `id` = %2%") % time(0) % task_id);
         db->query(&qstr[0]);
     }
     else {
         status = success;
-        qstr = str(boost::format("UPDATE `{pref}gdaemon_tasks` SET `status` = 'success' WHERE `id` = %1%") % task_id);
+        qstr = str(boost::format("UPDATE `{pref}gdaemon_tasks` SET `status` = 'success', `time_stchange` = %1%  WHERE `id` = %2%") % time(0) % task_id);
         db->query(&qstr[0]);
     }
 }
