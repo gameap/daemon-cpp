@@ -51,10 +51,6 @@ public:
 
     ~Task() {
         std::cout << "Task destructor" << std::endl;
-
-        if (gserver != nullptr) {
-            delete gserver;
-        }
     }
     
     // void start(ulong task_id, ulong ds_id, ulong server_id, char task[8], char * data, char * cmd);

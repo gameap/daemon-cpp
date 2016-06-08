@@ -48,7 +48,7 @@ void Task::run()
             sleep(1);
             gserver->status_server();
             
-            gserver = nullptr;
+            // gserver = nullptr;
         } catch (std::exception &e) {
             status = error;
             std::cerr << "gsstart error: " << e.what() << std::endl;
@@ -68,7 +68,7 @@ void Task::run()
             sleep(1);
             gserver->status_server();
             
-            gserver = nullptr;
+            // gserver = nullptr;
         } catch (std::exception &e) {
             status = error;
             std::cerr << "gsstop error: " << e.what() << std::endl;
@@ -89,7 +89,7 @@ void Task::run()
             sleep(1);
             gserver->status_server();
             
-            gserver = nullptr;
+            // gserver = nullptr;
         } catch (std::exception &e) {
             status = error;
             std::cerr << "gsstop error: " << e.what() << std::endl;
@@ -122,7 +122,7 @@ void Task::run()
             gserver->clear_cmd_output();
             result_status = gserver->delete_server();
             
-            gserver = nullptr;
+            // gserver = nullptr;
         } catch (std::exception &e) {
             status = error;
             std::cerr << "gsinst error: " << e.what() << std::endl;
@@ -154,9 +154,13 @@ void Task::run()
 std::string Task::get_output()
 {
     if (server_id != 0 && gserver != nullptr) {
-        std::string output;
-        cur_outpos += gserver->get_cmd_output(&output, cur_outpos);
-        return output;
+        std::string * output;
+        output = gserver->get_cmd_output();
+
+        std::string output_part = output->substr(cur_outpos, output->size());
+        cur_outpos += (output->size() - cur_outpos);
+
+        return output_part;
     }
 
     return "";
@@ -197,8 +201,6 @@ int TaskList::update_list()
         fprintf(stdout, "Error query\n");
         return -1;
     }
-
-    // _clear_tasklist();
 
     // Task tasks;
     for (auto itv = results.rows.begin(); itv != results.rows.end(); ++itv) {
