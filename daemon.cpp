@@ -45,18 +45,23 @@ int check_tasks()
 {
     TaskList& tasks = TaskList::getInstance();
 
-    std::vector<ulong> tasks_ended;
-    std::vector<ulong> tasks_runned;
-    boost::thread_group tasks_thrs;
+    std::vector<ulong>      servers_working;
+    std::vector<ulong>      tasks_ended;
+    std::vector<ulong>      tasks_runned;
+    
+    boost::thread_group     tasks_thrs;
 
     std::string output = "";
     while (true) {
         tasks.update_list();
         for (std::vector<Task *>::iterator it = tasks.begin(); !tasks.is_end(it); it = tasks.next(it)) {
 
-            std::vector<ulong>::iterator run_it = std::find(tasks_runned.begin(), tasks_runned.end(), (**it).get_id());
+            std::vector<ulong>::iterator run_it     = std::find(tasks_runned.begin(), tasks_runned.end(), (**it).get_id());
+            std::vector<ulong>::iterator swork_it    = std::find(servers_working.begin(), servers_working.end(), (**it).get_server_id());
 
+            // Run task
             if ((**it).get_status() == TASK_WAITING
+                && swork_it == servers_working.end()
                 && run_it == tasks_runned.end()
                 && ((**it).run_after() == 0
                     || ((**it).run_after() != 0
@@ -64,6 +69,10 @@ int check_tasks()
                     )
                 )
             ) {
+                if ((**it).get_server_id() != 0) {
+                    servers_working.push_back((**it).get_server_id());
+                }
+                
                 tasks_thrs.create_thread([=]() {
                     std::cout << "Task ptr: " << *it << std::endl;
                     (**it).run();
@@ -71,7 +80,8 @@ int check_tasks()
 
                 tasks_runned.push_back((**it).get_id());
             }
-            
+
+            // Check task
             if ((**it).get_status() == TASK_WORKING
                 || (**it).get_status() == TASK_ERROR
                 || (**it).get_status() == TASK_SUCCESS
@@ -95,6 +105,7 @@ int check_tasks()
                 }
             }
 
+            // End task. Erase data
             if ((**it).get_status() == TASK_ERROR || (**it).get_status() == TASK_SUCCESS) {
                 if (output == "") {
                     output = (**it).get_output();
@@ -104,6 +115,7 @@ int check_tasks()
                     tasks.delete_task(it);
                     tasks_ended.push_back((**it).get_id());
                     tasks_runned.erase(run_it);
+                    servers_working.erase(swork_it);
                 }
             }
         }
