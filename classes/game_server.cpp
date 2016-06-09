@@ -94,6 +94,9 @@ GameServer::GameServer(ulong mserver_id)
     gt_localrep    = results.rows[0].row["gt_local_repository"];
     gt_remrep      = results.rows[0].row["gt_remote_repository"];
 
+    cmd_output      = "";
+    block           = false;
+
     try {
         Json::Value jaliases;
 
@@ -112,6 +115,24 @@ GameServer::GameServer(ulong mserver_id)
     catch (std::exception &e) {
         std::cerr << "Aliases error: " << e.what() << std::endl;
     }
+}
+
+// ---------------------------------------------------------------------
+
+void GameServer::set_block()
+{
+    while(block) {
+        usleep(100);
+    }
+
+    block = true;
+}
+
+// ---------------------------------------------------------------------
+
+void GameServer::unset_block()
+{
+    block = false;
 }
 
 // ---------------------------------------------------------------------
@@ -170,11 +191,14 @@ void GameServer::replace_shortcodes(std::string &cmd)
 
 int GameServer::start_server()
 {
+    set_block();
+
     DedicatedServer& deds = DedicatedServer::getInstance();
     std::string cmd  = str_replace("{command}", start_command, deds.get_script_cmd(DS_SCRIPT_START));
     replace_shortcodes(cmd);
 
     int result = _exec(cmd);
+    unset_block();
     
     if (result == -1) {
         return -1;
@@ -187,13 +211,16 @@ int GameServer::start_server()
 
 int GameServer::stop_server()
 {
+    set_block();
+
     DedicatedServer& deds = DedicatedServer::getInstance();
     // std::string cmd  = str_replace("{command}", "", deds.get_script_cmd(DS_SCRIPT_STOP));
     std::string cmd  = deds.get_script_cmd(DS_SCRIPT_STOP);
     replace_shortcodes(cmd);
 
     int result = _exec(cmd);
-
+    unset_block();
+    
     if (result == -1) {
         return -1;
     } else {
@@ -205,6 +232,8 @@ int GameServer::stop_server()
 
 int GameServer::update_server()
 {
+    set_block();
+
     // Update installed = 2. In process
     {
         std::string qstr = str(boost::format(
@@ -230,6 +259,7 @@ int GameServer::update_server()
     else {
         // No Source to install =(
         std::cerr << "No source to intall" << std::endl;
+        unset_block();
         return -1;
     }
 
@@ -292,6 +322,7 @@ int GameServer::update_server()
         std::string cmd = str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % work_path.string());
 
         if (_exec(cmd) == -1) {
+            unset_block();
             return -1;
         }
         
@@ -341,6 +372,7 @@ int GameServer::update_server()
         std::string cmd = str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % work_path.string());
 
         if (_exec(cmd) == -1) {
+            unset_block();
             return -1;
         }
         
@@ -359,10 +391,12 @@ int GameServer::update_server()
         
         if (db->query(&qstr[0]) == -1) {
             fprintf(stdout, "Error query\n");
+            unset_block();
             return -1;
         }
     }
 
+    unset_block();
     return 0;
 }
 
@@ -472,6 +506,7 @@ bool GameServer::_copy_dir(
 int GameServer::delete_server()
 {
     try {
+        std::cout << "Remove path: " << work_path << std::endl;
         boost::filesystem::remove_all(work_path);
     }
     catch (boost::filesystem::filesystem_error &e) {
