@@ -12,6 +12,8 @@ namespace GameAP {
 class Task {
 private:
     ulong task_id;
+    ulong task_run_after;
+    
     ulong ds_id;
     ulong server_id;
     char task[8];
@@ -57,10 +59,6 @@ public:
 
     void run();
     std::string get_output();
-    
-    ulong get_task_id() {
-        return task_id;
-    }
 
     int get_status()
     {
@@ -70,6 +68,17 @@ public:
     ulong get_id()
     {
         return task_id;
+    }
+
+    ulong run_after(ulong aft)
+    {
+        task_run_after = aft;
+        return task_run_after;
+    }
+
+    ulong run_after()
+    {
+        return task_run_after;
     }
     
     time_t get_time_started() {
@@ -84,6 +93,7 @@ private:
     enum st {waiting = 1, working, error, success};
     
     std::vector<Task *>tasklist;
+    std::vector<ulong>taskids;
 
     void _clear_tasklist();
     

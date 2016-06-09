@@ -30,6 +30,8 @@ void Task::run()
         // return -1;
     // }
 
+    std::cout << "task: " << task << std::endl;
+
     int result_status;
 
     GameServersList& gslist = GameServersList::getInstance();
@@ -95,7 +97,7 @@ void Task::run()
             std::cerr << "gsstop error: " << e.what() << std::endl;
         }
     }
-    else if (!strcmp(task, "gsinst") || !strcmp(task, "gsupdate")) {
+    else if (!strcmp(task, "gsinst") || !strcmp(task, "gsupd")) {
         try {
             gserver = gslist.get_server(server_id);
             
@@ -105,13 +107,13 @@ void Task::run()
             
             gserver->clear_cmd_output();
             result_status = gserver->update_server();
-            gserver = nullptr;
+            // gserver = nullptr;
         } catch (std::exception &e) {
             status = error;
             std::cerr << "gsinst error: " << e.what() << std::endl;
         }
     }
-    else if (! strcmp(task, "gsdelete")) {
+    else if (! strcmp(task, "gsdel")) {
         try {
             gserver = gslist.get_server(server_id);
             
@@ -125,7 +127,7 @@ void Task::run()
             // gserver = nullptr;
         } catch (std::exception &e) {
             status = error;
-            std::cerr << "gsinst error: " << e.what() << std::endl;
+            std::cerr << "gsdelete error: " << e.what() << std::endl;
         }
     }
     else if (! strcmp(task, "gsmove")) {
@@ -136,15 +138,19 @@ void Task::run()
     else if (! strcmp(task, "cmdexec")) {
         
     }
+    else {
+        // Unknown task
+        result_status = -1;
+    }
 
-    if (result_status == -1) {
-        status = error;
-        qstr = str(boost::format("UPDATE `{pref}gdaemon_tasks` SET `status` = 'error', `time_stchange` = %1% WHERE `id` = %2%") % time(0) % task_id);
+    if (result_status == 0) {
+        status = success;
+        qstr = str(boost::format("UPDATE `{pref}gdaemon_tasks` SET `status` = 'success', `time_stchange` = %1%  WHERE `id` = %2%") % time(0) % task_id);
         db->query(&qstr[0]);
     }
     else {
-        status = success;
-        qstr = str(boost::format("UPDATE `{pref}gdaemon_tasks` SET `status` = 'success', `time_stchange` = %1%  WHERE `id` = %2%") % time(0) % task_id);
+        status = error;
+        qstr = str(boost::format("UPDATE `{pref}gdaemon_tasks` SET `status` = 'error', `time_stchange` = %1% WHERE `id` = %2%") % time(0) % task_id);
         db->query(&qstr[0]);
     }
 }
@@ -156,6 +162,10 @@ std::string Task::get_output()
     if (server_id != 0 && gserver != nullptr) {
         std::string * output;
         output = gserver->get_cmd_output();
+
+        std::cout << "output: " << output << std::endl;
+        std::cout << "cur_outpos: " << cur_outpos << std::endl;
+        std::cout << "output->size(): " << output->size() << std::endl;
 
         std::string output_part = output->substr(cur_outpos, output->size());
         cur_outpos += (output->size() - cur_outpos);
@@ -180,6 +190,13 @@ void TaskList::_clear_tasklist()
 
 int TaskList::delete_task(std::vector<Task *>::iterator it)
 {
+    ulong task_id = (*it)->get_id();
+    
+    std::vector<ulong>::iterator idit = std::find(taskids.begin(), taskids.end(), task_id);
+    if (idit != taskids.end()) {
+        taskids.erase(idit);
+    }
+    
     delete *it;
     tasklist.erase(it);
 
@@ -193,7 +210,7 @@ int TaskList::update_list()
     db_elems results;
 
     if (db->query(
-        "SELECT `id`, `ds_id`, `server_id`, `task`, `data`, `cmd`, status+0 AS status\
+        "SELECT `id`, `run_aft_id`, `ds_id`, `server_id`, `task`, `data`, `cmd`, status+0 AS status\
             FROM `{pref}gdaemon_tasks`\
             WHERE `status` = 'waiting'",
         &results) == -1
@@ -204,8 +221,13 @@ int TaskList::update_list()
 
     // Task tasks;
     for (auto itv = results.rows.begin(); itv != results.rows.end(); ++itv) {
+            ulong task_id = (ulong)atoi(itv->row["id"].c_str());
+            if (std::find(taskids.begin(), taskids.end(), task_id) != taskids.end()) {
+                continue;
+            }
+             
             Task * task = new Task(
-                (ulong)atoi(itv->row["id"].c_str()),
+                task_id,
                 (ulong)atoi(itv->row["ds_id"].c_str()),
                 (ulong)atoi(itv->row["server_id"].c_str()),
                 itv->row["task"].c_str(),
@@ -213,9 +235,18 @@ int TaskList::update_list()
                 itv->row["cmd"].c_str(),
                 (ushort)atoi(itv->row["status"].c_str())
             );
+
+            if (itv->row["run_aft_id"] != "") {
+                task->run_after((ulong)atoi(itv->row["run_aft_id"].c_str()));
+            } else {
+                task->run_after(0);
+            }
             
             insert(task);
     }
+
+    std::cout << "Tasks count: " << tasklist.size() << std::endl;
+    
     return 0;
 }
 
@@ -224,6 +255,7 @@ int TaskList::update_list()
 void TaskList::insert(Task * task)
 {
     tasklist.push_back(task);
+    taskids.push_back(task->get_id());
     // it = tasklist.begin();
 }
 

@@ -56,8 +56,16 @@ int check_tasks()
 
             std::vector<ulong>::iterator run_it = std::find(tasks_runned.begin(), tasks_runned.end(), (**it).get_id());
 
-            if (run_it == tasks_runned.end()) {
+            if ((**it).get_status() == TASK_WAITING
+                && run_it == tasks_runned.end()
+                && ((**it).run_after() == 0
+                    || ((**it).run_after() != 0
+                        && std::find(tasks_ended.begin(), tasks_ended.end(), (**it).get_id()) != tasks_ended.end()
+                    )
+                )
+            ) {
                 tasks_thrs.create_thread([=]() {
+                    std::cout << "Task ptr: " << *it << std::endl;
                     (**it).run();
                 });
 
@@ -78,7 +86,7 @@ int check_tasks()
                     std::string qstr = str(
                         boost::format(
                             "UPDATE `{pref}gdaemon_tasks` SET `output` = CONCAT(IFNULL(output,''), '%1%') WHERE `id` = %2%"
-                        ) % output  % (**it).get_task_id()
+                        ) % output  % (**it).get_id()
                     );
                     
                     if (db->query(&qstr[0]) == 0) {
@@ -94,7 +102,7 @@ int check_tasks()
 
                 if (output == "") {
                     tasks.delete_task(it);
-                    
+                    tasks_ended.push_back((**it).get_id());
                     tasks_runned.erase(run_it);
                 }
             }
@@ -133,14 +141,12 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    boost::thread thr1(check_tasks);
+    boost::thread ctsk_thr(check_tasks);
     boost::thread daemon_server(run_server, config.listen_port);
 
     DedicatedServer& deds = DedicatedServer::getInstance();
 
     while (true) {
-        std::cout << "CICLE START" << std::endl;
-
         deds.stats_process();
         deds.update_db();
 
