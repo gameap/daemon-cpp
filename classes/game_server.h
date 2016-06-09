@@ -57,17 +57,12 @@ private:
     std::string cmd_output;
 
     int _unpack_archive(boost::filesystem::path const & archive);
-
-    bool block;
     
     bool _copy_dir(
         boost::filesystem::path const & source,
         boost::filesystem::path const & destination
     );
 
-    void set_block();
-    void unset_block();
-    
     int _exec(std::string cmd);
     boost::process::child __exec(std::string cmd, boost::process::pipe &out);
     
