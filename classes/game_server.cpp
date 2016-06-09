@@ -205,6 +205,19 @@ int GameServer::stop_server()
 
 int GameServer::update_server()
 {
+    // Update installed = 2. In process
+    {
+        std::string qstr = str(boost::format(
+            "UPDATE {pref}servers SET `installed` = 2\
+                WHERE {pref}servers.`id` = %1%"
+        ) % server_id);
+        
+        if (db->query(&qstr[0]) == -1) {
+            fprintf(stdout, "Error query\n");
+            return -1;
+        }
+    }
+
     std::cout << "Update Start" << std::endl;
 
     ushort game_install_from =  INST_NO_SOURCE;
@@ -337,6 +350,19 @@ int GameServer::update_server()
         boost::filesystem::remove(archive);
     }
 
+    // Update installed = 1
+    {
+        std::string qstr = str(boost::format(
+            "UPDATE {pref}servers SET `installed` = 1\
+                WHERE {pref}servers.`id` = %1%"
+        ) % server_id);
+        
+        if (db->query(&qstr[0]) == -1) {
+            fprintf(stdout, "Error query\n");
+            return -1;
+        }
+    }
+
     return 0;
 }
 
@@ -364,7 +390,7 @@ int GameServer::_unpack_archive(boost::filesystem::path const & archive)
 int GameServer::_exec(std::string cmd)
 {
     std::cout << "CMD Exec: " << cmd << std::endl;
-    _append_cmd_output("CMD# " + cmd);
+    _append_cmd_output(boost::filesystem::current_path().string() + "# " + cmd);
 
     boost::process::pipe out = boost::process::create_pipe();
 
@@ -482,7 +508,9 @@ bool GameServer::status_server()
 
     bool active = false;
     if (pid != 0) {
-        active = (kill(pid, 0) == 0) ? 1 : 0;
+        #ifdef __linux__
+            active = (kill(pid, 0) == 0) ? 1 : 0;
+        #endif
     }
 
     // std::cout << "Active: " << active << std::endl;
