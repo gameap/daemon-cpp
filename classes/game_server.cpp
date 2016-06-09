@@ -505,6 +505,8 @@ bool GameServer::_copy_dir(
 
 int GameServer::delete_server()
 {
+    set_block();
+
     try {
         std::cout << "Remove path: " << work_path << std::endl;
         boost::filesystem::remove_all(work_path);
@@ -513,7 +515,8 @@ int GameServer::delete_server()
         std::cerr << "Error remove: " << e.what() << std::endl;
         return -1;
     }
-
+    
+    unset_block();
     return 0;
 }
 
