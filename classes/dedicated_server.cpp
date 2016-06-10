@@ -9,7 +9,19 @@
 #ifdef _WIN32
     #include <windows.h>
     #include <stdio.h>
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
+    #include <iphlpapi.h>
+
+    #define MALLOC(x) HeapAlloc(GetProcessHeap(), 0, (x))
+    #define FREE(x) HeapFree(GetProcessHeap(), 0, (x))
+
+    #ifdef _MSC_VER
+		#pragma comment(lib, "iphlpapi.lib")
+	#endif
 #endif // _WIN32
+
+#define _WIN32
 
 using namespace GameAP;
 
@@ -37,6 +49,9 @@ DedicatedServer::DedicatedServer()
         GlobalMemoryStatusEx (&statex);
 
         ram_total = statex.ullTotalPhys;
+
+        // Check interfaces
+        interfaces.push_back("all");
 	#elif __linux__
 
         struct sysinfo sysi;
@@ -50,10 +65,10 @@ DedicatedServer::DedicatedServer()
                 interfaces.push_back(*it);
             }
         }
-        std::map<std::string, ds_iftstats> ifstats;
-        get_net_load(ifstats);
-
 	#endif
+
+    std::map<std::string, ds_iftstats> ifstats;
+    get_net_load(ifstats);
 
 	std::vector<float> cpu_percent;
     get_cpu_load(cpu_percent);
@@ -120,6 +135,9 @@ int DedicatedServer::stats_process()
         GlobalMemoryStatusEx (&statex);
 
         cur_stats.ram_us = statex.ullTotalPhys - statex.ullAvailPhys;
+
+        // Get if stat
+        get_net_load(cur_stats.ifstats);
     #elif __linux__
         getloadavg(cur_stats.loa, 3);
 
@@ -131,6 +149,8 @@ int DedicatedServer::stats_process()
 
         // Get ram load
         cur_stats.ram_us = sysi.totalram - sysi.freeram;
+
+        std::cout << "bufferram: " << sysi.bufferram << std::endl;
 
         // Get if stat
         get_net_load(cur_stats.ifstats);
@@ -167,12 +187,94 @@ int DedicatedServer::stats_process()
 
 int DedicatedServer::get_net_load(std::map<std::string, ds_iftstats> &ifstats)
 {
-    #ifdef __linux__
-        // Get current tx rx
+    // Get current tx rx
+    #ifdef _WIN32
+        char bufread[1024];
+    #elif __linux__
         char bufread[32];
+    #endif
+    std::map<std::string, ds_iftstats> current_ifstats;
 
-        std::map<std::string, ds_iftstats> current_ifstats;
+    #ifdef _WIN32
+        /*DWORD dwRetval;
+        MIB_IPSTATS *pStats;
 
+        pStats = (MIB_IPSTATS *) MALLOC(sizeof (MIB_IPSTATS));
+        if (pStats == NULL) {
+            std::cerr << "Allocate memory error (get_net_load)" << std::endl;
+            return -1;
+        }
+        dwRetval = GetIpStatistics(pStats);
+        if (dwRetval != NO_ERROR) {
+            std::cerr << "GetIpStatistics error: " << dwRetval << std::endl;
+            return -1;
+        }
+
+        std::cout << "pStats->dwInReceives: " << pStats->dwInReceives << std::endl;
+        std::cout << "pStats->dwOutRequests: " << pStats->dwOutRequests << std::endl;
+        */
+
+        std::string netstat_result;
+        FILE *netstat;
+        netstat = popen("netstat -e", "r");
+
+        while(fgets(bufread, sizeof(bufread), netstat)!=NULL){
+            netstat_result += bufread;
+        }
+        pclose(netstat);
+
+        std::vector<std::string> split_lines;
+        boost::split(split_lines, netstat_result, boost::is_any_of("\n\r"));
+        // std::cout << "split_lines size: " << split_lines.size() << std::endl;
+
+        if (split_lines.size() != 11) {
+            return -1;
+        }
+
+        std::vector<std::string> split_spaces;
+        ushort i;
+
+        boost::split(split_spaces, split_lines[4], boost::is_any_of(" "));
+
+        i = 0;
+        for (std::vector<std::string>::iterator its = split_spaces.begin()+1; its != split_spaces.end(); ++its) {
+            if (*its == "") continue;
+            if (i > 1) break;
+
+            if (i == 0) current_ifstats["all"].rxb = atoi((*its).c_str());
+            else current_ifstats["all"].txb = atoi((*its).c_str());
+            i++;
+        }
+
+        boost::split(split_spaces, split_lines[5], boost::is_any_of(" "));
+
+        i = 0;
+        for (std::vector<std::string>::iterator its = split_spaces.begin()+2; its != split_spaces.end(); ++its) {
+            if (*its == "") continue;
+            if (i > 1) break;
+
+            if (i == 0) current_ifstats["all"].rxp = atoi((*its).c_str());
+            else current_ifstats["all"].txp = atoi((*its).c_str());
+            i++;
+        }
+
+        boost::split(split_spaces, split_lines[6], boost::is_any_of(" "));
+
+        i = 0;
+        for (std::vector<std::string>::iterator its = split_spaces.begin()+2; its != split_spaces.end(); ++its) {
+            if (*its == "") continue;
+            if (i > 1) break;
+
+            if (i == 0) current_ifstats["all"].rxp += atoi((*its).c_str());
+            else current_ifstats["all"].txp += atoi((*its).c_str());
+            i++;
+        }
+
+        // std::cout << "current_ifstats[\"all\"].rxb: " << current_ifstats["all"].rxb << std::endl;
+        // std::cout << "current_ifstats[\"all\"].txb: " << current_ifstats["all"].txb << std::endl;
+        // std::cout << "current_ifstats[\"all\"].rxp: " << current_ifstats["all"].rxp << std::endl;
+        // std::cout << "current_ifstats[\"all\"].txp: " << current_ifstats["all"].txp << std::endl;
+    #elif __linux__
         for (std::vector<std::string>::iterator it = interfaces.begin(); it != interfaces.end(); ++it) {
             std::ifstream netstats;
             netstats.open(str(boost::format("/sys/class/net/%s/statistics/rx_bytes") % *it), std::ios::in);
@@ -195,32 +297,32 @@ int DedicatedServer::get_net_load(std::map<std::string, ds_iftstats> &ifstats)
             current_ifstats[*it].txp = atoi(bufread);
             netstats.close();
         }
+	#endif
 
-        time_t current_time = time(0);
+    time_t current_time = time(0);
 
-        if (last_ifstat_time != 0 && current_time > last_ifstat_time) {
+    if (last_ifstat_time != 0 && current_time > last_ifstat_time) {
 
-            int time_diff = current_time - last_ifstat_time;
+        int time_diff = current_time - last_ifstat_time;
 
-            for (std::vector<std::string>::iterator it = interfaces.begin(); it != interfaces.end(); ++it) {
-                if (current_ifstats.count(*it) > 0  && last_ifstats.count(*it) > 0) {
+        for (std::vector<std::string>::iterator it = interfaces.begin(); it != interfaces.end(); ++it) {
+            if (current_ifstats.count(*it) > 0  && last_ifstats.count(*it) > 0) {
 
-                    ifstats[*it].rxb = (current_ifstats[*it].rxb - last_ifstats[*it].rxb) / time_diff;
-                    ifstats[*it].txb = (current_ifstats[*it].txb - last_ifstats[*it].txb) / time_diff;
-                    ifstats[*it].rxp = (current_ifstats[*it].rxp - last_ifstats[*it].rxp) / time_diff;
-                    ifstats[*it].txp = (current_ifstats[*it].txp - last_ifstats[*it].txp) / time_diff;
+                ifstats[*it].rxb = (current_ifstats[*it].rxb - last_ifstats[*it].rxb) / time_diff;
+                ifstats[*it].txb = (current_ifstats[*it].txb - last_ifstats[*it].txb) / time_diff;
+                ifstats[*it].rxp = (current_ifstats[*it].rxp - last_ifstats[*it].rxp) / time_diff;
+                ifstats[*it].txp = (current_ifstats[*it].txp - last_ifstats[*it].txp) / time_diff;
 
-                    // std::cout << "ifstats[*it].rxb: " << ifstats[*it].rxb << std::endl;
-                    // std::cout << "ifstats[*it].txb: " << ifstats[*it].txb << std::endl;
-                    // std::cout << "ifstats[*it].rxp: " << ifstats[*it].rxp << std::endl;
-                    // std::cout << "ifstats[*it].txp: " << ifstats[*it].txp << std::endl;
-                }
+                // std::cout << "ifstats[*it].rxb: " << ifstats[*it].rxb << std::endl;
+                // std::cout << "ifstats[*it].txb: " << ifstats[*it].txb << std::endl;
+                // std::cout << "ifstats[*it].rxp: " << ifstats[*it].rxp << std::endl;
+                // std::cout << "ifstats[*it].txp: " << ifstats[*it].txp << std::endl;
             }
         }
+    }
 
-        last_ifstats        = current_ifstats;
-        last_ifstat_time    = time(0);
-	#endif
+    last_ifstats        = current_ifstats;
+    last_ifstat_time    = time(0);
 
     return 0;
 }
@@ -245,7 +347,28 @@ int DedicatedServer::get_cpu_load(std::vector<float> &cpu_percent)
     time_t cpustat_time = time(0);
 
     #ifdef _WIN32
+        std::string wmic_result;
+        FILE *wmic;
+        wmic = popen("wmic cpu get LoadPercentage", "r");
 
+         while(fgets(buf, sizeof(buf), wmic)!=NULL){
+            wmic_result += buf;
+        }
+        pclose(wmic);
+
+        std::vector<std::string> split_lines;
+        boost::split(split_lines, wmic_result, boost::is_any_of("\n\r"));
+
+        ushort cpuid = 0;
+        for (std::vector<std::string>::iterator itl = split_lines.begin()+1; itl != split_lines.end(); ++itl) {
+            if (cpuid+1 > cpu_count) break;
+            if (*itl == "") continue;
+
+            // std::cout << "CPU #" << cpuid << ": " << (float)atoi((*itl).c_str()) << std::endl;
+
+            cpu_percent.push_back((float)atoi((*itl).c_str()));
+            cpuid++;
+        }
     #elif __linux__
         cpustat.open("/proc/stat", std::ios::in);
 
