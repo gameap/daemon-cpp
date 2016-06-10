@@ -69,6 +69,11 @@ public:
     {
         return task_id;
     }
+    
+    ulong get_server_id()
+    {
+        return server_id;
+    }
 
     ulong run_after(ulong aft)
     {
