@@ -375,6 +375,7 @@ int DedicatedServer::update_db()
         // Cpu
         std::string cpu = "";
         for (int i = 0; i < (*it).cpu_load.size(); ++i) {
+            // std::cout << "CPU #" << i << " " << (*it).cpu_load[i] << std::endl;
             cpu +=  str(boost::format("%.2f") % (*it).cpu_load[i]) + " ";
         }
 

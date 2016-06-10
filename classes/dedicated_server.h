@@ -58,6 +58,7 @@ struct ds_stats {
     double loa[3];
     std::vector<float> cpu_load;
     ulong ram_us;
+    ulong ram_cache;
 
     std::map<std::string, ds_iftstats> ifstats;
     std::map<std::string, ulong> drv_us_space;
