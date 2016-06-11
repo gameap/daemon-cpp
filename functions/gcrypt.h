@@ -26,8 +26,8 @@ namespace GCrypt {
 
     char* base64_decode(char *input);
 
-    size_t mcrypt_decode(char ** str_out, const char * str_in, size_t str_in_sz, char * key);
-    size_t mcrypt_encode(char ** str_out, const char * str_in, size_t str_in_sz, char * key);
+    size_t mcrypt_decode(char ** str_out, const char * str_in, size_t str_in_sz, char * key, char * iv);
+    size_t mcrypt_encode(char ** str_out, const char * str_in, size_t str_in_sz, char * key, char * iv);
 
 }
 

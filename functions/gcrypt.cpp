@@ -94,7 +94,7 @@ namespace GCrypt {
 
     // -----------------------------------------------------------------
 
-    size_t mcrypt_decode(char ** str_out, const char * str_in, size_t str_in_sz, char * key)
+    size_t mcrypt_decode(char ** str_out, const char * str_in, size_t str_in_sz, char * key, char * iv)
     {
         MCRYPT td;
         int keysize = 32; /* 256 bits */
@@ -105,13 +105,8 @@ namespace GCrypt {
             std::cerr << "Mcrypt load failed" << std::endl;
             return -1;
         }
-
-        // IV = (char *)malloc(mcrypt_enc_get_iv_size(td));
-        std::string IV(mcrypt_enc_get_iv_size(td), 0);
-        // IV = random(mcrypt_enc_get_iv_size(td));
-        IV = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
-
-        if (mcrypt_generic_init(td, key, keysize,&IV[0]) < 0) {
+        
+        if (mcrypt_generic_init(td, key, keysize, iv) < 0) {
             std::cerr << "Error mcrypt_generic_init!" << std::endl;
             return -1;
         }
@@ -132,15 +127,13 @@ namespace GCrypt {
 
         *str_out = buf;
 
-        // std::cout << "Decoded: " << std::endl;
-        // hex_print(buf, str_in_sz);
         
         return siz;
     }
 
     // -----------------------------------------------------------------
     
-    size_t mcrypt_encode(char ** str_out, const char * str_in, size_t str_in_sz, char * key)
+    size_t mcrypt_encode(char ** str_out, const char * str_in, size_t str_in_sz, char * key, char * iv)
     {
         MCRYPT td;
         int keysize = 32; /* 256 bits */
@@ -152,12 +145,7 @@ namespace GCrypt {
             return -1;
         }
 
-        // IV = (char *)malloc(mcrypt_enc_get_iv_size(td));
-        std::string IV(mcrypt_enc_get_iv_size(td), 0);
-        // IV = random(mcrypt_enc_get_iv_size(td));
-        IV = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
-
-        if (mcrypt_generic_init(td, key, keysize,&IV[0]) < 0) {
+        if (mcrypt_generic_init(td, key, keysize, iv) < 0) {
             std::cerr << "Error mcrypt_generic_init!" << std::endl;
             return -1;
         }
@@ -177,9 +165,6 @@ namespace GCrypt {
         }
 
         *str_out = buf;
-
-        // std::cout << "Encoded: " << std::endl;
-        // hex_print(str_out, siz);
 
         return siz;
     }
