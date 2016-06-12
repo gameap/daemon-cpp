@@ -10,6 +10,9 @@
 #include <openssl/bio.h>
 #include <openssl/evp.h>
 
+#include <openssl/rsa.h>
+#include <openssl/pem.h> 
+
 #include <mcrypt.h>
 
 #include "crypt.h"
@@ -78,23 +81,171 @@ namespace GCrypt {
         return (char *)decMsg;
     }
     */
+    
     // -----------------------------------------------------------------
 
-    char* rsa_encrypt(char *str_in, char *key)
+    int rsa_priv_encrypt(char ** str_out, char *str_in, size_t str_in_sz, char *key_file, char * keypass)
     {
-
-    }
-
-    // -----------------------------------------------------------------
-
-    char* rsa_decrypt(char *str_in, char *key)
-    {
+        RSA * priv_key = NULL;
+        FILE * priv_key_file;
         
+        OpenSSL_add_all_algorithms();
+        OpenSSL_add_all_ciphers();
+        ERR_load_crypto_strings();
+
+        priv_key_file = fopen(key_file, "rb");
+
+        if (priv_key_file == NULL) {
+            std::cerr << "Keyfile read failed" << std::endl;
+            return -1;
+        }
+
+        priv_key = PEM_read_RSAPrivateKey(priv_key_file, NULL, NULL, keypass);
+        fclose(priv_key_file);
+
+        if (!priv_key) {
+            std::cerr << "priv_key error: " << std::endl;
+            std::cerr << ERR_error_string(ERR_get_error(), NULL) << std::endl;
+            return -1;
+        }
+
+        int key_size = RSA_size(priv_key);
+        unsigned char *ustr_out = (unsigned char *)malloc(key_size);
+        
+        int len = RSA_private_encrypt(str_in_sz, (unsigned char *)&str_in[0], ustr_out, priv_key, RSA_PKCS1_PADDING);
+
+        if (len == -1) {
+            std::cerr << "RSA_private_encrypt error (rsa_priv_encrypt)." << std::endl;
+            std::cerr << ERR_error_string(ERR_get_error(), NULL) << std::endl;
+            return -1;
+        }
+        
+        *str_out = (char *)ustr_out;
+        return len;
     }
 
     // -----------------------------------------------------------------
 
-    size_t mcrypt_decode(char ** str_out, const char * str_in, size_t str_in_sz, char * key, char * iv)
+    int rsa_pub_decrypt(char ** str_out, char *str_in, size_t str_in_sz, char *key_file)
+    {
+        RSA * pub_key = NULL;
+        FILE * pub_key_file;
+        
+        OpenSSL_add_all_algorithms();
+        OpenSSL_add_all_ciphers();
+        ERR_load_crypto_strings();
+        
+        pub_key_file = fopen(key_file, "rb");
+        pub_key = PEM_read_RSA_PUBKEY(pub_key_file, NULL, NULL, NULL);
+        fclose(pub_key_file);
+
+        if (!pub_key) {
+            std::cerr << ERR_error_string(ERR_get_error(), NULL) << std::endl;
+            return -1;
+        }
+
+        int key_size = RSA_size(pub_key);
+
+        if (key_size == 0) {
+            std::cerr << "Key size error" << std::endl;
+            return -1;
+        }
+        
+        unsigned char *ustr_out = (unsigned char *)malloc(key_size);
+        int len = RSA_public_decrypt(str_in_sz, (unsigned char *)&str_in[0], ustr_out, pub_key, RSA_PKCS1_PADDING);
+        
+        if (len == -1) {
+            std::cerr << "RSA_public_decrypt error (rsa_pub_decrypt)." << std::endl;
+            std::cerr << ERR_error_string(ERR_get_error(), NULL) << std::endl;
+            return -1;
+        }
+        
+        *str_out = (char *)ustr_out;
+        return len;
+    }
+    
+    // -----------------------------------------------------------------
+
+    int rsa_pub_encrypt(char ** str_out, char *str_in, size_t str_in_sz, char *key_file)
+    {
+        RSA * pub_key = NULL;
+        FILE * pub_key_file;
+        
+        OpenSSL_add_all_algorithms();
+        OpenSSL_add_all_ciphers();
+        ERR_load_crypto_strings();
+        
+        pub_key_file = fopen(key_file, "rb");
+
+        if (pub_key_file == NULL) {
+            std::cerr << "Keyfile read failed" << std::endl;
+            return -1;
+        }
+
+        pub_key = PEM_read_RSA_PUBKEY(pub_key_file, NULL, NULL, NULL);
+        fclose(pub_key_file);
+
+        if (!pub_key) {
+            std::cerr << ERR_error_string(ERR_get_error(), NULL) << std::endl;
+            return -1;
+        }
+
+        int key_size = RSA_size(pub_key);
+        unsigned char *ustr_out = (unsigned char *)malloc(key_size);
+
+        // std::cout << "key_size: " << key_size << std::endl;
+        // std::cout << "str_in_sz: " << str_in_sz << std::endl;
+        
+        int len = RSA_public_encrypt(str_in_sz, (unsigned char *)&str_in[0], ustr_out, pub_key, RSA_PKCS1_PADDING);
+
+        if (len == -1) {
+            std::cerr << "RSA_public_encrypt error (rsa_pub_encrypt)." << std::endl;
+            std::cerr << ERR_error_string(ERR_get_error(), NULL) << std::endl;
+            return -1;
+        }
+        
+        *str_out = (char *)ustr_out;
+        return len;
+    }
+
+    // -----------------------------------------------------------------
+
+    int rsa_priv_decrypt(char ** str_out, char *str_in, size_t str_in_sz, char *key_file, char * keypass)
+    {
+        RSA * priv_key = NULL;
+        FILE * priv_key_file;
+        
+        OpenSSL_add_all_algorithms();
+        OpenSSL_add_all_ciphers();
+        ERR_load_crypto_strings();
+        
+        priv_key_file = fopen(key_file, "rb");
+        priv_key = PEM_read_RSAPrivateKey(priv_key_file, NULL, NULL, keypass);
+        fclose(priv_key_file);
+
+        if (!priv_key) {
+            std::cerr << ERR_error_string(ERR_get_error(), NULL) << std::endl;
+            return -1;
+        }
+
+        int key_size = RSA_size(priv_key);
+        unsigned char *ustr_out = (unsigned char *)malloc(key_size);
+        
+        int len = RSA_private_decrypt(str_in_sz, (unsigned char *)&str_in[0], ustr_out, priv_key, RSA_PKCS1_PADDING);
+        
+        if (len == -1) {
+            std::cerr << "RSA_private_decrypt error (rsa_priv_decrypt)." << std::endl;
+            std::cerr << ERR_error_string(ERR_get_error(), NULL) << std::endl;
+            return -1;
+        }
+        
+        *str_out = (char *)ustr_out;
+        return len;
+    }
+
+    // -----------------------------------------------------------------
+
+    int mcrypt_decode(char ** str_out, const char * str_in, size_t str_in_sz, char * key, char * iv)
     {
         MCRYPT td;
         int keysize = 32; /* 256 bits */
@@ -117,9 +268,7 @@ namespace GCrypt {
         char buf[siz*8];
 
         memcpy(buf, &str_in[0], str_in_sz);
-        std::cout << "buf: " << std::endl;
-        hex_print(buf, str_in_sz);
-
+        
         if (mdecrypt_generic(td, &buf, siz) < 0) {
             std::cerr << "mdecrypt_generic error: " << std::endl;
             return -1;
@@ -127,13 +276,12 @@ namespace GCrypt {
 
         *str_out = buf;
 
-        
         return siz;
     }
 
     // -----------------------------------------------------------------
     
-    size_t mcrypt_encode(char ** str_out, const char * str_in, size_t str_in_sz, char * key, char * iv)
+    int mcrypt_encode(char ** str_out, const char * str_in, size_t str_in_sz, char * key, char * iv)
     {
         MCRYPT td;
         int keysize = 32; /* 256 bits */
@@ -155,9 +303,6 @@ namespace GCrypt {
 
         char buf[siz*8];
         strcpy(buf, str_in);
-        // memcpy(buf, &str_in[0], str_in_sz);
-        std::cout << "buf: " << std::endl;
-        hex_print(buf, str_in_sz);
         
         if (mcrypt_generic(td, &buf, siz) < 0) {
             std::cerr << "mcrypt_generic error: " << std::endl;
@@ -170,6 +315,7 @@ namespace GCrypt {
     }
 
     // -----------------------------------------------------------------
+    
     /*
     char* base64_encode(char* string)
     {
