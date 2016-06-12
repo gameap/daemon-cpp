@@ -29,6 +29,8 @@ int Config::parse()
         db_name         = pt.get<std::string>("db_name");
         db_port         = pt.get<uint>("db_port");
         db_prefix       = pt.get<std::string>("db_prefix");
+        
+        pub_key_file    = pt.get<std::string>("pub_key_file");
 
         buf = pt.get_optional<std::string>("if_list");
         if (*buf != "") {

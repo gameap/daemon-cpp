@@ -4,12 +4,17 @@
 #include "file_server.h"
 #include "daemon_server.h"
 
+#include "functions/gcrypt.h"
+
 // ---------------------------------------------------------------------
 
 void DaemonServerSess::start ()
 {
     write_binn = binn_list();
     mode = DAEMON_SERVER_MODE_NOAUTH;
+
+    Config& config = Config::getInstance();
+    pub_keyfile = config.pub_key_file;
 
     read_length = 0;
     do_read();
@@ -31,9 +36,21 @@ void DaemonServerSess::do_read()
                         if (read_complete(length)) {
                             Config& config = Config::getInstance();
 
+                            if ((read_length-4) != 256) {
+                                std::cerr << "Incorrect message" << std::endl;
+                                return;
+                            }
+
+                            // Decrypt without end chars
+                            char * decstring;
+                            GCrypt::rsa_pub_decrypt(&decstring, &read_buf[0], read_length-4, &pub_keyfile[0]);
+
                             // Check auth
                             binn *read_binn;
-                            read_binn = binn_open((void*)&read_buf[0]);
+                            read_binn = binn_open((void*)decstring);
+                            // read_binn = binn_open((void*)&read_buf[0]);
+
+                            std::cout << "read_length: " << read_length << std::endl;
 
                             if (config.daemon_login == binn_list_str(read_binn, 2)
                                 && config.daemon_password == binn_list_str(read_binn, 3)
@@ -50,7 +67,7 @@ void DaemonServerSess::do_read()
                                 binn_list_add_str(write_binn, (char *)"Auth failed");
                             }
 
-                            do_write();
+                            do_write(true);
                         }
                     }
                     else {
@@ -112,20 +129,36 @@ int DaemonServerSess::append_end_symbols(char * buf, size_t length)
 
 // ---------------------------------------------------------------------
 
-void DaemonServerSess::do_write()
+void DaemonServerSess::do_write(bool rsa_crypt)
 {
     read_length = 0;
     memset(read_buf, 0, max_length-1);
 
     auto self(shared_from_this());
-    char sendbin[binn_size(write_binn)+5];
-	// char sendbin[10240];
+	char sendbin[10240];
 
-    // msg = GCrypt::aes_encrypt((char*)binn_ptr(write_binn), aes_key);
-    memcpy(sendbin, (char*)binn_ptr(write_binn), binn_size(write_binn));
+    size_t write_len = 0;
 
+    if (rsa_crypt == true) {
+        char buf[binn_size(write_binn)+1];
+        char * encstring;
+        size_t length = GCrypt::rsa_pub_encrypt(&encstring, (char*)binn_ptr(write_binn), binn_size(write_binn), &pub_keyfile[0]);
+
+        if (length == -1) {
+            // Crypt error
+            return;
+        }
+        
+        memcpy(sendbin, encstring, length);
+        write_len = length;
+    }
+    else {
+        memcpy(sendbin, (char*)binn_ptr(write_binn), binn_size(write_binn));
+        write_len = binn_size(write_binn);
+    }
+    
     size_t len = 0;
-    len = append_end_symbols(&sendbin[0], binn_size(write_binn));
+    len = append_end_symbols(&sendbin[0], write_len);
 
     boost::asio::async_write(socket_, boost::asio::buffer(sendbin, len),
         [this, self](boost::system::error_code ec, std::size_t) {

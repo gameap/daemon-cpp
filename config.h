@@ -31,6 +31,8 @@ public:
     uint db_port;
     std::string db_prefix;
 
+    std::string pub_key_file;
+    
     std::string crypt_key;
     std::string allowed_ip_str;
     uint port;

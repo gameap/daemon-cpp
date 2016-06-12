@@ -23,13 +23,14 @@ public:
 
 private:
     int append_end_symbols(char * buf, size_t length);
-    void do_write();
+    void do_write(bool rsa_crypt);
     void do_read();
     size_t read_complete(size_t length);
     
     enum { max_length = 1024 };
     size_t read_length;
     char read_buf[max_length];
+    std::string pub_keyfile;
 
     binn *write_binn;
 
