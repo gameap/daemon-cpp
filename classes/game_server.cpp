@@ -1,6 +1,5 @@
+#define BOOST_NO_CXX11_SCOPED_ENUMS
 #include "consts.h"
-
-#include <boost/filesystem.hpp>
 
 #include <boost/process.hpp>
 #include <boost/iostreams/stream.hpp>
@@ -12,6 +11,8 @@
 
 #include "db/db.h"
 #include "game_server.h"
+
+#include <boost/filesystem.hpp>
 
 #include "functions/gsystem.h"
 #include "functions/gstring.h"
@@ -507,8 +508,14 @@ bool GameServer::_copy_dir(
                 }
             } else {
                 // Found file: Copy
-                _append_cmd_output("Copy " + current.string() + " " + destination.string() + "/" + current.filename().string());
-                boost::filesystem::copy(current, destination / current.filename());
+                _append_cmd_output("Copy " + current.string() + "  " + destination.string() + "/" + current.filename().string());
+                
+                if (boost::filesystem::is_regular_file(current)) {
+                    boost::filesystem::copy_file(current, destination / current.filename(), boost::filesystem::copy_option::overwrite_if_exists);
+                }
+                else {
+                    boost::filesystem::copy(current, destination / current.filename());
+                }
             }
         } catch(boost::filesystem::filesystem_error const & e) {
             std:: cerr << e.what() << std::endl;
