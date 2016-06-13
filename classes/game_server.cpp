@@ -59,7 +59,7 @@ GameServer::GameServer(ulong mserver_id)
         "SELECT {pref}servers.*,\
             {pref}games.remote_repository AS game_remote_repository, {pref}games.local_repository AS game_local_repository,\
             {pref}dedicated_servers.work_path,\
-            {pref}game_types.remote_repository AS gt_remote_repository, {pref}game_types.local_repository AS gt_local_repository\
+            {pref}game_types.remote_repository AS gt_remote_repository, {pref}game_types.local_repository AS gt_local_repository, {pref}game_types.aliases AS gt_aliases\
         FROM `{pref}servers`\
         RIGHT JOIN {pref}dedicated_servers ON {pref}dedicated_servers.id={pref}servers.ds_id\
         RIGHT JOIN {pref}games ON {pref}games.code={pref}servers.game\
@@ -100,14 +100,43 @@ GameServer::GameServer(ulong mserver_id)
         Json::Value jaliases;
 
         Json::Reader jreader(Json::Features::strictMode());
+        jreader.parse(results.rows[0].row["gt_aliases"], jaliases, false);
+
+        for( Json::ValueIterator itr = jaliases.begin() ; itr != jaliases.end() ; itr++ ) {
+            
+            if ((*itr)["default_value"].isNull()) {
+                aliases.insert(std::pair<std::string, std::string>((*itr)["alias"].asString(), ""));
+            }
+            else if ((*itr)["default_value"].isString()) {
+                aliases.insert(std::pair<std::string, std::string>((*itr)["alias"].asString(), (*itr)["default_value"].asString()));
+            }
+            else if ((*itr)["default_value"].isInt()) {
+                aliases.insert(std::pair<std::string, std::string>((*itr)["alias"].asString(), std::to_string((*itr)["default_value"].asInt())));
+            }
+            else {
+                std::cerr << "Unknown alias type: " << (*itr)["default_value"] << std::endl;
+            }
+            
+        }
+
         jreader.parse(results.rows[0].row["aliases"], jaliases, false);
 
         for( Json::ValueIterator itr = jaliases.begin() ; itr != jaliases.end() ; itr++ ) {
             if ((*itr).isString()) {
-                aliases.insert(std::pair<std::string, std::string>(itr.key().asString(), (*itr).asString()));
+                if (aliases.find(itr.key().asString()) == aliases.end()) {
+                    aliases.insert(std::pair<std::string, std::string>(itr.key().asString(), (*itr).asString()));
+                } else {
+                    aliases[itr.key().asString()] = (*itr).asString();
+                }
             }
             else if ((*itr).isInt()) {
-                aliases.insert(std::pair<std::string, std::string>(itr.key().asString(), std::to_string((*itr).asInt())));
+                if (aliases.find(itr.key().asString()) == aliases.end()) {
+                    aliases.insert(std::pair<std::string, std::string>(itr.key().asString(), std::to_string((*itr).asInt())));
+                } else {
+                    aliases[itr.key().asString()] = std::to_string((*itr).asInt());
+                }
+            } else {
+                std::cerr << "Unknown alias type: " << (*itr) << std::endl;
             }
         }
     }
@@ -539,6 +568,12 @@ bool GameServer::status_server()
     if (pid != 0) {
         #ifdef __linux__
             active = (kill(pid, 0) == 0) ? 1 : 0;
+
+        #elif _WIN32
+            HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, pid);
+            DWORD ret = WaitForSingleObject(process, 0);
+            CloseHandle(process);
+            active = (ret == WAIT_TIMEOUT);
         #endif
     }
 
