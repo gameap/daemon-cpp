@@ -35,6 +35,7 @@ DedicatedServer::DedicatedServer()
     last_cpustat_time = 0;
     last_ifstat_time = 0;
 
+    std::cout << "ds_id: " << ds_id << std::endl;
     std::cout << "stats_update_period: " << stats_update_period << std::endl;
     std::cout << "db_update_period: " << db_update_period << std::endl;
 
@@ -98,6 +99,10 @@ DedicatedServer::DedicatedServer()
         return;
     }
 
+    if (results.rows.size() <= 0) {
+        throw std::runtime_error("DS id not found");
+    }
+
     script_start        = results.rows[0].row["script_start"];
     script_stop         = results.rows[0].row["script_stop"];
     script_restart      = results.rows[0].row["script_restart"];
@@ -159,14 +164,20 @@ int DedicatedServer::stats_process()
         boost::split(split_lines, buf, boost::is_any_of("\n\r"));
 
         std::vector<std::string> split_spaces;
-        boost::split(split_spaces, split_lines[4], boost::is_any_of(" "));
 
         // ulong cached_mem = 0;
-        for (std::vector<std::string>::iterator its = split_spaces.begin()+1; its != split_spaces.end(); ++its) {
-            if (*its == "") continue;
+        for (std::vector<std::string>::iterator itl = split_lines.begin()+2; itl != split_lines.end(); ++itl) {
+            boost::split(split_spaces, *itl, boost::is_any_of(" "));
+            if (split_spaces[0] != "Cached:") {
+                continue;
+            }
+            
+            for (std::vector<std::string>::iterator its = split_spaces.begin()+1; its != split_spaces.end(); ++its) {
+                if (*its == "") continue;
 
-            cur_stats.ram_cache = atoi((*its).c_str());
-            break;
+                cur_stats.ram_cache = atoi((*its).c_str());
+                break;
+            }
         }
 
         meminfo.close();

@@ -126,9 +126,10 @@ void GameServer::_append_cmd_output(std::string line)
 // ---------------------------------------------------------------------
 
 // size_t GameServer::get_cmd_output(std::string * output, size_t position)
-std::string * GameServer::get_cmd_output()
+int GameServer::get_cmd_output(std::string * str_out)
 {
-    return &cmd_output;
+    *str_out = cmd_output;
+    return 0;
 }
 
 // ---------------------------------------------------------------------
@@ -443,6 +444,7 @@ bool GameServer::_copy_dir(
     try {
         // Check whether the function call is valid
         if(!boost::filesystem::exists(source) || !boost::filesystem::is_directory(source)) {
+            _append_cmd_output("Source dir not found:  " + source.string());
             std::cerr << "Source directory " << source.string()
                 << " does not exist or is not a directory." << '\n';
             return false;
@@ -450,7 +452,8 @@ bool GameServer::_copy_dir(
         
         if (!boost::filesystem::exists(destination)) {
             // Create the destination directory
-            if(!boost::filesystem::create_directory(destination)) {
+            if (!boost::filesystem::create_directory(destination)) {
+                _append_cmd_output("Create failed:  " + destination.string());
                 std::cerr << "Unable to create destination directory"
                     << destination.string() << '\n';
                 return false;
@@ -475,6 +478,7 @@ bool GameServer::_copy_dir(
                 }
             } else {
                 // Found file: Copy
+                _append_cmd_output("Copy " + current.string() + " " + destination.string() + "/" + current.filename().string());
                 boost::filesystem::copy(current, destination / current.filename());
             }
         } catch(boost::filesystem::filesystem_error const & e) {

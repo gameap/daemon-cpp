@@ -160,15 +160,18 @@ void Task::run()
 std::string Task::get_output()
 {
     if (server_id != 0 && gserver != nullptr) {
-        std::string * output;
-        output = gserver->get_cmd_output();
+        std::string output;
+        
+        if (gserver->get_cmd_output(&output) == -1) {
+            return "";
+        }
 
-        std::cout << "output: " << output << std::endl;
-        std::cout << "cur_outpos: " << cur_outpos << std::endl;
-        std::cout << "output->size(): " << output->size() << std::endl;
+        // std::cout << "output: " << output << std::endl;
+        // std::cout << "cur_outpos: " << cur_outpos << std::endl;
+        // std::cout << "output->size(): " << output.size() << std::endl;
 
-        std::string output_part = output->substr(cur_outpos, output->size());
-        cur_outpos += (output->size() - cur_outpos);
+        std::string output_part = output.substr(cur_outpos, output.size());
+        cur_outpos += (output.size() - cur_outpos);
 
         return output_part;
     }

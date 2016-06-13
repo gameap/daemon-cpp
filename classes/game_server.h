@@ -88,7 +88,7 @@ public:
     int get_game_server_load();
     
     // size_t get_cmd_output(std::string * output, size_t position);
-    std::string * get_cmd_output();
+    int get_cmd_output(std::string * str_out);
     void clear_cmd_output();
 };
 
