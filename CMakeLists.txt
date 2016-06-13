@@ -62,15 +62,15 @@ add_executable(daemon
 )
 
 if (WIN32)
-	target_link_libraries (daemon gcc stdc++ ws2_32 wsock32 binn boost_system boost_filesystem boost_iostreams boost_thread jsoncpp)
-	
+	target_link_libraries (daemon gcc stdc++ ws2_32 wsock32 binn boost_system boost_filesystem boost_iostreams boost_thread crypto ssl jsoncpp)
+
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -march=i686 -static" )
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -march=i686 -static" )
 endif()
 
 if (UNIX)
 	target_link_libraries (daemon dl binn boost_system boost_filesystem boost_iostreams boost_thread pthread crypto mcrypt jsoncpp)
-	
+
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -g" )
 endif()
