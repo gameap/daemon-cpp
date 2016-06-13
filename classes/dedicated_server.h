@@ -45,11 +45,11 @@ namespace GameAP {
 // }
 
 struct ds_iftstats {
-    ulong rxb;
-    ulong txb;
+    uintmax_t rxb;
+    uintmax_t txb;
 
-    ulong rxp;
-    ulong txp;
+    uintmax_t rxp;
+    uintmax_t txp;
 };
 
 struct ds_stats {
@@ -57,19 +57,19 @@ struct ds_stats {
 
     double loa[3];
     std::vector<float> cpu_load;
-    ulong ram_us;
-    ulong ram_cache;
+    uintmax_t ram_us;
+    uintmax_t ram_cache;
 
     std::map<std::string, ds_iftstats> ifstats;
-    std::map<std::string, ulong> drv_us_space;
-    std::map<std::string, ulong> drv_free_space;
+    std::map<std::string, uintmax_t> drv_us_space;
+    std::map<std::string, uintmax_t> drv_free_space;
 };
 
 class DedicatedServer {
 private:
     ushort cpu_count;
-    ulong ram_total;
-    std::map<std::string, ulong> drv_space;
+    uintmax_t ram_total;
+    std::map<std::string, uintmax_t> drv_space;
 
     std::vector<ds_stats> stats;
     std::string ds_ip;
@@ -112,6 +112,8 @@ public:
 
     int get_net_load(std::map<std::string, ds_iftstats> &ifstat);
     int get_cpu_load(std::vector<float> &cpu_percent);
+
+    int get_ping(ushort &ping);
 
     std::string get_script_cmd(ushort script);
 };
