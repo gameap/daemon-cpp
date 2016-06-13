@@ -4,6 +4,8 @@
 #include <stdarg.h>  // For va_start, etc.
 #include <memory>    // For std::unique_ptr
 
+#include <algorithm>
+
 // ---------------------------------------------------------------------
 
 std::string str_replace(const std::string& search, const std::string& replace, const std::string& subject)
@@ -39,7 +41,8 @@ std::string string_format(const std::string fmt_str, ...) {
 
 // ---------------------------------------------------------------------
 
-std::string getFileExt(const std::string& s) {
+std::string getFileExt(const std::string& s)
+{
 
    size_t i = s.rfind('.', s.length());
    if (i != std::string::npos) {
@@ -47,4 +50,25 @@ std::string getFileExt(const std::string& s) {
    }
 
    return("");
+}
+
+// ---------------------------------------------------------------------
+
+std::string random(size_t size)
+{
+    srand(time(0));
+    auto randchar = []() -> char
+    {
+        const char charset[] =
+            "0123456789"
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            "abcdefghijklmnopqrstuvwxyz";
+        const size_t max_index = (sizeof(charset)-1);
+        return charset[rand() % max_index];
+    };
+
+    std::string rstr(16, 0);
+    std::generate_n(rstr.begin(), size, randchar);
+
+    return rstr;
 }
