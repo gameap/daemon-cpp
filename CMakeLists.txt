@@ -10,8 +10,8 @@ if (WIN32)
 endif()
 
 if (UNIX)
-    SET(CMAKE_C_COMPILER       gcc-4.9)
-    SET(CMAKE_CXX_COMPILER     g++-4.9)
+    SET(CMAKE_C_COMPILER       gcc-4.8)
+    SET(CMAKE_CXX_COMPILER     g++-4.8)
 endif()
 
 cmake_minimum_required(VERSION 2.8)
@@ -51,7 +51,7 @@ add_executable(daemon
     db/db.cpp
     daemon_server.cpp
     file_server.cpp
-    #functions/gcrypt.cpp
+    functions/gcrypt.cpp
     functions/gstring.cpp
     functions/gsystem.cpp
     #classes/crypto.cpp
@@ -69,7 +69,7 @@ if (WIN32)
 endif()
 
 if (UNIX)
-	target_link_libraries (daemon dl binn boost_system boost_filesystem boost_iostreams boost_thread pthread crypto jsoncpp)
+	target_link_libraries (daemon dl binn boost_system boost_filesystem boost_iostreams boost_thread pthread crypto mcrypt jsoncpp)
 	
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -g" )
