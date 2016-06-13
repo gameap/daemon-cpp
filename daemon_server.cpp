@@ -37,7 +37,7 @@ void DaemonServerSess::do_read()
                             Config& config = Config::getInstance();
 
                             if ((read_length-4) != 256) {
-                                std::cerr << "Incorrect message" << std::endl;
+                                std::cerr << "Incorrect message (RSA Size error)" << std::endl;
                                 return;
                             }
 
@@ -48,17 +48,30 @@ void DaemonServerSess::do_read()
                             // Check auth
                             binn *read_binn;
                             read_binn = binn_open((void*)decstring);
-                            // read_binn = binn_open((void*)&read_buf[0]);
-
+                            
                             std::cout << "read_length: " << read_length << std::endl;
 
-                            if (config.daemon_login == binn_list_str(read_binn, 2)
-                                && config.daemon_password == binn_list_str(read_binn, 3)
+                            char *login;
+                            char *password;
+
+                            if (!binn_list_get_str(read_binn, 2, &login)
+                                || !binn_list_get_str(read_binn, 3, &password)
+                            ) {
+                                std::cerr << "Incorrect binn data" << std::endl;
+                                return; 
+                            }
+
+                            if (config.daemon_login == login
+                                && config.daemon_password == password
                             ) {
                                 binn_list_add_uint32(write_binn, 100);
                                 binn_list_add_str(write_binn, (char *)"Auth success");
 
-                                mode = binn_list_uint16(read_binn, 4);
+                                if (!binn_list_get_uint16(read_binn, 4, &mode)) {
+                                    mode = DAEMON_SERVER_MODE_NOAUTH;
+                                    std::cerr << "Incorrect binn data" << std::endl;
+                                    return; 
+                                }
 
                                 std::cout << "Auth success" << std::endl;
                             }

@@ -87,7 +87,7 @@ private:
     std::string filename;
     size_t filesize;
 
-    ushort sendfile_mode;
+    unsigned char sendfile_mode;
     
     std::ifstream input_file;
     std::ofstream output_file;

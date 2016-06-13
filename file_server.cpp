@@ -29,6 +29,9 @@ void FileServerSess::start ()
     read_length = 0;
     mode = FSERV_AUTH;
     // aes_key = "12345678901234561234567890123456";
+
+    // setgid(1000);
+    // setuid(1000);
     do_read();
 }
 
@@ -157,8 +160,12 @@ void FileServerSess::cmd_process()
     binn *read_binn;
     read_binn = binn_open((void*)&read_buf[0]);
 
-    int command;
-    command = binn_list_int16(read_binn, 1);
+    unsigned char command;
+
+    if (!binn_list_get_uint8(read_binn, 1, &command)) {
+        response_msg(1, "Binn data get error", true);
+        return;
+    }
 
     std::cout << "command: " << binn_list_int16(read_binn, 1) << std::endl;
     clear_write_vars();
@@ -168,11 +175,18 @@ void FileServerSess::cmd_process()
             // Shell command
             break;
         };
-
+        
         case FSERV_FILESEND: {
             // File send
-            sendfile_mode = binn_list_uint8(read_binn, 2);
-            filename = binn_list_str(read_binn, 3);
+            char * fname;
+            if (!binn_list_get_uint8(read_binn, 2, &sendfile_mode)
+                || !binn_list_get_str(read_binn, 3, &fname)
+            ) {
+                response_msg(1, "Binn data get error", true);
+                break;
+            }
+
+            filename = std::string(fname);
 
             // Check
             // ...
@@ -180,9 +194,18 @@ void FileServerSess::cmd_process()
             mode = FSERV_FILESEND;
 
             if (sendfile_mode == FSERV_FILE_DOWNLOAD) {
-                filesize = binn_list_uint64(read_binn, 4);
-                bool make_dir = binn_list_bool(read_binn, 5);
-                int chmod = binn_list_uint16(read_binn, 6);
+                BOOL make_dir;
+                uint chmod;
+
+                uint64 fsize;
+                if (!binn_list_get_uint64(read_binn, 4, &fsize)
+                    || !binn_list_get_bool(read_binn, 5, &make_dir)
+                    || !binn_list_get_uint8(read_binn, 6, (unsigned char *)&chmod)
+                ) {
+                    response_msg(1, "Binn data get error", true);
+                    break;
+                }
+                filesize = fsize;
 
                 open_output_file();
                 write_ok();
@@ -214,14 +237,22 @@ void FileServerSess::cmd_process()
 
         case FSERV_READDIR: {
             // Read Dir
-            char *dir = binn_list_str(read_binn, 2);
-            uint type = binn_list_uint8(read_binn, 3);
+            char *dir;
+            unsigned char type;
+            
+            if (!binn_list_get_str(read_binn, 2, &dir)
+                || !binn_list_get_uint8(read_binn, 3, &type)
+            ) {
+                response_msg(1, "Binn data get error", true);
+                break;
+            }
 
             DIR *dp;
             struct dirent *dirp;
 
             if ((dp = opendir(dir)) == NULL) {
-                std::cout << "Error(" << errno << ") opening " << dir << std::endl;
+                response_msg(1, "Directory open error", true);
+                std::cerr << "Error(" << errno << ") opening " << dir << std::endl;
                 break;
             }
 
@@ -241,7 +272,7 @@ void FileServerSess::cmd_process()
                     struct stat stat_buf;
 
 					#ifdef _WIN32
-                        if (stat(dirp->d_name, &stat_buf) == 0) {
+                        if (stat(std::string(std::string(dir) + "/" + std::string(dirp->d_name)).c_str(), &stat_buf) == 0) {
                             binn_list_add_uint64(file_info, stat_buf.st_size);
 							binn_list_add_uint64(file_info, stat_buf.st_atime);
 
@@ -287,8 +318,14 @@ void FileServerSess::cmd_process()
 
         case FSERV_MKDIR: {
 
+            char *path;
+            if (!binn_list_get_str(read_binn, 2, &path)) {
+                response_msg(1, "Binn data get error", true);
+                break;
+            }
+            
             try {
-                boost::filesystem::path p = binn_list_str(read_binn, 2);
+                boost::filesystem::path p = path;
                 boost::filesystem::create_directories(p);
             }
             catch (boost::filesystem::filesystem_error &e) {
@@ -303,9 +340,17 @@ void FileServerSess::cmd_process()
         };
 
         case FSERV_MOVE: {
-            char *oldfile = binn_list_str(read_binn, 2);
-            char *newfile = binn_list_str(read_binn, 3);
-            bool copy = binn_list_bool(read_binn, 4);
+            char *oldfile;
+            char *newfile;
+            BOOL copy;
+
+            if (!binn_list_get_str(read_binn, 2, &oldfile)
+                || !binn_list_get_str(read_binn, 3, &newfile)
+                || !binn_list_get_bool(read_binn, 4, &copy)
+            ) {
+                response_msg(1, "Binn data get error", true);
+                break;
+            }
 
 
             try {
@@ -332,8 +377,15 @@ void FileServerSess::cmd_process()
         };
 
         case FSERV_REMOVE: {
-            char *file      = binn_list_str(read_binn, 2);
-            bool recursive  = binn_list_bool(read_binn, 3);
+            char *file;
+            BOOL recursive ;
+
+            if (!binn_list_get_str(read_binn, 2, &file)
+                || !binn_list_get_bool(read_binn, 3, &recursive)
+            ) {
+                response_msg(1, "Binn data get error", true);
+                break;
+            }
 
             try {
                 if (recursive) {
