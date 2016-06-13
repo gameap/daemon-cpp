@@ -1,10 +1,5 @@
 #include <sstream>
-
 #include <iostream>
-
-#ifdef WIN32
-#include <winsock2.h>
-#endif
 
 #ifdef __GNUC__
 #include <unistd.h>
@@ -12,12 +7,17 @@
 
 #include <mysql/mysql.h>
 
+#ifdef _WIN32
+// #include <Windows.h>
+#endif
+
 #include <cstring>
 #include <string>
 #include <map>
 #include <vector>
 
-// #include <boost/any.hpp>
+#include <time.h>
+
 #include "db.h"
 #include "../functions/gstring.h"
 #include "../dl.h"
@@ -40,7 +40,12 @@ private:
     {
         // Wait for unblock
         while(blocked) {
-            usleep(100000);
+			#ifdef __linux__
+				usleep(100000);
+			#elif _WIN32
+				clock_t goal = 100 + clock();
+				while (goal > clock());
+			#endif
         }
 
         blocked = true;
