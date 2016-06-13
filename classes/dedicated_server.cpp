@@ -21,8 +21,6 @@
 	#endif
 #endif // _WIN32
 
-#define _WIN32
-
 using namespace GameAP;
 
 DedicatedServer::DedicatedServer()
@@ -48,7 +46,7 @@ DedicatedServer::DedicatedServer()
         statex.dwLength = sizeof (statex);
         GlobalMemoryStatusEx (&statex);
 
-        ram_total = statex.ullTotalPhys;
+        ram_total = statex.ullTotalPhys/1024; // Kb
 
         // Check interfaces
         interfaces.push_back("all");
@@ -57,7 +55,7 @@ DedicatedServer::DedicatedServer()
         struct sysinfo sysi;
         sysinfo(&sysi);
 
-        ram_total = sysi.totalram;
+        ram_total = sysi.totalram/1024; // kB
 
         // Check interfaces
         for (std::vector<std::string>::iterator it = config.if_list.begin(); it != config.if_list.end(); ++it) {
@@ -134,7 +132,8 @@ int DedicatedServer::stats_process()
         statex.dwLength = sizeof (statex);
         GlobalMemoryStatusEx (&statex);
 
-        cur_stats.ram_us = statex.ullTotalPhys - statex.ullAvailPhys;
+        cur_stats.ram_us = (statex.ullTotalPhys - statex.ullAvailPhys)/1024;
+        cur_stats.ram_cache = 0;
 
         // Get if stat
         get_net_load(cur_stats.ifstats);
@@ -148,9 +147,29 @@ int DedicatedServer::stats_process()
         get_cpu_load(cur_stats.cpu_load);
 
         // Get ram load
-        cur_stats.ram_us = sysi.totalram - sysi.freeram;
+        cur_stats.ram_us = (sysi.totalram - sysi.freeram)/1024; // kB
 
-        std::cout << "bufferram: " << sysi.bufferram << std::endl;
+        // Cached ram
+        char buf[1024];
+        std::ifstream meminfo;
+        meminfo.open("/proc/meminfo", std::ios::in);
+        meminfo.read(buf, 1024);
+
+        std::vector<std::string> split_lines;
+        boost::split(split_lines, buf, boost::is_any_of("\n\r"));
+
+        std::vector<std::string> split_spaces;
+        boost::split(split_spaces, split_lines[4], boost::is_any_of(" "));
+
+        // ulong cached_mem = 0;
+        for (std::vector<std::string>::iterator its = split_spaces.begin()+1; its != split_spaces.end(); ++its) {
+            if (*its == "") continue;
+
+            cur_stats.ram_cache = atoi((*its).c_str());
+            break;
+        }
+
+        meminfo.close();
 
         // Get if stat
         get_net_load(cur_stats.ifstats);
@@ -329,6 +348,13 @@ int DedicatedServer::get_net_load(std::map<std::string, ds_iftstats> &ifstats)
 
 // ---------------------------------------------------------------------
 
+int DedicatedServer::get_ping(ushort &ping)
+{
+    ping = 0;
+}
+
+// ---------------------------------------------------------------------
+
 int DedicatedServer::get_cpu_load(std::vector<float> &cpu_percent)
 {
     std::ifstream cpustat;
@@ -493,7 +519,7 @@ int DedicatedServer::update_db()
         std::string loa = str(boost::format("%.2f %.2f %.2f") % (*it).loa[0] % (*it).loa[1] % (*it).loa[2]);
 
         // Ram
-        std::string ram = str(boost::format("%1% %2%") % (*it).ram_us % ram_total);
+        std::string ram = str(boost::format("%1% %2% %3%") % (*it).ram_us % (*it).ram_cache % ram_total);
 
         // Cpu
         std::string cpu = "";
@@ -521,7 +547,7 @@ int DedicatedServer::update_db()
 
         // Drive space
         std::string drvspace = "";
-        for (std::map<std::string, ulong>::iterator itd = (*it).drv_us_space.begin();
+        for (std::map<std::string, uintmax_t>::iterator itd = (*it).drv_us_space.begin();
             itd != (*it).drv_us_space.end();
             ++itd
         ) {
