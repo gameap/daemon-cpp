@@ -248,7 +248,7 @@ int GameServer::stop_server()
 int GameServer::update_server()
 {
     if (status_server() == true) {
-        if (!stop_server()) {
+        if (stop_server() == -1) {
             return -1;
         }
     }
@@ -523,7 +523,7 @@ bool GameServer::_copy_dir(
 int GameServer::delete_server()
 {
     if (status_server() == true) {
-        if (!stop_server()) {
+        if (stop_server() == -1) {
             return -1;
         }
     }
