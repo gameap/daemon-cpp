@@ -17,8 +17,9 @@ private:
     ulong ds_id;
     ulong server_id;
     char task[8];
-    const char * data;
-    const char * cmd;
+    
+    std::string data;
+    std::string cmd;
 
     size_t cur_outpos;
     
@@ -47,6 +48,8 @@ public:
         data = mdata;
         cmd = mcmd;
         status = mstatus;
+
+        gserver = nullptr;
         
         cur_outpos = 0;
     }

@@ -33,7 +33,6 @@ void Task::run()
     std::cout << "task: " << task << std::endl;
 
     int result_status;
-
     GameServersList& gslist = GameServersList::getInstance();
     
     if (! strcmp(task, "gsstart")) {
@@ -136,7 +135,19 @@ void Task::run()
         gserver->clear_cmd_output();
     }
     else if (! strcmp(task, "cmdexec")) {
-        
+        try {
+            gserver = gslist.get_server(server_id);
+
+            if (gserver == nullptr) {
+                throw std::runtime_error("gslist.get_server error");
+            }
+
+            gserver->clear_cmd_output();
+            result_status = gserver->cmd_exec(cmd);
+        } catch (std::exception &e) {
+            status = error;
+            std::cerr << "cmdexec error: " << e.what() << std::endl;
+        }
     }
     else {
         // Unknown task

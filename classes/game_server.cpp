@@ -13,6 +13,8 @@
 #include "game_server.h"
 
 #include <boost/filesystem.hpp>
+#undef BOOST_NO_CXX11_SCOPED_ENUMS
+#include <boost/format.hpp>
 
 #include "functions/gsystem.h"
 #include "functions/gstring.h"
@@ -436,6 +438,8 @@ int GameServer::_unpack_archive(boost::filesystem::path const & archive)
     }
 }
 
+// ---------------------------------------------------------------------
+
 int GameServer::_exec(std::string cmd)
 {
     std::cout << "CMD Exec: " << cmd << std::endl;
@@ -535,6 +539,19 @@ int GameServer::delete_server()
         }
     }
 
+    // installed = 0.
+    {
+        std::string qstr = str(boost::format(
+            "UPDATE {pref}servers SET `installed` = 0\
+                WHERE {pref}servers.`id` = %1%"
+        ) % server_id);
+        
+        if (db->query(&qstr[0]) == -1) {
+            fprintf(stdout, "Error query\n");
+            return -1;
+        }
+    }
+
     try {
         std::cout << "Remove path: " << work_path << std::endl;
         boost::filesystem::remove_all(work_path);
@@ -542,6 +559,21 @@ int GameServer::delete_server()
     catch (boost::filesystem::filesystem_error &e) {
         std::cerr << "Error remove: " << e.what() << std::endl;
         return -1;
+    }
+
+    return 0;
+}
+
+// ---------------------------------------------------------------------
+
+int GameServer::cmd_exec(std::string cmd)
+{
+    std::vector<std::string> split_lines;
+    boost::split(split_lines, cmd, boost::is_any_of("\n\r"));
+
+    for (std::vector<std::string>::iterator itl = split_lines.begin(); itl != split_lines.end(); ++itl) {
+        if (*itl == "") continue;
+        _exec(*itl);
     }
 
     return 0;

@@ -79,6 +79,7 @@ public:
     int update_server();
     int delete_server();
     int move_game_server();
+    int cmd_exec(std::string cmd);
 
     void replace_shortcodes(std::string &cmd);
     int start_server();
