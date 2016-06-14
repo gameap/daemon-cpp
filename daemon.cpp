@@ -112,10 +112,13 @@ int check_tasks()
                 }
 
                 if (output == "") {
-                    tasks.delete_task(it);
                     tasks_ended.push_back((**it).get_id());
+                    tasks.delete_task(it);
                     tasks_runned.erase(run_it);
-                    servers_working.erase(swork_it);
+
+                    if (swork_it != servers_working.end()) {
+                        servers_working.erase(swork_it);
+                    }
                 }
             }
         }

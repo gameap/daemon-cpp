@@ -210,9 +210,9 @@ int TaskList::delete_task(std::vector<Task *>::iterator it)
     if (idit != taskids.end()) {
         taskids.erase(idit);
     }
-    
-    delete *it;
+
     tasklist.erase(it);
+    delete *it;
 
     return 0;
 }
