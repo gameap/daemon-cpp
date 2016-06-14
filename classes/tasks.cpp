@@ -18,7 +18,10 @@ void Task::run()
     std::string qstr;
 
     qstr = str(boost::format("UPDATE `{pref}gdaemon_tasks` SET `status` = 'working', `time_stchange` = %1% WHERE `id` = %2%") % time(0) % task_id);
-    db->query(&qstr[0]);
+
+    if (db->query(&qstr[0]) == -1) {
+        std::cerr << "Update task status in DB error" << std::cout;
+    }
     
     // if (db->query(
         // "SELECT `id`, `ds_id`, `server_id`, `task`, `data`, `cmd`, status+0 AS status\
@@ -210,9 +213,9 @@ int TaskList::delete_task(std::vector<Task *>::iterator it)
     if (idit != taskids.end()) {
         taskids.erase(idit);
     }
-
-    tasklist.erase(it);
+    
     delete *it;
+    tasklist.erase(it);
 
     return 0;
 }

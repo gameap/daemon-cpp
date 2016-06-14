@@ -30,11 +30,6 @@
 
 // #include <string>
 
-#define TASK_WAITING    1
-#define TASK_WORKING    2
-#define TASK_ERROR      3
-#define TASK_SUCCESS    4
-
 using namespace GameAP;
 
 Db *db;
@@ -65,7 +60,7 @@ int check_tasks()
                 && run_it == tasks_runned.end()
                 && ((**it).run_after() == 0
                     || ((**it).run_after() != 0
-                        && std::find(tasks_ended.begin(), tasks_ended.end(), (**it).get_id()) != tasks_ended.end()
+                        && std::find(tasks_ended.begin(), tasks_ended.end(), (**it).run_after()) != tasks_ended.end()
                     )
                 )
             ) {
@@ -113,8 +108,8 @@ int check_tasks()
 
                 if (output == "") {
                     tasks_ended.push_back((**it).get_id());
-                    tasks.delete_task(it);
                     tasks_runned.erase(run_it);
+                    tasks.delete_task(it);
 
                     if (swork_it != servers_working.end()) {
                         servers_working.erase(swork_it);

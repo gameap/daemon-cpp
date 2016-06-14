@@ -7,6 +7,11 @@
 #include "db/db.h"
 #include "classes/game_server.h"
 
+#define TASK_WAITING    1
+#define TASK_WORKING    2
+#define TASK_ERROR      3
+#define TASK_SUCCESS    4
+
 namespace GameAP {
 
 class Task {
@@ -55,7 +60,7 @@ public:
     }
 
     ~Task() {
-        std::cout << "Task destructor" << std::endl;
+        std::cout << "Task destructor: " << task_id << std::endl;
     }
     
     // void start(ulong task_id, ulong ds_id, ulong server_id, char task[8], char * data, char * cmd);
@@ -116,7 +121,7 @@ public:
     
     int update_list();
     int delete_task(std::vector<Task *>::iterator it);
-    
+
     void insert(Task * task);
     std::vector<Task *>::iterator begin();
     int run_task();
