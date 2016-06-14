@@ -23,10 +23,10 @@
 #include "db/db.h"
 #include "config.h"
 
-#include "models/tasks.h"
+#include "classes/tasks.h"
 #include "classes/dedicated_server.h"
 
-// #include "functions/gcrypt.h"
+#include "functions/gcrypt.h"
 
 // #include <string>
 
@@ -48,7 +48,7 @@ int check_tasks()
     std::vector<ulong>      servers_working;
     std::vector<ulong>      tasks_ended;
     std::vector<ulong>      tasks_runned;
-    
+
     boost::thread_group     tasks_thrs;
 
     std::string output = "";
@@ -72,7 +72,7 @@ int check_tasks()
                 if ((**it).get_server_id() != 0) {
                     servers_working.push_back((**it).get_server_id());
                 }
-                
+
                 tasks_thrs.create_thread([=]() {
                     std::cout << "Task ptr: " << *it << std::endl;
                     (**it).run();
@@ -98,7 +98,7 @@ int check_tasks()
                             "UPDATE `{pref}gdaemon_tasks` SET `output` = CONCAT(IFNULL(output,''), '%1%') WHERE `id` = %2%"
                         ) % output  % (**it).get_id()
                     );
-                    
+
                     if (db->query(&qstr[0]) == 0) {
                         output = "";
                     }

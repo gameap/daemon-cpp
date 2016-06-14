@@ -58,7 +58,7 @@ add_executable(daemon
     #classes/base64.cpp
     classes/dedicated_server.cpp
     classes/game_server.cpp
-    models/tasks.cpp
+    classes/tasks.cpp
 )
 
 if (WIN32)

@@ -19,7 +19,7 @@
 #include "functions/gsystem.h"
 #include "functions/gstring.h"
 
-#include "models/tasks.h"
+#include "classes/tasks.h"
 
 using namespace GameAP;
 
