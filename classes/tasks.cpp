@@ -1,5 +1,6 @@
 #include "db/db.h"
 #include "tasks.h"
+#include "config.h"
 
 #include <boost/format.hpp>
 #include <cstring>
@@ -224,14 +225,18 @@ int TaskList::delete_task(std::vector<Task *>::iterator it)
 
 int TaskList::update_list()
 {
-    db_elems results;
-
-    if (db->query(
+    Config& config = Config::getInstance();
+    
+    std::string qstr = str(boost::format(
         "SELECT `id`, `run_aft_id`, `ds_id`, `server_id`, `task`, `data`, `cmd`, status+0 AS status\
             FROM `{pref}gdaemon_tasks`\
-            WHERE `status` = 'waiting'",
-        &results) == -1
-    ){
+            WHERE `ds_id` = %1% `status` = 'waiting'"
+        ) config.ds_id
+    );
+            
+
+    db_elems results;
+    if (db->query(&qstr[0],&results) == -1){
         fprintf(stdout, "Error query\n");
         return -1;
     }
