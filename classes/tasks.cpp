@@ -230,8 +230,8 @@ int TaskList::update_list()
     std::string qstr = str(boost::format(
         "SELECT `id`, `run_aft_id`, `ds_id`, `server_id`, `task`, `data`, `cmd`, status+0 AS status\
             FROM `{pref}gdaemon_tasks`\
-            WHERE `ds_id` = %1% `status` = 'waiting'"
-        ) config.ds_id
+            WHERE `ds_id` = %1% AND `status` = 'waiting'"
+        ) % config.ds_id
     );
             
 
@@ -267,8 +267,6 @@ int TaskList::update_list()
             insert(task);
     }
 
-    std::cout << "Tasks count: " << tasklist.size() << std::endl;
-    
     return 0;
 }
 
