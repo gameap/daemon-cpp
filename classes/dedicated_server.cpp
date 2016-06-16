@@ -569,8 +569,8 @@ int DedicatedServer::update_db()
         std::string qstr = str(
             boost::format(
                 "INSERT INTO `{pref}ds_stats` (`ds_id`, `time`, `loa`, `ram`, `cpu`, `ifstat`, `ping`, `drvspace`)\
-                VALUES ('%1%', %2%, '%3%', '%4%', '%5%', '%6%', %7%, '%8%')"
-            ) % ds_id % (*it).time % loa % ram % cpu % ifstat % ping % drvspace
+                VALUES ('%1%', UNIX_TIMESTAMP(), '%2%', '%3%', '%4%', '%5%', %6%, '%7%')"
+            ) % ds_id % loa % ram % cpu % ifstat % ping % drvspace
         );
 
         if (db->query(&qstr[0]) == 0) {
