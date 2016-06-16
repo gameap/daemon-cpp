@@ -43,7 +43,7 @@ private:
     std::map<std::string, std::string> aliases;
     
     std::string start_command;
-    std::string stop_command;
+    std::string game_scode;
 
     std::string game_localrep;
     std::string game_remrep;

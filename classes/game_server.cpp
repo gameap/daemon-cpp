@@ -62,6 +62,7 @@ GameServer::GameServer(ulong mserver_id)
         "SELECT {pref}servers.*,\
             {pref}games.remote_repository AS game_remote_repository, {pref}games.local_repository AS game_local_repository,\
             {pref}dedicated_servers.work_path,\
+            {pref}games.start_code AS g_start_code,\
             {pref}game_types.remote_repository AS gt_remote_repository, {pref}game_types.local_repository AS gt_local_repository, {pref}game_types.aliases AS gt_aliases\
         FROM `{pref}servers`\
         RIGHT JOIN {pref}dedicated_servers ON {pref}dedicated_servers.id={pref}servers.ds_id\
@@ -84,6 +85,7 @@ GameServer::GameServer(ulong mserver_id)
 
     work_path = results.rows[0].row["work_path"];   // DS dir
     work_path /= results.rows[0].row["dir"];        // Game server dir
+    user        = results.rows[0].row["su_user"];        // User
 
     ip              = results.rows[0].row["server_ip"];
     server_port     = (ulong)atoi(results.rows[0].row["server_port"].c_str());
@@ -91,6 +93,7 @@ GameServer::GameServer(ulong mserver_id)
     rcon_port       = (ulong)atoi(results.rows[0].row["rcon_port"].c_str());
 
     start_command   = results.rows[0].row["start_command"];
+    game_scode      = results.rows[0].row["g_start_code"];
 
     game_localrep  = results.rows[0].row["game_local_repository"];
     game_remrep    = results.rows[0].row["game_remote_repository"];
@@ -103,43 +106,43 @@ GameServer::GameServer(ulong mserver_id)
         Json::Value jaliases;
 
         Json::Reader jreader(Json::Features::strictMode());
-        jreader.parse(results.rows[0].row["gt_aliases"], jaliases, false);
 
-        for( Json::ValueIterator itr = jaliases.begin() ; itr != jaliases.end() ; itr++ ) {
-            
-            if ((*itr)["default_value"].isNull()) {
-                aliases.insert(std::pair<std::string, std::string>((*itr)["alias"].asString(), ""));
+        if (jreader.parse(results.rows[0].row["gt_aliases"], jaliases, false)) {
+            for( Json::ValueIterator itr = jaliases.begin() ; itr != jaliases.end() ; itr++ ) {
+                
+                if ((*itr)["default_value"].isNull()) {
+                    aliases.insert(std::pair<std::string, std::string>((*itr)["alias"].asString(), ""));
+                }
+                else if ((*itr)["default_value"].isString()) {
+                    aliases.insert(std::pair<std::string, std::string>((*itr)["alias"].asString(), (*itr)["default_value"].asString()));
+                }
+                else if ((*itr)["default_value"].isInt()) {
+                    aliases.insert(std::pair<std::string, std::string>((*itr)["alias"].asString(), std::to_string((*itr)["default_value"].asInt())));
+                }
+                else {
+                    std::cerr << "Unknown alias type: " << (*itr)["default_value"] << std::endl;
+                }
             }
-            else if ((*itr)["default_value"].isString()) {
-                aliases.insert(std::pair<std::string, std::string>((*itr)["alias"].asString(), (*itr)["default_value"].asString()));
-            }
-            else if ((*itr)["default_value"].isInt()) {
-                aliases.insert(std::pair<std::string, std::string>((*itr)["alias"].asString(), std::to_string((*itr)["default_value"].asInt())));
-            }
-            else {
-                std::cerr << "Unknown alias type: " << (*itr)["default_value"] << std::endl;
-            }
-            
         }
 
-        jreader.parse(results.rows[0].row["aliases"], jaliases, false);
-
-        for( Json::ValueIterator itr = jaliases.begin() ; itr != jaliases.end() ; itr++ ) {
-            if ((*itr).isString()) {
-                if (aliases.find(itr.key().asString()) == aliases.end()) {
-                    aliases.insert(std::pair<std::string, std::string>(itr.key().asString(), (*itr).asString()));
-                } else {
-                    aliases[itr.key().asString()] = (*itr).asString();
+        if (jreader.parse(results.rows[0].row["aliases"], jaliases, false)) {
+            for( Json::ValueIterator itr = jaliases.begin() ; itr != jaliases.end() ; itr++ ) {
+                if ((*itr).isString()) {
+                    if (aliases.find(itr.key().asString()) == aliases.end()) {
+                        aliases.insert(std::pair<std::string, std::string>(itr.key().asString(), (*itr).asString()));
+                    } else {
+                        aliases[itr.key().asString()] = (*itr).asString();
+                    }
                 }
-            }
-            else if ((*itr).isInt()) {
-                if (aliases.find(itr.key().asString()) == aliases.end()) {
-                    aliases.insert(std::pair<std::string, std::string>(itr.key().asString(), std::to_string((*itr).asInt())));
+                else if ((*itr).isInt()) {
+                    if (aliases.find(itr.key().asString()) == aliases.end()) {
+                        aliases.insert(std::pair<std::string, std::string>(itr.key().asString(), std::to_string((*itr).asInt())));
+                    } else {
+                        aliases[itr.key().asString()] = std::to_string((*itr).asInt());
+                    }
                 } else {
-                    aliases[itr.key().asString()] = std::to_string((*itr).asInt());
+                    std::cerr << "Unknown alias type: " << (*itr) << std::endl;
                 }
-            } else {
-                std::cerr << "Unknown alias type: " << (*itr) << std::endl;
             }
         }
     }
@@ -180,6 +183,7 @@ void GameServer::replace_shortcodes(std::string &cmd)
     cmd = str_replace("{screen_name}", screen_name, cmd);
     
     cmd = str_replace("{ip}", ip, cmd);
+    cmd = str_replace("{game}", game_scode, cmd);
 
 	#ifdef __GNUC__
 		cmd = str_replace("{id}", std::to_string(server_id), cmd);
