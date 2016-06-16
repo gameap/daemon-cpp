@@ -1,3 +1,6 @@
+cmake_minimum_required(VERSION 2.8)
+project(GDaemon)
+
 if (WIN32)
     SET(CMAKE_SYSTEM_NAME      Windows)
     # SET(CMAKE_SYSTEM_PROCESSOR i686)
@@ -45,7 +48,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs)
 
-add_executable(daemon
+set(SOURCES_CPP
     config.cpp
     daemon.cpp
     db/db.cpp
@@ -62,6 +65,16 @@ add_executable(daemon
 )
 
 if (WIN32)
+    list(APPEND SOURCES_CPP control_windows.cpp)
+endif()
+
+if (UNIX)
+    list(APPEND SOURCES_CPP control_linux.cpp)
+endif()
+
+add_executable(daemon ${SOURCES_CPP})
+
+if (WIN32)
 	target_link_libraries (daemon gcc stdc++ ws2_32 wsock32 binn boost_system boost_filesystem boost_iostreams boost_thread crypto ssl jsoncpp)
 
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -march=i686 -static" )
@@ -69,8 +82,8 @@ if (WIN32)
 endif()
 
 if (UNIX)
-	target_link_libraries (daemon dl binn boost_system boost_filesystem boost_iostreams boost_thread pthread crypto mcrypt jsoncpp)
+	target_link_libraries (daemon stdc++ m dl binn boost_system boost_filesystem boost_iostreams boost_thread pthread crypto mcrypt jsoncpp)
 
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -g" )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -g" )
 endif()
