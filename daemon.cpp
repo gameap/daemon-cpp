@@ -128,7 +128,7 @@ int check_tasks()
 
 // ---------------------------------------------------------------------
 
-int main(int argc, char* argv[])
+int run_daemon()
 {
     std::cout << "Start" << std::endl;
 
