@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <iostream>
 
-#include <cryptopp/aes.h>
-#include <cryptopp/modes.h>
-#include <cryptopp/base64.h>
+// #include <cryptopp/aes.h>
+// #include <cryptopp/modes.h>
+// #include <cryptopp/base64.h>
 
 #include <openssl/aes.h>
 
@@ -13,9 +13,9 @@
 #include <openssl/rsa.h>
 #include <openssl/pem.h> 
 
-#include <mcrypt.h>
+// #include <mcrypt.h>
 
-#include "crypt.h"
+// #include "crypt.h"
 #include "gstring.h"
 
 #include "classes/crypto.h"
@@ -244,11 +244,11 @@ namespace GCrypt {
     }
 
     // -----------------------------------------------------------------
-
+	/*
     int mcrypt_decode(char ** str_out, const char * str_in, size_t str_in_sz, char * key, char * iv)
     {
         MCRYPT td;
-        int keysize = 32; /* 256 bits */
+        int keysize = 32; // 256 bits
 
         td = mcrypt_module_open("rijndael-256", NULL, "cbc", NULL);
 
@@ -284,7 +284,7 @@ namespace GCrypt {
     int mcrypt_encode(char ** str_out, const char * str_in, size_t str_in_sz, char * key, char * iv)
     {
         MCRYPT td;
-        int keysize = 32; /* 256 bits */
+        int keysize = 32; // 256 bits
 
         td = mcrypt_module_open("rijndael-256", NULL, "cbc", NULL);
 
@@ -313,7 +313,7 @@ namespace GCrypt {
 
         return siz;
     }
-
+	*/
     // -----------------------------------------------------------------
     
     /*
