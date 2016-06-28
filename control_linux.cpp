@@ -17,6 +17,7 @@
 #include <errno.h>
 #include <wait.h>
 
+#include <iostream>
 #include <fstream>
 #include <boost/filesystem.hpp>
 
@@ -91,8 +92,8 @@ int monitor_daemon()
 
     sigemptyset(&sigset);
     sigaddset(&sigset, SIGQUIT);
-    sigaddset(&sigset, SIGINT);
-    sigaddset(&sigset, SIGTERM);
+    // sigaddset(&sigset, SIGINT);
+    // sigaddset(&sigset, SIGTERM);
     sigaddset(&sigset, SIGCHLD); 
     sigaddset(&sigset, SIGUSR1);
     
@@ -126,8 +127,8 @@ int monitor_daemon()
             sigemptyset(&sigset);
 
             sigaddset(&sigset, SIGQUIT);
-            sigaddset(&sigset, SIGINT);
-            sigaddset(&sigset, SIGTERM);
+            // sigaddset(&sigset, SIGINT);
+            // sigaddset(&sigset, SIGTERM);
 
             sigaddset(&sigset, SIGUSR1);
             sigprocmask(SIG_BLOCK, &sigset, NULL);
@@ -164,6 +165,8 @@ int monitor_daemon()
                 break;
             }
         }
+
+        sleep(5);
     }
 
     std::cout << "GameAP Daemon stopped" << std::endl;
@@ -176,6 +179,9 @@ int monitor_daemon()
 
 int main(int argc, char** argv)
 {
+    // run_daemon();
+    // return 0;
+    
     int status;
     int pid;
 
