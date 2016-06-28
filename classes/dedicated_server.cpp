@@ -152,7 +152,7 @@ int DedicatedServer::stats_process()
         get_cpu_load(cur_stats.cpu_load);
 
         // Get ram load
-        cur_stats.ram_us = (sysi.totalram - sysi.freeram)/1024; // kB
+        // cur_stats.ram_us = (sysi.totalram - sysi.freeram)/1024; // kB
 
         // Cached ram
         char buf[1024];
@@ -166,20 +166,50 @@ int DedicatedServer::stats_process()
         std::vector<std::string> split_spaces;
 
         // ulong cached_mem = 0;
+        ushort itm_count = 0;
+        uintmax_t ram_free = 0;
         for (std::vector<std::string>::iterator itl = split_lines.begin()+2; itl != split_lines.end(); ++itl) {
             boost::split(split_spaces, *itl, boost::is_any_of(" "));
-            if (split_spaces[0] != "Cached:") {
-                continue;
+            // if (split_spaces[0] != "Cached:") {
+                // continue;
+            // }
+
+            if (split_spaces[0] == "MemTotal:") {
+                for (std::vector<std::string>::iterator its = split_spaces.begin()+1; its != split_spaces.end(); ++its) {
+                    if (*its == "") continue;
+
+                    ram_total = atoi((*its).c_str());
+                    itm_count++;
+                    break;
+                }
             }
             
-            for (std::vector<std::string>::iterator its = split_spaces.begin()+1; its != split_spaces.end(); ++its) {
-                if (*its == "") continue;
+            if (split_spaces[0] == "MemFree:") {
+                for (std::vector<std::string>::iterator its = split_spaces.begin()+1; its != split_spaces.end(); ++its) {
+                    if (*its == "") continue;
 
-                cur_stats.ram_cache = atoi((*its).c_str());
+                    ram_free = atoi((*its).c_str());
+                    itm_count++;
+                    break;
+                }
+            }
+
+            if (split_spaces[0] == "Cached:") {
+                for (std::vector<std::string>::iterator its = split_spaces.begin()+1; its != split_spaces.end(); ++its) {
+                    if (*its == "") continue;
+
+                    cur_stats.ram_cache = atoi((*its).c_str());
+                    itm_count++;
+                    break;
+                }
+            }
+
+            if (itm_count >= 3) {
                 break;
             }
         }
 
+        cur_stats.ram_us = (ram_total - ram_free); // kB
         meminfo.close();
 
         // Get if stat
