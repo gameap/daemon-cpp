@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <signal.h>
 
+#include "config.h"
 #include "db/db.h"
 #include "game_server.h"
 
@@ -57,6 +58,18 @@ int GameServers::start_server()
 GameServer::GameServer(ulong mserver_id)
 {
     server_id = mserver_id;
+    last_update_vars = 0;
+    
+    _update_vars();
+}
+
+// ---------------------------------------------------------------------
+
+void GameServer::_update_vars()
+{
+    if (time(0) - last_update_vars < TIME_UPDDIFF) {
+        return;
+    }
 
     std::string qstr = str(boost::format(
         "SELECT {pref}servers.*,\
@@ -75,7 +88,7 @@ GameServer::GameServer(ulong mserver_id)
 
     db_elems results;
     if (db->query(&qstr[0], &results) == -1) {
-        fprintf(stdout, "Error query\n");
+        std::cerr << "Error query" << std::endl;
         return;
     }
 
@@ -101,6 +114,8 @@ GameServer::GameServer(ulong mserver_id)
     gt_remrep      = results.rows[0].row["gt_remote_repository"];
 
     cmd_output      = "";
+
+    aliases.clear();
 
     try {
         Json::Value jaliases;
@@ -149,6 +164,8 @@ GameServer::GameServer(ulong mserver_id)
     catch (std::exception &e) {
         std::cerr << "Aliases error: " << e.what() << std::endl;
     }
+
+    last_update_vars = time(0);
 }
 
 // ---------------------------------------------------------------------
@@ -233,7 +250,7 @@ int GameServer::stop_server()
 {
     if (!status_server()) {
         // Server offline
-        return 0;
+        //return 0;
     }
 
     DedicatedServer& deds = DedicatedServer::getInstance();
@@ -587,6 +604,8 @@ int GameServer::cmd_exec(std::string cmd)
 
 bool GameServer::status_server()
 {
+    _update_vars();
+
     boost::filesystem::path p(work_path);
     p /= "pid.txt";
 
@@ -596,7 +615,7 @@ bool GameServer::status_server()
     pidfile.open(p.string(), std::ios::in);
 
     if (!pidfile.good()) {
-        // std::cerr << "Pidfile error open" << std::endl;
+        std::cerr << "Pidfile " << p <<  " not found" << std::endl;
         return false;
     }
     
@@ -620,8 +639,8 @@ bool GameServer::status_server()
         #endif
     }
 
-    // std::cout << "Active: " << active << std::endl;
-    // std::cout << "Pid: " << pid << std::endl;
+    std::cout << "Active: " << active << std::endl;
+    std::cout << "Pid: " << pid << std::endl;
     
     std::string qstr = str(
         boost::format("UPDATE `{pref}servers` SET `process_active` = '%1%', `last_process_check` = '%2%' WHERE `id` = %3%")
@@ -641,9 +660,15 @@ bool GameServer::status_server()
 
 int GameServersList::update_list()
 {
+    Config& config = Config::getInstance();
     db_elems results;
 
-    if (db->query("SELECT `id`FROM `{pref}servers`", &results) == -1) {
+    std::string qstr = str(
+        boost::format("SELECT `id` FROM `{pref}servers` WHERE `ds_id` = %1%")
+            % config.ds_id
+    );
+
+    if (db->query(&qstr[0], &results) == -1) {
         fprintf(stdout, "Error query\n");
         return -1;
     }
@@ -665,6 +690,15 @@ int GameServersList::update_list()
     }
 
     return 0;
+}
+
+// ---------------------------------------------------------------------
+
+void GameServersList::stats_process()
+{
+    for (std::map<ulong, GameServer *>::iterator it = servers_list.begin(); it != servers_list.end(); ++it) {
+        it->second->status_server();
+    }
 }
 
 // ---------------------------------------------------------------------

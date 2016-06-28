@@ -19,6 +19,8 @@
 #define INST_FILE 1
 #define INST_DIR 2
 
+#define TIME_UPDDIFF 120
+
 #if defined(BOOST_POSIX_API)
     #define PROC_SHELL "sh"
     #define SHELL_PREF "-c"
@@ -52,6 +54,8 @@ private:
 
     pid_t last_pid;
 
+    time_t last_update_vars;
+
     boost::filesystem::path work_path;
 
     std::string cmd_output;
@@ -65,7 +69,8 @@ private:
 
     int _exec(std::string cmd);
     boost::process::child __exec(std::string cmd, boost::process::pipe &out);
-    
+
+    void _update_vars();
     void _append_cmd_output(std::string line);
     
 public:
@@ -111,6 +116,8 @@ public:
     }
 
     GameServer * get_server(ulong server_id);
+    
+    void stats_process();
 };
 
 /* End namespace GameAP */
