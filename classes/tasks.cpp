@@ -21,7 +21,7 @@ void Task::run()
     qstr = str(boost::format("UPDATE `{pref}gdaemon_tasks` SET `status` = 'working', `time_stchange` = %1% WHERE `id` = %2%") % time(0) % task_id);
 
     if (db->query(&qstr[0]) == -1) {
-        std::cerr << "Update task status in DB error" << std::cout;
+        std::cerr << "Update task status in DB error" << std::endl;
     }
     
     // if (db->query(
@@ -237,7 +237,7 @@ int TaskList::update_list()
 
     db_elems results;
     if (db->query(&qstr[0],&results) == -1){
-        fprintf(stdout, "Error query\n");
+        std::cerr << "Error query" << std::endl;
         return -1;
     }
 
@@ -268,6 +268,42 @@ int TaskList::update_list()
     }
 
     return 0;
+}
+
+// ---------------------------------------------------------------------
+
+void TaskList::check_working_errors()
+{
+    Config& config = Config::getInstance();
+    
+    std::string qstr = str(boost::format(
+        "SELECT `id`\
+            FROM `{pref}gdaemon_tasks`\
+            WHERE `ds_id` = %1% AND `status` = 'working'"
+        ) % config.ds_id
+    );
+
+    db_elems results;
+    if (db->query(&qstr[0],&results) == -1){
+        std::cerr << "Error query" << std::endl;
+        return;
+    }
+
+    for (auto itv = results.rows.begin(); itv != results.rows.end(); ++itv) {
+        ulong task_id = (ulong)atoi(itv->row["id"].c_str());
+
+        if (std::find(taskids.begin(), taskids.end(), task_id) == taskids.end()) {
+            std::string qstr = str(
+                boost::format(
+                    "UPDATE `{pref}gdaemon_tasks` SET `status` = 'error' WHERE `id` = %1%"
+                ) % task_id
+            );
+
+            if (db->query(&qstr[0]) != 0) {
+                std::cerr << "Query: Update task error" << std::endl;
+            }
+        }
+    }
 }
 
 // ---------------------------------------------------------------------

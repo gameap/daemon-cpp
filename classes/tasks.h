@@ -122,6 +122,8 @@ public:
     int update_list();
     int delete_task(std::vector<Task *>::iterator it);
 
+    void check_working_errors();
+
     void insert(Task * task);
     std::vector<Task *>::iterator begin();
     int run_task();

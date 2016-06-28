@@ -25,6 +25,7 @@
 
 #include "classes/tasks.h"
 #include "classes/dedicated_server.h"
+#include "classes/game_server.h"
 
 #include "functions/gcrypt.h"
 
@@ -39,6 +40,8 @@ Db *db;
 int check_tasks()
 {
     TaskList& tasks = TaskList::getInstance();
+
+    tasks.check_working_errors();
 
     std::vector<ulong>      servers_working;
     std::vector<ulong>      tasks_ended;
@@ -155,10 +158,17 @@ int run_daemon()
     boost::thread daemon_server(run_server, config.listen_port);
 
     DedicatedServer& deds = DedicatedServer::getInstance();
+    GameServersList& gslist = GameServersList::getInstance();
 
     while (true) {
         deds.stats_process();
         deds.update_db();
+
+        try {
+            gslist.stats_process();
+        } catch (std::exception &e) {
+            std::cerr << "Game servers stats process error: " << e.what() << std::endl;
+        }
 
 		#ifdef _WIN32
 			Sleep(5000);
