@@ -422,6 +422,13 @@ int GameServer::update_server()
         boost::filesystem::remove(archive);
     }
 
+    #ifdef __linux__
+        if (user != "") {
+            std::string cmd = str(boost::format("chown -R %1% %2%") % user % work_path.string());
+            _exec(cmd);
+        }
+    #endif
+
     // Update installed = 1
     {
         std::string qstr = str(boost::format(
@@ -639,9 +646,6 @@ bool GameServer::status_server()
         #endif
     }
 
-    std::cout << "Active: " << active << std::endl;
-    std::cout << "Pid: " << pid << std::endl;
-    
     std::string qstr = str(
         boost::format("UPDATE `{pref}servers` SET `process_active` = '%1%', `last_process_check` = '%2%' WHERE `id` = %3%")
             % (int)active
