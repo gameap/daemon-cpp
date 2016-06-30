@@ -160,7 +160,7 @@ void Task::run()
                 result_status = gserver->cmd_exec(cmd);
             } else {
                 cmd_output = "";
-                _exec(cmd);
+                result_status = _exec(cmd);
             }
         } catch (std::exception &e) {
             status = error;
