@@ -59,6 +59,8 @@ GameServer::GameServer(ulong mserver_id)
 {
     server_id = mserver_id;
     last_update_vars = 0;
+
+    staft_crash_disabled = false;
     
     _update_vars();
 }
@@ -112,6 +114,8 @@ void GameServer::_update_vars()
     game_remrep    = results.rows[0].row["game_remote_repository"];
     gt_localrep    = results.rows[0].row["gt_local_repository"];
     gt_remrep      = results.rows[0].row["gt_remote_repository"];
+    
+    staft_crash = (bool)atoi(results.rows[0].row["start_after_crash"].c_str());
 
     cmd_output      = "";
 
@@ -235,12 +239,33 @@ int GameServer::start_server()
     std::string cmd  = str_replace("{command}", start_command, deds.get_script_cmd(DS_SCRIPT_START));
     replace_shortcodes(cmd);
 
+    staft_crash_disabled = false;
+
     int result = _exec(cmd);
     
     if (result == -1) {
         return -1;
     } else {
         return 0;
+    }
+}
+
+// ---------------------------------------------------------------------
+
+void GameServer::start_if_need()
+{
+    bool cur_status = status_server();
+    
+    if (!staft_crash) {
+        return;
+    }
+
+    if (staft_crash_disabled) {
+        return;
+    }
+
+    if (!cur_status) {
+        start_server();
     }
 }
 
@@ -258,6 +283,8 @@ int GameServer::stop_server()
     std::string cmd  = deds.get_script_cmd(DS_SCRIPT_STOP);
     replace_shortcodes(cmd);
 
+    staft_crash_disabled = true;
+    
     int result = _exec(cmd);
 
     if (result == -1) {
@@ -701,7 +728,8 @@ int GameServersList::update_list()
 void GameServersList::stats_process()
 {
     for (std::map<ulong, GameServer *>::iterator it = servers_list.begin(); it != servers_list.end(); ++it) {
-        it->second->status_server();
+        // Check status and start if server not active
+        it->second->start_if_need();
     }
 }
 

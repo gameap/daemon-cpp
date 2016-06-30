@@ -41,6 +41,9 @@ private:
     uint query_port;
     uint rcon_port;
 
+    bool staft_crash_disabled;
+    bool staft_crash;
+
     std::string user;
     std::map<std::string, std::string> aliases;
     
@@ -88,6 +91,7 @@ public:
 
     void replace_shortcodes(std::string &cmd);
     int start_server();
+    void start_if_need();
     int stop_server();
     bool status_server();
 
