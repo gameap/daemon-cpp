@@ -193,7 +193,7 @@ int Task::_exec(std::string cmd)
 
     for (std::vector<std::string>::iterator itl = split_lines.begin(); itl != split_lines.end(); ++itl) {
         if (*itl == "") continue;
-        _exec(*itl);
+        _single_exec(*itl);
     }
 
     return 0;
