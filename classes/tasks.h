@@ -25,7 +25,8 @@ private:
     
     std::string data;
     std::string cmd;
-
+    std::string cmd_output;
+    
     size_t cur_outpos;
     
     enum st {waiting = 1, working, error, success};
@@ -34,6 +35,10 @@ private:
     time_t task_started;
 
     GameServer *gserver;
+
+    int _exec(std::string cmd);
+    int _single_exec(std::string cmd);
+    void _append_cmd_output(std::string line);
 public:
     Task(ulong mtask_id, ulong mds_id, ulong mserver_id, const char * mtask, const char * mdata, const char * mcmd, ushort mstatus) {
         task_id = mtask_id;

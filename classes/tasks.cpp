@@ -2,8 +2,17 @@
 #include "tasks.h"
 #include "config.h"
 
+#include <boost/process.hpp>
+#include <boost/iostreams/stream.hpp>
 #include <boost/format.hpp>
+
 #include <cstring>
+
+#include "functions/gsystem.h"
+
+namespace bp = ::boost::process;
+using namespace boost::process;
+using namespace boost::process::initializers;
 
 using namespace GameAP;
 
@@ -140,14 +149,19 @@ void Task::run()
     }
     else if (! strcmp(task, "cmdexec")) {
         try {
-            gserver = gslist.get_server(server_id);
+            if (server_id != 0) {
+                gserver = gslist.get_server(server_id);
 
-            if (gserver == nullptr) {
-                throw std::runtime_error("gslist.get_server error");
+                if (gserver == nullptr) {
+                    throw std::runtime_error("gslist.get_server error");
+                }
+
+                gserver->clear_cmd_output();
+                result_status = gserver->cmd_exec(cmd);
+            } else {
+                cmd_output = "";
+                _exec(cmd);
             }
-
-            gserver->clear_cmd_output();
-            result_status = gserver->cmd_exec(cmd);
         } catch (std::exception &e) {
             status = error;
             std::cerr << "cmdexec error: " << e.what() << std::endl;
@@ -172,6 +186,53 @@ void Task::run()
 
 // ---------------------------------------------------------------------
 
+int Task::_exec(std::string cmd)
+{
+    std::vector<std::string> split_lines;
+    boost::split(split_lines, cmd, boost::is_any_of("\n\r"));
+
+    for (std::vector<std::string>::iterator itl = split_lines.begin(); itl != split_lines.end(); ++itl) {
+        if (*itl == "") continue;
+        _exec(*itl);
+    }
+
+    return 0;
+}
+
+// ---------------------------------------------------------------------
+
+int Task::_single_exec(std::string cmd)
+{
+    std::cout << "CMD Exec: " << cmd << std::endl;
+    _append_cmd_output(boost::filesystem::current_path().string() + "# " + cmd);
+
+    boost::process::pipe out = boost::process::create_pipe();
+
+    boost::iostreams::file_descriptor_source source(out.source, boost::iostreams::close_handle);
+    boost::iostreams::stream<boost::iostreams::file_descriptor_source> is(source);
+    std::string s;
+
+    child c = exec(cmd, out);
+
+    while (!is.eof()) {
+        std::getline(is, s);
+        cmd_output.append(s + "\n");
+    }
+    
+    auto exit_code = wait_for_exit(c);
+
+    return 0;
+}
+
+// ---------------------------------------------------------------------
+
+void Task::_append_cmd_output(std::string line)
+{
+    cmd_output = cmd_output + line + '\n';
+}
+
+// ---------------------------------------------------------------------
+
 std::string Task::get_output()
 {
     if (server_id != 0 && gserver != nullptr) {
@@ -188,6 +249,12 @@ std::string Task::get_output()
         std::string output_part = output.substr(cur_outpos, output.size());
         cur_outpos += (output.size() - cur_outpos);
 
+        return output_part;
+    }
+
+    if (server_id == 0) {
+        std::string output_part = cmd_output.substr(cur_outpos, cmd_output.size());
+        cur_outpos += (cmd_output.size() - cur_outpos);
         return output_part;
     }
 
