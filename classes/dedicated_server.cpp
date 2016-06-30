@@ -110,6 +110,14 @@ DedicatedServer::DedicatedServer()
     script_get_console  = results.rows[0].row["script_get_console"];
     script_send_command = results.rows[0].row["script_send_command"];
 
+    db_elems timeresults;
+    if (db->query("SELECT UNIX_TIMESTAMP() AS `timestamp`", &timeresults) == -1) {
+        std::cerr << "Timestamp get failed (DB query)" << std::endl;
+        return;
+    }
+
+    db_timediff = (time(0) - atoi(timeresults.rows[0].row["timestamp"].c_str()));
+    std::cout << "DB Timediff: " << db_timediff << std::endl;
 }
 
 // ---------------------------------------------------------------------
@@ -168,7 +176,7 @@ int DedicatedServer::stats_process()
         // ulong cached_mem = 0;
         ushort itm_count = 0;
         uintmax_t ram_free = 0;
-        for (std::vector<std::string>::iterator itl = split_lines.begin()+2; itl != split_lines.end(); ++itl) {
+        for (std::vector<std::string>::iterator itl = split_lines.begin(); itl != split_lines.end(); ++itl) {
             boost::split(split_spaces, *itl, boost::is_any_of(" "));
             // if (split_spaces[0] != "Cached:") {
                 // continue;
@@ -595,12 +603,11 @@ int DedicatedServer::update_db()
             drvspace +=  str(boost::format("%1% %2% %3%") % (*itd).first % (*itd).second % drv_space[(*itd).first]) + "\n";
         }
 
-
         std::string qstr = str(
             boost::format(
                 "INSERT INTO `{pref}ds_stats` (`ds_id`, `time`, `loa`, `ram`, `cpu`, `ifstat`, `ping`, `drvspace`)\
-                VALUES ('%1%', UNIX_TIMESTAMP(), '%2%', '%3%', '%4%', '%5%', %6%, '%7%')"
-            ) % ds_id % loa % ram % cpu % ifstat % ping % drvspace
+                VALUES ('%1%', %2%, '%3%', '%4%', '%5%', '%6%', %7%, '%8%')"
+            ) % ds_id % ((*it).time-db_timediff) % loa % ram % cpu % ifstat % ping % drvspace
         );
 
         if (db->query(&qstr[0]) == 0) {

@@ -77,6 +77,8 @@ private:
     time_t last_stats_update;
     time_t last_db_update;
 
+    int db_timediff;
+
     ushort stats_update_period;
     ushort db_update_period;
 
