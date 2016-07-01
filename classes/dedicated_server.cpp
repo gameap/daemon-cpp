@@ -186,7 +186,7 @@ int DedicatedServer::stats_process()
                 for (std::vector<std::string>::iterator its = split_spaces.begin()+1; its != split_spaces.end(); ++its) {
                     if (*its == "") continue;
 
-                    ram_total = atoi((*its).c_str());
+                    ram_total = strtoull((*its).c_str(), NULL, 10);
                     itm_count++;
                     break;
                 }
@@ -196,7 +196,7 @@ int DedicatedServer::stats_process()
                 for (std::vector<std::string>::iterator its = split_spaces.begin()+1; its != split_spaces.end(); ++its) {
                     if (*its == "") continue;
 
-                    ram_free = atoi((*its).c_str());
+                    ram_free = strtoull((*its).c_str(), NULL, 10);
                     itm_count++;
                     break;
                 }
@@ -206,7 +206,7 @@ int DedicatedServer::stats_process()
                 for (std::vector<std::string>::iterator its = split_spaces.begin()+1; its != split_spaces.end(); ++its) {
                     if (*its == "") continue;
 
-                    cur_stats.ram_cache = atoi((*its).c_str());
+                    cur_stats.ram_cache = strtoull((*its).c_str(), NULL, 10);
                     itm_count++;
                     break;
                 }
@@ -309,8 +309,8 @@ int DedicatedServer::get_net_load(std::map<std::string, ds_iftstats> &ifstats)
             if (*its == "") continue;
             if (i > 1) break;
 
-            if (i == 0) current_ifstats["all"].rxb = atoi((*its).c_str());
-            else current_ifstats["all"].txb = atoi((*its).c_str());
+            if (i == 0) current_ifstats["all"].rxb = strtoull((*its).c_str(), NULL, 10);
+            else current_ifstats["all"].txb = strtoull((*its).c_str(), NULL, 10);
             i++;
         }
 
@@ -321,8 +321,8 @@ int DedicatedServer::get_net_load(std::map<std::string, ds_iftstats> &ifstats)
             if (*its == "") continue;
             if (i > 1) break;
 
-            if (i == 0) current_ifstats["all"].rxp = atoi((*its).c_str());
-            else current_ifstats["all"].txp = atoi((*its).c_str());
+            if (i == 0) current_ifstats["all"].rxp = strtoull((*its).c_str());
+            else current_ifstats["all"].txp = strtoull((*its).c_str(), NULL, 10);
             i++;
         }
 
@@ -333,8 +333,8 @@ int DedicatedServer::get_net_load(std::map<std::string, ds_iftstats> &ifstats)
             if (*its == "") continue;
             if (i > 1) break;
 
-            if (i == 0) current_ifstats["all"].rxp += atoi((*its).c_str());
-            else current_ifstats["all"].txp += atoi((*its).c_str());
+            if (i == 0) current_ifstats["all"].rxp += strtoull((*its).c_str());
+            else current_ifstats["all"].txp += strtoull((*its).c_str(), NULL, 10);
             i++;
         }
 
@@ -347,22 +347,22 @@ int DedicatedServer::get_net_load(std::map<std::string, ds_iftstats> &ifstats)
             std::ifstream netstats;
             netstats.open(str(boost::format("/sys/class/net/%s/statistics/rx_bytes") % *it), std::ios::in);
             netstats.getline(bufread, 32);
-            current_ifstats[*it].rxb = atoi(bufread);
+            current_ifstats[*it].rxb = strtoull(bufread, NULL, 10);
             netstats.close();
 
             netstats.open(str(boost::format("/sys/class/net/%s/statistics/tx_bytes") % *it), std::ios::in);
             netstats.getline(bufread, 32);
-            current_ifstats[*it].txb = atoi(bufread);
+            current_ifstats[*it].txb = strtoull(bufread, NULL, 10);
             netstats.close();
 
             netstats.open(str(boost::format("/sys/class/net/%s/statistics/rx_packets") % *it), std::ios::in);
             netstats.getline(bufread, 32);
-            current_ifstats[*it].rxp = atoi(bufread);
+            current_ifstats[*it].rxp = strtoull(bufread, NULL, 10);
             netstats.close();
 
             netstats.open(str(boost::format("/sys/class/net/%s/statistics/tx_packets") % *it), std::ios::in);
             netstats.getline(bufread, 32);
-            current_ifstats[*it].txp = atoi(bufread);
+            current_ifstats[*it].txp = strtoull(bufread, NULL, 10);
             netstats.close();
         }
 	#endif
@@ -381,6 +381,8 @@ int DedicatedServer::get_net_load(std::map<std::string, ds_iftstats> &ifstats)
                 ifstats[*it].rxp = (current_ifstats[*it].rxp - last_ifstats[*it].rxp) / time_diff;
                 ifstats[*it].txp = (current_ifstats[*it].txp - last_ifstats[*it].txp) / time_diff;
 
+                // std::cout << "last_ifstats[*it].rx: " << last_ifstats[*it].rxb << std::endl;
+                // std::cout << "current_ifstats[*it].rxb: " << current_ifstats[*it].rxb << std::endl;
                 // std::cout << "ifstats[*it].rxb: " << ifstats[*it].rxb << std::endl;
                 // std::cout << "ifstats[*it].txb: " << ifstats[*it].txb << std::endl;
                 // std::cout << "ifstats[*it].rxp: " << ifstats[*it].rxp << std::endl;
@@ -439,9 +441,7 @@ int DedicatedServer::get_cpu_load(std::vector<float> &cpu_percent)
             if (cpuid+1 > cpu_count) break;
             if (*itl == "") continue;
 
-            // std::cout << "CPU #" << cpuid << ": " << (float)atoi((*itl).c_str()) << std::endl;
-
-            cpu_percent.push_back((float)atoi((*itl).c_str()));
+            cpu_percent.push_back((float)atof((*itl).c_str()));
             cpuid++;
         }
     #elif __linux__
@@ -466,10 +466,10 @@ int DedicatedServer::get_cpu_load(std::vector<float> &cpu_percent)
             // std::cout << *itl << std::endl;
 
             boost::split(split_spaces, *itl, boost::is_any_of("  "));
-            cpuload[0][cpuid] = atoi(&split_spaces[1][0]); // User
-            cpuload[1][cpuid] = atoi(&split_spaces[2][0]); // Nice
-            cpuload[2][cpuid] = atoi(&split_spaces[3][0]); // System
-            cpuload[3][cpuid] = atoi(&split_spaces[4][0]); // Idle
+            cpuload[0][cpuid] = strtoul(&split_spaces[1][0], NULL, 10); // User
+            cpuload[1][cpuid] = strtoul(&split_spaces[2][0], NULL, 10); // Nice
+            cpuload[2][cpuid] = strtoul(&split_spaces[3][0], NULL, 10); // System
+            cpuload[3][cpuid] = strtoul(&split_spaces[4][0], NULL, 10); // Idle
 
             cpuid++;
             split_spaces.clear();
