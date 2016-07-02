@@ -321,7 +321,7 @@ int DedicatedServer::get_net_load(std::map<std::string, ds_iftstats> &ifstats)
             if (*its == "") continue;
             if (i > 1) break;
 
-            if (i == 0) current_ifstats["all"].rxp = strtoull((*its).c_str());
+            if (i == 0) current_ifstats["all"].rxp = strtoull((*its).c_str(), NULL, 10);
             else current_ifstats["all"].txp = strtoull((*its).c_str(), NULL, 10);
             i++;
         }
@@ -333,7 +333,7 @@ int DedicatedServer::get_net_load(std::map<std::string, ds_iftstats> &ifstats)
             if (*its == "") continue;
             if (i > 1) break;
 
-            if (i == 0) current_ifstats["all"].rxp += strtoull((*its).c_str());
+            if (i == 0) current_ifstats["all"].rxp += strtoull((*its).c_str(), NULL, 10);
             else current_ifstats["all"].txp += strtoull((*its).c_str(), NULL, 10);
             i++;
         }
