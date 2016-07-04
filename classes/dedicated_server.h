@@ -29,6 +29,14 @@
 #include <thread>
 #endif
 
+#ifdef _WIN32
+    #define OS "windows"
+#elif __linux__
+    #define OS "linux"
+#else
+    #define OS "unknown"
+#endif
+
 #include <fstream>
 
 #include <boost/thread.hpp>

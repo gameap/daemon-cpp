@@ -114,6 +114,12 @@ void GameServer::_update_vars()
     game_remrep    = results.rows[0].row["game_remote_repository"];
     gt_localrep    = results.rows[0].row["gt_local_repository"];
     gt_remrep      = results.rows[0].row["gt_remote_repository"];
+
+    // Replace os shortcode
+    game_localrep   = str_replace("{os}", OS, game_localrep);
+    game_remrep     = str_replace("{os}", OS, game_remrep);
+    gt_localrep     = str_replace("{os}", OS, gt_localrep);
+    gt_remrep       = str_replace("{os}", OS, gt_remrep);
     
     staft_crash = (bool)atoi(results.rows[0].row["start_after_crash"].c_str());
 
