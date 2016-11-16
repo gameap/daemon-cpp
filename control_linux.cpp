@@ -181,9 +181,6 @@ int monitor_daemon()
 
 int main(int argc, char** argv)
 {
-    // run_daemon();
-    // return 0;
-
     int status;
     int pid;
 
@@ -199,35 +196,40 @@ int main(int argc, char** argv)
         }
 	}
 
-    pid = fork();
+	#ifdef SYSCTL_DAEMON
+		monitor_daemon();
+	    return 0;
+	#else
+	    pid = fork();
 
-    if (pid == -1) {
-        std::cerr << "Error: Start Daemon failed" << std::endl;
-        return -1;
-    }
-    else if (!pid) {
-        umask(0);
-        setsid();
+	    if (pid == -1) {
+	        std::cerr << "Error: Start Daemon failed" << std::endl;
+	        return -1;
+	    }
+	    else if (!pid) {
+	        umask(0);
+	        setsid();
 
-        boost::filesystem::path exe_path( boost::filesystem::initial_path<boost::filesystem::path>() );
-        exe_path = boost::filesystem::system_complete( boost::filesystem::path( argv[0] ) );
-        boost::filesystem::current_path(exe_path.parent_path());
+	        boost::filesystem::path exe_path( boost::filesystem::initial_path<boost::filesystem::path>() );
+	        exe_path = boost::filesystem::system_complete( boost::filesystem::path( argv[0] ) );
+	        boost::filesystem::current_path(exe_path.parent_path());
 
-        close(STDIN_FILENO);
-        close(STDOUT_FILENO);
-        close(STDERR_FILENO);
+	        close(STDIN_FILENO);
+	        close(STDOUT_FILENO);
+	        close(STDERR_FILENO);
 
-        freopen(config.error_log.c_str(), "w", stdout);
-        freopen(config.error_log.c_str(), "w", stderr);
+	        freopen(config.error_log.c_str(), "w", stdout);
+	        freopen(config.error_log.c_str(), "w", stderr);
 
-        // run_daemon();
-        monitor_daemon();
+	        // run_daemon();
+	        monitor_daemon();
 
-        status = 0;
+	        status = 0;
 
-        return status;
-    }
-    else {
-        return 0;
-    }
+	        return status;
+	    }
+	    else {
+	        return 0;
+	    }
+	#endif
 }

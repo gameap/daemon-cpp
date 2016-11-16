@@ -69,6 +69,8 @@ if (WIN32)
 endif()
 
 if (UNIX)
+    link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs)
+
     list(APPEND SOURCES_CPP control_linux.cpp)
 endif()
 
@@ -82,7 +84,8 @@ if (WIN32)
 endif()
 
 if (UNIX)
-	target_link_libraries (daemon stdc++ m dl binn boost_system boost_filesystem boost_iostreams boost_thread pthread crypto mcrypt jsoncpp)
+    target_compile_definitions(daemon PRIVATE SYSCTL_DAEMON)
+	target_link_libraries (daemon binn boost_system boost_filesystem boost_iostreams boost_thread pthread crypto mcrypt jsoncpp dl)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -g" )
