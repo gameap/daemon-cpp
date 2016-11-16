@@ -16,7 +16,7 @@ int load_db(Db **db, char *driver)
     #ifdef WIN32
         sprintf(lib, "db/%s.dll", driver);
     #else
-        sprintf(lib, "./db/%s.so", driver);
+        sprintf(lib, "%s/db/%s.so", GDADEMON_LIB_PATH, driver);
     #endif
 
     DLHANDLE handle = DLOPEN(lib);
@@ -25,9 +25,9 @@ int load_db(Db **db, char *driver)
         std::cerr << "Cannot load library: " << DLERROR() << '\n';
         return -1;
     }
-    
+
     DLERROR();
-    
+
     create_t* create_db = (create_t*) DLSYM(handle, "create");
 	#ifndef WIN32
 		const char* dlsym_error = DLERROR();
@@ -36,7 +36,7 @@ int load_db(Db **db, char *driver)
 			return -1;
 		}
 	#endif
-	
+
     destroy_t* destroy_db = (destroy_t*) DLSYM(handle, "destroy");
 	#ifndef WIN32
 		dlsym_error = DLERROR();
@@ -45,7 +45,7 @@ int load_db(Db **db, char *driver)
 			return -1;
 		}
 	#endif
-	
+
     *db = create_db();
 
     return 0;

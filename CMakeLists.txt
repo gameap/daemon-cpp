@@ -85,6 +85,8 @@ endif()
 
 if (UNIX)
     target_compile_definitions(daemon PRIVATE SYSCTL_DAEMON)
+    target_compile_definitions(daemon PRIVATE GDADEMON_LIB_PATH="/usr/lib/gameap-daemon")
+
 	target_link_libraries (daemon binn boost_system boost_filesystem boost_iostreams boost_thread pthread crypto mcrypt jsoncpp dl)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
