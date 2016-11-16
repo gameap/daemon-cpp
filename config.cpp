@@ -14,7 +14,9 @@ int Config::parse()
 
     try {
         boost::optional<std::string> buf;
-        boost::property_tree::ini_parser::read_ini("daemon.cfg", pt);
+
+        std::cout << "Reading cfg file " << cfg_file.c_str() << std::endl;
+        boost::property_tree::ini_parser::read_ini(cfg_file.c_str(), pt);
 
         ds_id           = pt.get<uint>("ds_id");
         listen_port     = pt.get<uint>("listen_port");
@@ -29,7 +31,7 @@ int Config::parse()
         db_name         = pt.get<std::string>("db_name");
         db_port         = pt.get<uint>("db_port");
         db_prefix       = pt.get<std::string>("db_prefix");
-        
+
         pub_key_file    = pt.get<std::string>("pub_key_file");
 
         buf = pt.get_optional<std::string>("if_list");

@@ -17,6 +17,8 @@ public:
         return instance;
     }
 
+    std::string cfg_file;
+
     uint ds_id;
     uint listen_port;
 
@@ -32,7 +34,7 @@ public:
     std::string db_prefix;
 
     std::string pub_key_file;
-    
+
     std::string crypt_key;
     std::string allowed_ip_str;
     uint port;

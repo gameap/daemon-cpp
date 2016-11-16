@@ -21,6 +21,8 @@
 #include <fstream>
 #include <boost/filesystem.hpp>
 
+#include "config.h"
+
 // #define PID_FILE "/var/run/gdaemon.pid"
 #define PID_FILE "gdaemon.pid"
 
@@ -51,7 +53,7 @@ static void signal_error(int sig, siginfo_t *si, void *ptr)
 	Trace[1] = ErrorAddr;
 
 	Messages = backtrace_symbols(Trace, TraceSize);
-    
+
 	if (Messages) {
 		std::cout << std::endl << "== Backtrace ==" << std::endl;
 
@@ -94,9 +96,9 @@ int monitor_daemon()
     sigaddset(&sigset, SIGQUIT);
     // sigaddset(&sigset, SIGINT);
     // sigaddset(&sigset, SIGTERM);
-    sigaddset(&sigset, SIGCHLD); 
+    sigaddset(&sigset, SIGCHLD);
     sigaddset(&sigset, SIGUSR1);
-    
+
     sigprocmask(SIG_BLOCK, &sigset, NULL);
 
     set_pid_file(PID_FILE);
@@ -106,9 +108,9 @@ int monitor_daemon()
         if (need_start) {
             pid = fork();
         }
-        
+
         need_start = 1;
-        
+
         if (pid == -1) {
             std::cout << "GameAP Daemon Fork failed" << std::endl;
         }
@@ -139,13 +141,13 @@ int monitor_daemon()
         else
         {
             sigwaitinfo(&sigset, &siginfo);
-            
+
             if (siginfo.si_signo == SIGCHLD) {
                 wait(&status);
-                
+
                 status = WEXITSTATUS(status);
 
-                if (status == CHILD_NEED_TERMINATE) {  
+                if (status == CHILD_NEED_TERMINATE) {
                     std::cout << "GameAP Daemon Stopped" << std::endl;
                     break;
                 }
@@ -159,7 +161,7 @@ int monitor_daemon()
             }
             else {
                 std::cout << "GameAP Daemon Monitor signal: " << strsignal(siginfo.si_signo) << std::endl;
-                
+
                 kill(pid, SIGTERM);
                 status = 0;
                 break;
@@ -170,7 +172,7 @@ int monitor_daemon()
     }
 
     std::cout << "GameAP Daemon stopped" << std::endl;
-    
+
     unlink(PID_FILE);
     return status;
 }
@@ -181,9 +183,20 @@ int main(int argc, char** argv)
 {
     // run_daemon();
     // return 0;
-    
+
     int status;
     int pid;
+
+	Config& config = Config::getInstance();
+	config.cfg_file = "daemon.cfg";
+
+	for (int i = 0; i < argc - 1; i++) {
+		if (std::string(argv[i]) == "-c") {
+			// Config file
+			config.cfg_file = std::string(argv[i + 1]);
+            i++;
+        }
+	}
 
     pid = fork();
 
@@ -198,7 +211,7 @@ int main(int argc, char** argv)
         boost::filesystem::path exe_path( boost::filesystem::initial_path<boost::filesystem::path>() );
         exe_path = boost::filesystem::system_complete( boost::filesystem::path( argv[0] ) );
         boost::filesystem::current_path(exe_path.parent_path());
-        
+
         close(STDIN_FILENO);
         close(STDOUT_FILENO);
         close(STDERR_FILENO);
@@ -208,9 +221,9 @@ int main(int argc, char** argv)
 
         // run_daemon();
         monitor_daemon();
-        
+
         status = 0;
-        
+
         return status;
     }
     else {
