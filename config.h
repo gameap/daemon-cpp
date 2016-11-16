@@ -18,6 +18,7 @@ public:
     }
 
     std::string cfg_file;
+    std::string error_log;
 
     uint ds_id;
     uint listen_port;

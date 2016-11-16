@@ -189,6 +189,7 @@ int main(int argc, char** argv)
 
 	Config& config = Config::getInstance();
 	config.cfg_file = "daemon.cfg";
+	config.error_log = "/var/log/gdaemon/error.log";
 
 	for (int i = 0; i < argc - 1; i++) {
 		if (std::string(argv[i]) == "-c") {
@@ -216,8 +217,8 @@ int main(int argc, char** argv)
         close(STDOUT_FILENO);
         close(STDERR_FILENO);
 
-        freopen("gdaemon.log","w", stdout);
-        freopen("gdaemon.log","w", stderr);
+        freopen(config.error_log.c_str(), "w", stdout);
+        freopen(config.error_log.c_str(), "w", stderr);
 
         // run_daemon();
         monitor_daemon();
