@@ -74,20 +74,20 @@ if (UNIX)
     list(APPEND SOURCES_CPP control_linux.cpp)
 endif()
 
-add_executable(daemon ${SOURCES_CPP})
+add_executable(gameap-daemon ${SOURCES_CPP})
 
 if (WIN32)
-	target_link_libraries (daemon gcc stdc++ ws2_32 wsock32 binn boost_system boost_filesystem boost_iostreams boost_thread crypto ssl jsoncpp)
+	target_link_libraries (gameap-daemon gcc stdc++ ws2_32 wsock32 binn boost_system boost_filesystem boost_iostreams boost_thread crypto ssl jsoncpp)
 
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -march=i686 -static" )
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -march=i686 -static" )
 endif()
 
 if (UNIX)
-    target_compile_definitions(daemon PRIVATE SYSCTL_DAEMON)
-    target_compile_definitions(daemon PRIVATE GDADEMON_LIB_PATH="/usr/lib/gameap-daemon")
+    # target_compile_definitions(gameap-daemon PRIVATE SYSCTL_DAEMON)
+    target_compile_definitions(gameap-daemon PRIVATE GDADEMON_LIB_PATH="/usr/lib/gameap-daemon")
 
-	target_link_libraries (daemon binn boost_system boost_filesystem boost_iostreams boost_thread pthread crypto mcrypt jsoncpp dl)
+	target_link_libraries (gameap-daemon binn boost_system boost_filesystem boost_iostreams boost_thread pthread crypto mcrypt jsoncpp dl)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -g" )
