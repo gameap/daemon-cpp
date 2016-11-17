@@ -1,0 +1,10 @@
+language: cpp
+sudo: required
+dist: trusty
+compiler:
+- g++
+os:
+- linux
+before_install:
+  - sudo apt-get -qq update
+script: ./build-deb.sh
