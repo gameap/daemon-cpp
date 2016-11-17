@@ -13,8 +13,8 @@ if (WIN32)
 endif()
 
 if (UNIX)
-    SET(CMAKE_C_COMPILER       gcc-4.8)
-    SET(CMAKE_CXX_COMPILER     g++-4.8)
+    SET(CMAKE_C_COMPILER       gcc)
+    SET(CMAKE_CXX_COMPILER     g++)
 endif()
 
 cmake_minimum_required(VERSION 2.8)
