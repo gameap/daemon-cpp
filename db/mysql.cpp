@@ -64,8 +64,9 @@ public:
 
         conn = mysql_real_connect(&mysql, host, user, passwd, db, port, NULL, 0);
 
-        if(mysql_errno(&mysql)) {
-            fprintf(stdout, "Error: %s\n", mysql_error(&mysql));
+        if (mysql_errno(&mysql)) {
+            // fprintf(stdout, "Error: %s\n", mysql_error(&mysql));
+            std::cerr << "MySQL Error: " << mysql_error(&mysql) << std::endl;
             return -1;
         }
 
@@ -167,7 +168,7 @@ public:
 
 // the class factories
 C_DLLEXPORT Db* create() {
-	std::cout << "Export!" << std::endl;
+	std::cout << "MySQL Loaded." << std::endl;
     return new MySQL;
 }
 
