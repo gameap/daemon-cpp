@@ -7,4 +7,4 @@ os:
 - linux
 before_install:
   - sudo apt-get -qq update
-script: ./build-deb.sh
+script: sudo ./build-deb.sh
