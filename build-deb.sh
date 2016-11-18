@@ -9,7 +9,7 @@ apt-get -y install build-essential make cmake gcc-4.8 g++-4.8
 
 apt-get -y install libboost-system1.55-dev libboost-filesystem1.55-dev libboost-iostreams1.55-dev libboost-thread1.55-dev
 apt-get -y install libboost-process1.55-dev libbinn-dev
-apt-get -y install libjsoncpp-dev libssl-dev libmcrypt-dev
+apt-get -y install libjsoncpp-dev libssl-dev libmcrypt-dev libmysqlcppconn-dev
 
 cmake .
 make
