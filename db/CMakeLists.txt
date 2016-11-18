@@ -41,7 +41,7 @@ if (WIN32)
 endif()
 
 if (UNIX)
-	target_link_libraries (mysql mysqlcppconn)
+	target_link_libraries (mysql mysqlclient)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fPIC" )
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -fPIC" )
