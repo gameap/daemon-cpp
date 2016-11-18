@@ -5,11 +5,11 @@ echo "deb http://packages.gameap.ru/debian jessie main" >> /etc/apt/sources.list
 
 apt-get -qq update
 
-apt-get -y install build-essential make cmake gcc-4.8 g++-4.8
+apt-get -y install build-essential make cmake
 
-apt-get -y install libboost-system1.55-dev libboost-filesystem1.55-dev libboost-iostreams1.55-dev libboost-thread1.55-dev
-apt-get -y install libboost-process1.55-dev libbinn-dev
-apt-get -y install libjsoncpp-dev libssl-dev libmcrypt-dev libmysqlcppconn-dev
+apt-get -y install libboost-dev libboost-system-dev libboost-filesystem-dev libboost-iostreams-dev libboost-thread-dev
+apt-get -y install libboost-process-dev libbinn-dev
+apt-get -y install libjsoncpp-dev libssl-dev libmysqlclient-dev
 
 cmake .
 make
