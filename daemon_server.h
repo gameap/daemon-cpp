@@ -26,7 +26,7 @@ private:
     void do_write(bool rsa_crypt);
     void do_read();
     size_t read_complete(size_t length);
-    
+
     enum { max_length = 1024 };
     size_t read_length;
     char read_buf[max_length];
@@ -47,7 +47,7 @@ class DaemonServer
 {
 public:
 DaemonServer(boost::asio::io_service& io_service, short port)
-        : acceptor_(io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
+        : acceptor_(io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), port)),
         socket_(io_service)
 {
         do_accept();
@@ -55,7 +55,7 @@ DaemonServer(boost::asio::io_service& io_service, short port)
 
 private:
     void do_accept();
-    
+
     boost::asio::ip::tcp::acceptor acceptor_;
     boost::asio::ip::tcp::socket socket_;
 };

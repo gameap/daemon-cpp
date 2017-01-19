@@ -23,8 +23,8 @@
 
 #include "config.h"
 
-// #define PID_FILE "/var/run/gdaemon.pid"
-#define PID_FILE "gdaemon.pid"
+#define PID_FILE "/var/run/gdaemon.pid"
+// #define PID_FILE "gdaemon.pid"
 
 #define CHILD_NEED_WORK			1
 #define CHILD_NEED_TERMINATE	2
