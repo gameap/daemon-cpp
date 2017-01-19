@@ -31,11 +31,11 @@ endif()
 # CMAKE_IMPORT_LIBRARY_PREFIX
 
 add_library(mysql SHARED mysql.cpp ../functions/gstring.cpp )
-set(LIBRARY_OUTPUT_PATH ${CMAKE_HOME_DIRECTORY}/build/lib/db)
+set(LIBRARY_OUTPUT_PATH ${CMAKE_HOME_DIRECTORY}/build/lib/gameap-daemon/db)
 
 if (WIN32)
 	target_link_libraries(mysql gcc stdc++ mysql_dll)
-	
+
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static" )
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static" )
 endif()
