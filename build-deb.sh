@@ -1,6 +1,6 @@
 #!/bin/bash
 
-wget -qO - http://packages.gameap.ru/debian/gameap-rep.gpg.key | sudo apt-key add -
+wget -qO - http://packages.gameap.ru/debian/gameap-rep.gpg.key | apt-key add -
 echo "deb http://packages.gameap.ru/debian jessie main" >> /etc/apt/sources.list
 
 apt-get -qq update
