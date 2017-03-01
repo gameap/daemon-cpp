@@ -246,10 +246,14 @@ std::string Task::get_output()
         // std::cout << "cur_outpos: " << cur_outpos << std::endl;
         // std::cout << "output->size(): " << output.size() << std::endl;
 
-        std::string output_part = output.substr(cur_outpos, output.size());
-        cur_outpos += (output.size() - cur_outpos);
+        if (output.size()-cur_outpos > 0) {
+            std::string output_part = output.substr(cur_outpos, output.size());
+            cur_outpos += (output.size() - cur_outpos);
 
-        return output_part;
+            return output_part;
+        } else {
+            return "";
+        }
     }
 
     if (server_id == 0) {

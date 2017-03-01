@@ -182,7 +182,8 @@ void GameServer::_update_vars()
 
 void GameServer::_append_cmd_output(std::string line)
 {
-    cmd_output = cmd_output + line + '\n';
+    line.append("\n");
+    cmd_output.append(line);
 }
 
 // ---------------------------------------------------------------------
