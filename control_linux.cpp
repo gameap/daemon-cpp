@@ -12,6 +12,9 @@
 #include <sys/stat.h>
 #include <sys/file.h>
 
+// TODO: Debug only. Delete it
+#include <openssl/bio.h>
+
 #include <execinfo.h>
 #include <unistd.h>
 #include <errno.h>
@@ -22,6 +25,8 @@
 #include <boost/filesystem.hpp>
 
 #include "config.h"
+
+#include "functions/gcrypt.h"
 
 #define PID_FILE "/var/run/gdaemon.pid"
 // #define PID_FILE "gdaemon.pid"
@@ -183,6 +188,23 @@ int main(int argc, char** argv)
 {
     int status;
     int pid;
+
+//    char* text = "Text";
+    char *enc_text;
+    char *dec_text;
+
+    char *res_test = new char;
+    char *res_test2 = new char;
+
+//    std::shared_ptr<char> res_test_sh(new char);
+//    std::shared_ptr<char *> res_test2(new char);
+
+//    char *sh = res_test_sh.get();
+
+    size_t enc_size = GCrypt::aes_encrypt(&res_test2, "abcdcfdeabcdcfde", 16, "12345678123456781234567812345678", "1234567812345678");
+    size_t dec_size = GCrypt::aes_decrypt(&res_test2, res_test, enc_size, "12345678123456781234567812345678", "1234567812345678");
+    std::cout << "res_test2: " << res_test2 << std::endl;
+    exit;
 
 	Config& config = Config::getInstance();
 	config.cfg_file = "daemon.cfg";

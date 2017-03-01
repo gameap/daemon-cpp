@@ -45,19 +45,19 @@ private:
 
 class DaemonServer
 {
-public:
-DaemonServer(boost::asio::io_service& io_service, short port)
-        : acceptor_(io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), port)),
-        socket_(io_service)
-{
-        do_accept();
-};
+    public:
+    DaemonServer(boost::asio::io_service& io_service, short port)
+            : acceptor_(io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), port)),
+            socket_(io_service)
+    {
+            do_accept();
+    };
 
-private:
-    void do_accept();
+    private:
+        void do_accept();
 
-    boost::asio::ip::tcp::acceptor acceptor_;
-    boost::asio::ip::tcp::socket socket_;
+        boost::asio::ip::tcp::acceptor acceptor_;
+        boost::asio::ip::tcp::socket socket_;
 };
 
 // ---------------------------------------------------------------------

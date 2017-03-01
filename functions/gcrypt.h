@@ -5,11 +5,11 @@ namespace GCrypt {
     
     // -----------------------------------------------------------------
 
-    char * aes_encrypt(char *str_in, char *key);
+    int aes_encrypt(char ** str_out, char *str_in, size_t str_in_sz, char *key, char *iv);
 
     // -----------------------------------------------------------------
 
-    char * aes_decrypt(char *str_in, char *key);
+    int aes_decrypt(char ** str_out, char *str_in, size_t str_in_sz, char *key, char *iv);
 
     // -----------------------------------------------------------------
 
