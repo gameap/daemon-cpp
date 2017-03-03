@@ -574,7 +574,7 @@ bool GameServer::_copy_dir(
                 }
             } else {
                 // Found file: Copy
-                _append_cmd_output("Copy " + current.string() + "  " + destination.string() + "/" + current.filename().string());
+                //_append_cmd_output("Copy " + current.string() + "  " + destination.string() + "/" + current.filename().string());
                 
                 if (boost::filesystem::is_regular_file(current)) {
                     boost::filesystem::copy_file(current, destination / current.filename(), boost::filesystem::copy_option::overwrite_if_exists);
