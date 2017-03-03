@@ -257,9 +257,11 @@ std::string Task::get_output()
     }
 
     if (server_id == 0) {
-        std::string output_part = cmd_output.substr(cur_outpos, cmd_output.size());
-        cur_outpos += (cmd_output.size() - cur_outpos);
-        return output_part;
+        if (cmd_output.size()-cur_outpos > 0) {
+            std::string output_part = cmd_output.substr(cur_outpos, cmd_output.size());
+            cur_outpos += (cmd_output.size() - cur_outpos);
+            return output_part;
+        }
     }
 
     return "";
