@@ -18,6 +18,7 @@ public:
     }
 
     std::string cfg_file;
+    std::string output_log;
     std::string error_log;
 
     uint ds_id;

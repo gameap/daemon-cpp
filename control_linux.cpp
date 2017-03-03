@@ -55,13 +55,13 @@ static void signal_error(int sig, siginfo_t *si, void *ptr)
 	Messages = backtrace_symbols(Trace, TraceSize);
 
 	if (Messages) {
-		std::cout << std::endl << "== Backtrace ==" << std::endl;
+		std::cerr << std::endl << "== Backtrace ==" << std::endl;
 
 		for (x = 1; x < TraceSize; x++) {
-            std::cout << Messages[x] << std::endl;
+            std::cerr << Messages[x] << std::endl;
 		}
 
-        std::cout << "== End Backtrace ==" << std::endl << std::endl;
+        std::cerr << "== End Backtrace ==" << std::endl << std::endl;
 		free(Messages);
 	}
 
@@ -186,6 +186,7 @@ int main(int argc, char** argv)
 
 	Config& config = Config::getInstance();
 	config.cfg_file = "daemon.cfg";
+	config.output_log = "/var/log/gdaemon/gdaemon.log";
 	config.error_log = "/var/log/gdaemon/error.log";
 
 	for (int i = 0; i < argc - 1; i++) {
@@ -218,8 +219,8 @@ int main(int argc, char** argv)
 	        close(STDOUT_FILENO);
 	        close(STDERR_FILENO);
 
-	        freopen(config.error_log.c_str(), "w", stdout);
-	        freopen(config.error_log.c_str(), "w", stderr);
+	        freopen(config.output_log.c_str(), "a+", stdout);
+	        freopen(config.error_log.c_str(), "a+", stderr);
 
 	        // run_daemon();
 	        monitor_daemon();
