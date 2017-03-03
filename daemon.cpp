@@ -85,7 +85,11 @@ int check_tasks()
                 || (**it).get_status() == TASK_SUCCESS
             ) {
                 if (output == "") {
-                    output = (**it).get_output();
+                    try {
+                        output = (**it).get_output();
+                    } catch (std::exception &e) {
+                        std::cerr << "get_output() error: " << e.what() << std::endl;
+                    }
                 }
 
                 if (output != "") {
@@ -106,7 +110,11 @@ int check_tasks()
             // End task. Erase data
             if ((**it).get_status() == TASK_ERROR || (**it).get_status() == TASK_SUCCESS) {
                 if (output == "") {
-                    output = (**it).get_output();
+                    try {
+                        output = (**it).get_output();
+                    } catch (std::exception &e) {
+                        std::cerr << "get_output() error: " << e.what() << std::endl;
+                    }
                 }
 
                 if (output == "") {
