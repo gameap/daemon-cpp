@@ -31,6 +31,17 @@
 
 namespace GameAP {
 
+struct gs_stats {
+    time_t time;
+
+    std::vector<float> cpu_perc;
+    uintmax_t cpu_time;
+    uintmax_t ram_us;
+
+    std::map<std::string, netstats> netstats;
+    uintmax_t drv_us_space;
+};
+
 class GameServer {
 private:
     std::string screen_name;
