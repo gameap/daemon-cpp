@@ -66,7 +66,7 @@ DedicatedServer::DedicatedServer()
         }
 	#endif
 
-    std::map<std::string, ds_iftstats> ifstats;
+    std::map<std::string, netstats> ifstats;
     get_net_load(ifstats);
 
 	std::vector<float> cpu_percent;
@@ -253,7 +253,7 @@ int DedicatedServer::stats_process()
 
 // ---------------------------------------------------------------------
 
-int DedicatedServer::get_net_load(std::map<std::string, ds_iftstats> &ifstats)
+int DedicatedServer::get_net_load(std::map<std::string, netstats> &ifstats)
 {
     // Get current tx rx
     #ifdef _WIN32
@@ -261,7 +261,7 @@ int DedicatedServer::get_net_load(std::map<std::string, ds_iftstats> &ifstats)
     #elif __linux__
         char bufread[32];
     #endif
-    std::map<std::string, ds_iftstats> current_ifstats;
+    std::map<std::string, netstats> current_ifstats;
 
     #ifdef _WIN32
         /*DWORD dwRetval;
@@ -579,7 +579,7 @@ int DedicatedServer::update_db()
 
         // If stat
         std::string ifstat = "";
-        for (std::map<std::string, ds_iftstats>::iterator itd = (*it).ifstats.begin();
+        for (std::map<std::string, netstats>::iterator itd = (*it).ifstats.begin();
             itd != (*it).ifstats.end();
             ++itd
         ) {
