@@ -7,8 +7,6 @@
 	typedef unsigned long ulong;
 #endif
 
-#endif
-
 struct netstats {
     uintmax_t rxb;
     uintmax_t txb;
@@ -16,3 +14,5 @@ struct netstats {
     uintmax_t rxp;
     uintmax_t txp;
 };
+
+#endif
