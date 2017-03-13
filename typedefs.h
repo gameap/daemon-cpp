@@ -8,3 +8,11 @@
 #endif
 
 #endif
+
+struct netstats {
+    uintmax_t rxb;
+    uintmax_t txb;
+
+    uintmax_t rxp;
+    uintmax_t txp;
+};

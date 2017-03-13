@@ -52,14 +52,6 @@ namespace GameAP {
     // std::vector<uint> drv_space;
 // }
 
-struct ds_iftstats {
-    uintmax_t rxb;
-    uintmax_t txb;
-
-    uintmax_t rxp;
-    uintmax_t txp;
-};
-
 struct ds_stats {
     time_t time;
 
@@ -68,7 +60,7 @@ struct ds_stats {
     uintmax_t ram_us;
     uintmax_t ram_cache;
 
-    std::map<std::string, ds_iftstats> ifstats;
+    std::map<std::string, netstats> ifstats;
     std::map<std::string, uintmax_t> drv_us_space;
     std::map<std::string, uintmax_t> drv_free_space;
 };
@@ -94,7 +86,7 @@ private:
     std::map<ushort, ulong> last_cpustat[4];
 
     time_t last_ifstat_time;
-    std::map<std::string, ds_iftstats> last_ifstats;
+    std::map<std::string, netstats> last_ifstats;
 
     std::vector<std::string> interfaces;
     std::vector<std::string> drives;
@@ -120,7 +112,7 @@ public:
     int stats_process();
     int update_db();
 
-    int get_net_load(std::map<std::string, ds_iftstats> &ifstat);
+    int get_net_load(std::map<std::string, netstats> &ifstat);
     int get_cpu_load(std::vector<float> &cpu_percent);
 
     int get_ping(ushort &ping);
