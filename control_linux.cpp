@@ -23,6 +23,8 @@
 
 #include "config.h"
 
+namespace fs = boost::filesystem;
+
 #define PID_FILE "/var/run/gdaemon.pid"
 // #define PID_FILE "gdaemon.pid"
 #define LOG_DIRECTORY "/var/log/gameap-daemon"
@@ -190,8 +192,8 @@ int main(int argc, char** argv)
 	config.output_log = std::string(LOG_DIRECTORY) + "/main.log";
 	config.error_log = std::string(LOG_DIRECTORY) + "/error.log";
 
-    if (!boost::filesystem::exists(LOG_DIRECTORY)) {
-        boost::filesystem::create_directory(LOG_DIRECTORY);
+    if (!fs::exists(LOG_DIRECTORY)) {
+        fs::create_directory(LOG_DIRECTORY);
     }
 
 	for (int i = 0; i < argc - 1; i++) {
@@ -216,9 +218,9 @@ int main(int argc, char** argv)
 	        umask(0);
 	        setsid();
 
-	        boost::filesystem::path exe_path( boost::filesystem::initial_path<boost::filesystem::path>() );
-	        exe_path = boost::filesystem::system_complete( boost::filesystem::path( argv[0] ) );
-	        boost::filesystem::current_path(exe_path.parent_path());
+	        fs::path exe_path( fs::initial_path<fs::path>() );
+	        exe_path = fs::system_complete( fs::path( argv[0] ) );
+	        fs::current_path(exe_path.parent_path());
 
 	        close(STDIN_FILENO);
 	        close(STDOUT_FILENO);

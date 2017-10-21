@@ -24,6 +24,7 @@
 
 using namespace GameAP;
 
+namespace fs = boost::filesystem;
 namespace bp = ::boost::process;
 using namespace boost::process;
 using namespace boost::process::initializers;
@@ -349,22 +350,22 @@ int GameServer::update_server()
     ushort game_source =    INST_NO_SOURCE;
     ushort gt_source =      INST_NO_SOURCE;
 
-    boost::filesystem::path source_path;
+    fs::path source_path;
     
     if (game_install_from == INST_FROM_LOCREP) {
 
-        if (boost::filesystem::is_regular_file(game_localrep)) {
+        if (fs::is_regular_file(game_localrep)) {
             game_source = INST_FILE;
             source_path = game_localrep;
         }
-        else if (boost::filesystem::is_directory(game_localrep)) {
+        else if (fs::is_directory(game_localrep)) {
             game_source = INST_DIR;
             source_path = game_localrep;
         } else {
             game_install_from = INST_FROM_REMREP;
         }
 
-        if (!boost::filesystem::exists(source_path)) {
+        if (!fs::exists(source_path)) {
             std::cerr << "Local rep not found: " << source_path << std::endl;
             game_install_from = INST_FROM_REMREP;
             source_path = game_remrep;
@@ -383,8 +384,8 @@ int GameServer::update_server()
     }
 
     // Mkdir
-    if (!boost::filesystem::exists(work_path)) {
-        boost::filesystem::create_directories(work_path);
+    if (!fs::exists(work_path)) {
+        fs::create_directories(work_path);
     }
 
     // Wget/Copy and unpack
@@ -404,25 +405,25 @@ int GameServer::update_server()
         std::string archive = str(boost::format("%1%/%2%") % work_path.string() % source_path.filename().string());
         
         _unpack_archive(archive);
-        boost::filesystem::remove(archive);
+        fs::remove(archive);
     }
 
     // Game Type Install
 
     if (gt_install_from == INST_FROM_LOCREP) {
 
-        if (boost::filesystem::is_regular_file(gt_localrep)) {
+        if (fs::is_regular_file(gt_localrep)) {
             gt_source = INST_FILE;
             source_path = gt_localrep;
         }
-        else if (boost::filesystem::is_directory(gt_localrep)) {
+        else if (fs::is_directory(gt_localrep)) {
             gt_source = INST_DIR;
             source_path = gt_localrep;
         } else {
             gt_install_from = INST_FROM_REMREP;
         }
 
-        if (!boost::filesystem::exists(source_path)) {
+        if (!fs::exists(source_path)) {
             std::cerr << "Local rep not found: " << source_path << std::endl;
             gt_install_from = INST_FROM_REMREP;
             source_path = gt_remrep;
@@ -453,7 +454,7 @@ int GameServer::update_server()
         std::string archive = str(boost::format("%1%/%2%") % work_path.string() % source_path.filename().string());
         
         _unpack_archive(archive);
-        boost::filesystem::remove(archive);
+        fs::remove(archive);
     }
 
     #ifdef __linux__
@@ -481,7 +482,7 @@ int GameServer::update_server()
 
 // ---------------------------------------------------------------------
 
-int GameServer::_unpack_archive(boost::filesystem::path const & archive)
+int GameServer::_unpack_archive(fs::path const & archive)
 {
     std::string cmd;
 
@@ -505,7 +506,7 @@ int GameServer::_unpack_archive(boost::filesystem::path const & archive)
 int GameServer::_exec(std::string cmd)
 {
     std::cout << "CMD Exec: " << cmd << std::endl;
-    _append_cmd_output(boost::filesystem::current_path().string() + "# " + cmd);
+    _append_cmd_output(fs::current_path().string() + "# " + cmd);
 
     boost::process::pipe out = boost::process::create_pipe();
 
@@ -534,21 +535,21 @@ int GameServer::_exec(std::string cmd)
 // ---------------------------------------------------------------------
 
 bool GameServer::_copy_dir(
-    boost::filesystem::path const & source,
-    boost::filesystem::path const & destination
+    fs::path const & source,
+    fs::path const & destination
 ) {
     try {
         // Check whether the function call is valid
-        if(!boost::filesystem::exists(source) || !boost::filesystem::is_directory(source)) {
+        if(!fs::exists(source) || !fs::is_directory(source)) {
             _append_cmd_output("Source dir not found:  " + source.string());
             std::cerr << "Source directory " << source.string()
                 << " does not exist or is not a directory." << '\n';
             return false;
         }
         
-        if (!boost::filesystem::exists(destination)) {
+        if (!fs::exists(destination)) {
             // Create the destination directory
-            if (!boost::filesystem::create_directory(destination)) {
+            if (!fs::create_directory(destination)) {
                 _append_cmd_output("Create failed:  " + destination.string());
                 std::cerr << "Unable to create destination directory"
                     << destination.string() << '\n';
@@ -556,18 +557,18 @@ bool GameServer::_copy_dir(
             }
         }
         
-    } catch(boost::filesystem::filesystem_error const & e) {
+    } catch(fs::filesystem_error const & e) {
         std::cerr << e.what() << std::endl;
         return false;
     }
 
     // Iterate through the source directory
-    for(boost::filesystem::directory_iterator file(source);
-        file != boost::filesystem::directory_iterator(); ++file
+    for(fs::directory_iterator file(source);
+        file != fs::directory_iterator(); ++file
     ) {
         try {
-            boost::filesystem::path current(file->path());
-            if(boost::filesystem::is_directory(current)) {
+            fs::path current(file->path());
+            if(fs::is_directory(current)) {
                 // Found directory: Recursion
                 if(!_copy_dir(current, destination / current.filename())) {
                     return false;
@@ -576,14 +577,14 @@ bool GameServer::_copy_dir(
                 // Found file: Copy
                 //_append_cmd_output("Copy " + current.string() + "  " + destination.string() + "/" + current.filename().string());
                 
-                if (boost::filesystem::is_regular_file(current)) {
-                    boost::filesystem::copy_file(current, destination / current.filename(), boost::filesystem::copy_option::overwrite_if_exists);
+                if (fs::is_regular_file(current)) {
+                    fs::copy_file(current, destination / current.filename(), fs::copy_option::overwrite_if_exists);
                 }
                 else {
-                    boost::filesystem::copy(current, destination / current.filename());
+                    fs::copy(current, destination / current.filename());
                 }
             }
-        } catch(boost::filesystem::filesystem_error const & e) {
+        } catch(fs::filesystem_error const & e) {
             std:: cerr << e.what() << std::endl;
         }
     }
@@ -616,9 +617,9 @@ int GameServer::delete_server()
 
     try {
         std::cout << "Remove path: " << work_path << std::endl;
-        boost::filesystem::remove_all(work_path);
+        fs::remove_all(work_path);
     }
-    catch (boost::filesystem::filesystem_error &e) {
+    catch (fs::filesystem_error &e) {
         std::cerr << "Error remove: " << e.what() << std::endl;
         return -1;
     }
@@ -647,7 +648,7 @@ bool GameServer::status_server()
 {
     _update_vars();
 
-    boost::filesystem::path p(work_path);
+    fs::path p(work_path);
     p /= "pid.txt";
 
     char bufread[32];

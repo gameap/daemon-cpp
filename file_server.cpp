@@ -4,6 +4,7 @@
 #include "config.h"
 
 using boost::asio::ip::tcp;
+namespace fs = boost::filesystem;
 
 /* SERV Commands */
 #define FSERV_NOAUTH        0
@@ -210,19 +211,19 @@ void FileServerSess::cmd_process()
                 write_ok();
             } else if (sendfile_mode == FSERV_FILE_UPLOAD) {
 
-                boost::filesystem::path p = filename;
+                fs::path p = filename;
 
-                if (!boost::filesystem::exists(filename)) {
+                if (!fs::exists(filename)) {
                     response_msg(1, "File not found", true);
                     return;
                 }
 
                 std::cout << "Filename: " << p << std::endl;
-                std::cout << "Filesize: " << boost::filesystem::file_size(p) << std::endl;
+                std::cout << "Filesize: " << fs::file_size(p) << std::endl;
 
                 binn_list_add_uint32(write_binn, 100);
                 binn_list_add_str(write_binn, (char *)"Send start");
-                binn_list_add_uint64(write_binn, boost::filesystem::file_size(p));
+                binn_list_add_uint64(write_binn, fs::file_size(p));
                 do_write();
 
                 open_input_file();
@@ -324,10 +325,10 @@ void FileServerSess::cmd_process()
             }
             
             try {
-                boost::filesystem::path p = path;
-                boost::filesystem::create_directories(p);
+                fs::path p = path;
+                fs::create_directories(p);
             }
-            catch (boost::filesystem::filesystem_error &e) {
+            catch (fs::filesystem_error &e) {
                 std::cout << "Error mkdir: " << e.what() << std::endl;
                 response_msg(1, e.what(), true);
                 return;
@@ -355,13 +356,13 @@ void FileServerSess::cmd_process()
             try {
                 if (copy) {
                     // Copy
-                    boost::filesystem::copy(oldfile, newfile);
+                    fs::copy(oldfile, newfile);
                 } else {
                     // Move
-                    boost::filesystem::rename(oldfile, newfile);
+                    fs::rename(oldfile, newfile);
                 }
             }
-            catch (boost::filesystem::filesystem_error &e) {
+            catch (fs::filesystem_error &e) {
                 std::cout << "Error move: " << e.what() << std::endl;
                 response_msg(1, e.what(), true);
                 return;
@@ -388,13 +389,13 @@ void FileServerSess::cmd_process()
 
             try {
                 if (recursive) {
-                    boost::filesystem::remove_all(file);
+                    fs::remove_all(file);
                 }
                 else {
-                    boost::filesystem::remove(file);
+                    fs::remove(file);
                 }
             }
-            catch (boost::filesystem::filesystem_error &e) {
+            catch (fs::filesystem_error &e) {
                 std::cout << "Error remove: " << e.what() << std::endl;
                 response_msg(1, e.what(), true);
                 return;

@@ -31,6 +31,8 @@
 
 namespace GameAP {
 
+namespace fs = boost::filesystem;
+
 class GameServer {
 private:
     std::string screen_name;
@@ -59,15 +61,15 @@ private:
 
     time_t last_update_vars;
 
-    boost::filesystem::path work_path;
+    fs::path work_path;
 
     std::string cmd_output;
 
-    int _unpack_archive(boost::filesystem::path const & archive);
+    int _unpack_archive(fs::path const & archive);
     
     bool _copy_dir(
-        boost::filesystem::path const & source,
-        boost::filesystem::path const & destination
+        fs::path const & source,
+        fs::path const & destination
     );
 
     int _exec(std::string cmd);

@@ -3,6 +3,8 @@
 #include <Windows.h>
 #include <tchar.h>
 
+namespace fs = boost::filesystem;
+
 SERVICE_STATUS        g_ServiceStatus = { 0 };
 SERVICE_STATUS_HANDLE g_StatusHandle = NULL;
 HANDLE                g_ServiceStopEvent = INVALID_HANDLE_VALUE;
@@ -157,9 +159,9 @@ VOID WINAPI ServiceCtrlHandler(DWORD CtrlCode)
 
 int _tmain (int argc, TCHAR *argv[])
 {
-	boost::filesystem::path exe_path( boost::filesystem::initial_path<boost::filesystem::path>() );
-    exe_path = boost::filesystem::system_complete( boost::filesystem::path(argv[0]) );
-    boost::filesystem::current_path(exe_path.parent_path());
+	fs::path exe_path( fs::initial_path<fs::path>() );
+    exe_path = fs::system_complete( fs::path(argv[0]) );
+    fs::current_path(exe_path.parent_path());
 	
 	SERVICE_TABLE_ENTRY ServiceTable[] = 
     {
@@ -176,9 +178,9 @@ int _tmain (int argc, TCHAR *argv[])
 /*
 int main(int argc, char** argv)
 {
-    boost::filesystem::path exe_path( boost::filesystem::initial_path<boost::filesystem::path>() );
-    exe_path = boost::filesystem::system_complete( boost::filesystem::path( argv[0] ) );
-    boost::filesystem::current_path(exe_path.parent_path());
+    fs::path exe_path( fs::initial_path<fs::path>() );
+    exe_path = fs::system_complete( fs::path( argv[0] ) );
+    fs::current_path(exe_path.parent_path());
 
     ServiceWorkerThread();
 }

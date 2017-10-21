@@ -22,6 +22,7 @@
 #endif // _WIN32
 
 using namespace GameAP;
+namespace fs = boost::filesystem;
 
 DedicatedServer::DedicatedServer()
 {
@@ -60,7 +61,7 @@ DedicatedServer::DedicatedServer()
 
         // Check interfaces
         for (std::vector<std::string>::iterator it = config.if_list.begin(); it != config.if_list.end(); ++it) {
-            if (boost::filesystem::is_directory(str(boost::format("/sys/class/net/%s") % *it))) {
+            if (fs::is_directory(str(boost::format("/sys/class/net/%s") % *it))) {
                 interfaces.push_back(*it);
             }
         }
@@ -72,16 +73,16 @@ DedicatedServer::DedicatedServer()
 	std::vector<float> cpu_percent;
     get_cpu_load(cpu_percent);
 
-	boost::filesystem::space_info spi;
+	fs::space_info spi;
 
     // check filesystem
     for (std::vector<std::string>::iterator it = config.drives_list.begin(); it != config.drives_list.end(); ++it) {
         try {
-            spi = boost::filesystem::space(*it);
+            spi = fs::space(*it);
             drv_space[*it] = spi.capacity;
             std::cout << "space capacity [" << *it << "]: " << drv_space[*it] << std::endl;
             drives.push_back(*it);
-        } catch (boost::filesystem::filesystem_error &e) {
+        } catch (fs::filesystem_error &e) {
             std::cout << "error get space: " << e.what() << std::endl;
             return;
         }
@@ -225,9 +226,9 @@ int DedicatedServer::stats_process()
 	#endif
 
 	// Get drive space
-    boost::filesystem::space_info spi;
+    fs::space_info spi;
     for (std::vector<std::string>::iterator it = drives.begin(); it != drives.end(); ++it) {
-        spi = boost::filesystem::space(*it);
+        spi = fs::space(*it);
         cur_stats.drv_us_space[*it] = spi.capacity-spi.free;
         cur_stats.drv_free_space[*it] = spi.free;
     }

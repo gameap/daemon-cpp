@@ -15,6 +15,7 @@ using namespace boost::process;
 using namespace boost::process::initializers;
 
 using namespace GameAP;
+namespace fs = boost::filesystem;
 
 void Task::run()
 {
@@ -204,7 +205,7 @@ int Task::_exec(std::string cmd)
 int Task::_single_exec(std::string cmd)
 {
     std::cout << "CMD Exec: " << cmd << std::endl;
-    _append_cmd_output(boost::filesystem::current_path().string() + "# " + cmd);
+    _append_cmd_output(fs::current_path().string() + "# " + cmd);
 
     boost::process::pipe out = boost::process::create_pipe();
 
