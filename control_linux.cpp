@@ -25,6 +25,7 @@
 
 #define PID_FILE "/var/run/gdaemon.pid"
 // #define PID_FILE "gdaemon.pid"
+#define LOG_DIRECTORY "/var/log/gameap-daemon"
 
 #define CHILD_NEED_WORK			1
 #define CHILD_NEED_TERMINATE	2
@@ -186,8 +187,12 @@ int main(int argc, char** argv)
 
 	Config& config = Config::getInstance();
 	config.cfg_file = "daemon.cfg";
-	config.output_log = "/var/log/gdaemon/gdaemon.log";
-	config.error_log = "/var/log/gdaemon/error.log";
+	config.output_log = std::string(LOG_DIRECTORY) + "/main.log";
+	config.error_log = std::string(LOG_DIRECTORY) + "/error.log";
+
+    if (!boost::filesystem::exists(LOG_DIRECTORY)) {
+        boost::filesystem::create_directory(LOG_DIRECTORY);
+    }
 
 	for (int i = 0; i < argc - 1; i++) {
 		if (std::string(argv[i]) == "-c") {
