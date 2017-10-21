@@ -93,7 +93,7 @@ if (UNIX)
     # target_compile_definitions(gameap-daemon PRIVATE SYSCTL_DAEMON)
     target_compile_definitions(gameap-daemon PRIVATE GDADEMON_LIB_PATH="/usr/lib/gameap-daemon")
 
-	target_link_libraries (gameap-daemon binn boost_system boost_filesystem boost_iostreams boost_thread pthread crypto jsoncpp dl)
+	target_link_libraries (gameap-daemon binn boost_system boost_filesystem boost_iostreams boost_thread pthread crypto jsoncpp dl crypto)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -g" )
