@@ -1,0 +1,9 @@
+/.idea/
+/cmake-build-debug/
+/build/
+/gameap-starter
+/CMakeFiles
+/db/CMakeFiles
+/Makefile
+/CMakeCache.txt
+/cmake_install.cmake
