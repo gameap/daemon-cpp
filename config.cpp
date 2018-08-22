@@ -19,7 +19,10 @@ int Config::parse()
         boost::property_tree::ini_parser::read_ini(cfg_file.c_str(), pt);
 
         ds_id           = pt.get<uint>("ds_id");
-        listen_port     = pt.get<uint>("listen_port");
+
+        listen_port = pt.count("listen_port") > 0
+                      ? pt.get<uint>("listen_port")
+                      : 31717;
 
         daemon_login     = pt.get<std::string>("daemon_login");
         daemon_password  = pt.get<std::string>("daemon_password");
@@ -30,7 +33,10 @@ int Config::parse()
         db_passwd       = pt.get<std::string>("db_passwd");
         db_name         = pt.get<std::string>("db_name");
         db_port         = pt.get<uint>("db_port");
-        db_prefix       = pt.get<std::string>("db_prefix");
+        
+        db_prefix       = pt.count("db_prefix") > 0
+                          ? pt.get<std::string>("db_prefix")
+                          : "";
 
         pub_key_file    = pt.get<std::string>("pub_key_file");
 
