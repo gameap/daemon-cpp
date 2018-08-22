@@ -30,9 +30,12 @@ void Task::run()
 
     qstr = str(boost::format("UPDATE `{pref}gdaemon_tasks` SET `status` = 'working', `time_stchange` = %1% WHERE `id` = %2%") % time(0) % task_id);
 
+    // TODO: DB -> API
+    /*
     if (db->query(&qstr[0]) == -1) {
         std::cerr << "Update task status in DB error" << std::endl;
     }
+     */
     
     // if (db->query(
         // "SELECT `id`, `ds_id`, `server_id`, `task`, `data`, `cmd`, status+0 AS status\
@@ -176,12 +179,14 @@ void Task::run()
     if (result_status == 0) {
         status = success;
         qstr = str(boost::format("UPDATE `{pref}gdaemon_tasks` SET `status` = 'success', `time_stchange` = %1%  WHERE `id` = %2%") % time(0) % task_id);
-        db->query(&qstr[0]);
+        // TODO: DB -> API
+        // db->query(&qstr[0]);
     }
     else {
         status = error;
         qstr = str(boost::format("UPDATE `{pref}gdaemon_tasks` SET `status` = 'error', `time_stchange` = %1% WHERE `id` = %2%") % time(0) % task_id);
-        db->query(&qstr[0]);
+        // TODO: DB -> API
+        // db->query(&qstr[0]);
     }
 }
 
@@ -310,12 +315,17 @@ int TaskList::update_list()
             
 
     db_elems results;
+    // TODO: DB -> API
+    /*
     if (db->query(&qstr[0],&results) == -1){
         std::cerr << "Error query" << std::endl;
         return -1;
     }
+     */
 
     // Task tasks;
+    // TODO: DB -> API
+    /*
     for (auto itv = results.rows.begin(); itv != results.rows.end(); ++itv) {
             ulong task_id = (ulong)atoi(itv->row["id"].c_str());
             if (std::find(taskids.begin(), taskids.end(), task_id) != taskids.end()) {
@@ -340,6 +350,7 @@ int TaskList::update_list()
             
             insert(task);
     }
+     */
 
     return 0;
 }
@@ -357,6 +368,8 @@ void TaskList::check_working_errors()
         ) % config.ds_id
     );
 
+    // TODO: DB -> API
+    /*
     db_elems results;
     if (db->query(&qstr[0],&results) == -1){
         std::cerr << "Error query" << std::endl;
@@ -378,6 +391,7 @@ void TaskList::check_working_errors()
             }
         }
     }
+     */
 }
 
 // ---------------------------------------------------------------------

@@ -74,6 +74,8 @@ void GameServer::_update_vars()
         return;
     }
 
+    // TODO: DB -> API
+    /*
     std::string qstr = str(boost::format(
         "SELECT {pref}servers.*,\
             {pref}games.remote_repository AS game_remote_repository, {pref}games.local_repository AS game_local_repository,\
@@ -123,6 +125,7 @@ void GameServer::_update_vars()
     gt_remrep       = str_replace("{os}", OS, gt_remrep);
     
     staft_crash = (bool)atoi(results.rows[0].row["start_after_crash"].c_str());
+
 
     cmd_output      = "";
 
@@ -175,6 +178,7 @@ void GameServer::_update_vars()
     catch (std::exception &e) {
         std::cerr << "Aliases error: " << e.what() << std::endl;
     }
+     */
 
     last_update_vars = time(0);
 }
@@ -318,11 +322,14 @@ int GameServer::update_server()
             "UPDATE {pref}servers SET `installed` = 2\
                 WHERE {pref}servers.`id` = %1%"
         ) % server_id);
-        
+
+        // TODO: DB -> API
+        /*
         if (db->query(&qstr[0]) == -1) {
             fprintf(stdout, "Error query\n");
             return -1;
         }
+         */
     }
 
     std::cout << "Update Start" << std::endl;
@@ -470,11 +477,14 @@ int GameServer::update_server()
             "UPDATE {pref}servers SET `installed` = 1\
                 WHERE {pref}servers.`id` = %1%"
         ) % server_id);
-        
+
+        // TODO: DB -> API
+        /*
         if (db->query(&qstr[0]) == -1) {
             fprintf(stdout, "Error query\n");
             return -1;
         }
+         */
     }
 
     return 0;
@@ -608,11 +618,14 @@ int GameServer::delete_server()
             "UPDATE {pref}servers SET `installed` = 0\
                 WHERE {pref}servers.`id` = %1%"
         ) % server_id);
-        
+
+        // TODO: DB -> API
+        /*
         if (db->query(&qstr[0]) == -1) {
             fprintf(stdout, "Error query\n");
             return -1;
         }
+         */
     }
 
     try {
@@ -688,9 +701,12 @@ bool GameServer::status_server()
             % server_id
     );
 
+    // TODO: DB -> API
+    /*
     if (db->query(&qstr[0]) == -1) {
         std::cerr << "Update db error (status_server)" << std::endl;
     }
+     */
 
     return (bool)active;
 }
@@ -707,11 +723,16 @@ int GameServersList::update_list()
             % config.ds_id
     );
 
+    // TODO: DB -> API
+    /*
     if (db->query(&qstr[0], &results) == -1) {
         fprintf(stdout, "Error query\n");
         return -1;
     }
+     */
 
+    // TODO: DB -> API
+    /*
     for (auto itv = results.rows.begin(); itv != results.rows.end(); ++itv) {
         ulong server_id = (ulong)atoi(itv->row["id"].c_str());
 
@@ -727,6 +748,7 @@ int GameServersList::update_list()
             }
         }
     }
+     */
 
     return 0;
 }

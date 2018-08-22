@@ -35,8 +35,6 @@
 
 using namespace GameAP;
 
-Db *db;
-
 // ---------------------------------------------------------------------
 
 int check_tasks()
@@ -95,6 +93,8 @@ int check_tasks()
                 }
 
                 if (output != "") {
+                    // TODO: DB -> API
+                    /*
                     output = db->real_escape_string(&output[0]);
 
                     std::string qstr = str(
@@ -103,9 +103,11 @@ int check_tasks()
                         ) % output  % (**it).get_id()
                     );
 
+
                     if (db->query(&qstr[0]) == 0) {
                         output = "";
                     }
+                     */
                 }
             }
 
@@ -149,18 +151,6 @@ int run_daemon()
 
     if (config.parse() == -1) {
 		std::cout << "Config parse error" << std::endl;
-        return -1;
-    }
-
-    if (load_db(&db, &config.db_driver[0]) == -1) {
-        std::cerr << "Db load error" << std::endl;
-        return -1;
-    }
-
-    db->set_prefix(config.db_prefix);
-
-    if (db->connect(&config.db_host[0], &config.db_user[0], &config.db_passwd[0], &config.db_name[0], config.db_port) == -1) {
-        std::cerr << "Connect to db error" << std::endl;
         return -1;
     }
 

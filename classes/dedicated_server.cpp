@@ -90,6 +90,8 @@ DedicatedServer::DedicatedServer()
 
     last_stats_update = time(0);
 
+    // TODO: DB -> API
+    /*
     std::string qstr = str(boost::format("SELECT `script_start`, `script_stop`, `script_restart`, `script_status`, `script_get_console`, `script_send_command`\
             FROM `{pref}dedicated_servers`\
             WHERE `id` = '%1%'") % ds_id);
@@ -119,6 +121,7 @@ DedicatedServer::DedicatedServer()
 
     db_timediff = (time(0) - atoi(timeresults.rows[0].row["timestamp"].c_str()));
     std::cout << "DB Timediff: " << db_timediff << std::endl;
+     */
 }
 
 // ---------------------------------------------------------------------
@@ -604,6 +607,8 @@ int DedicatedServer::update_db()
             drvspace +=  str(boost::format("%1% %2% %3%") % (*itd).first % (*itd).second % drv_space[(*itd).first]) + "\n";
         }
 
+        // TODO: DB -> API
+        /*
         std::string qstr = str(
             boost::format(
                 "INSERT INTO `{pref}ds_stats` (`ds_id`, `time`, `loa`, `ram`, `cpu`, `ifstat`, `ping`, `drvspace`)\
@@ -616,6 +621,7 @@ int DedicatedServer::update_db()
         } else {
             break;
         }
+         */
     }
 
     // Clear completed
