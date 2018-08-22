@@ -204,6 +204,11 @@ int main(int argc, char** argv)
         }
 	}
 
+    #ifdef NON_DAEMON
+        run_daemon();
+        return 0;
+    #endif
+
 	#ifdef SYSCTL_DAEMON
 		monitor_daemon();
 	    return 0;

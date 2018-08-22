@@ -90,6 +90,7 @@ if (WIN32)
 endif()
 
 if (UNIX)
+    # target_compile_definitions(gameap-daemon PRIVATE NON_DAEMON)
     # target_compile_definitions(gameap-daemon PRIVATE SYSCTL_DAEMON)
     target_compile_definitions(gameap-daemon PRIVATE GDADEMON_LIB_PATH="/usr/lib/gameap-daemon")
 
