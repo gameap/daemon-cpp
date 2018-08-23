@@ -325,7 +325,6 @@ int TaskList::update_list()
 
         if (jreader.parse(r.body, jvalue, false)) {
             for( Json::ValueIterator itr = jvalue.begin() ; itr != jvalue.end() ; itr++ ) {
-
                 ulong task_id = (*itr)["id"].asLargestUInt();
                 if (std::find(taskids.begin(), taskids.end(), task_id) != taskids.end()) {
                     continue;
@@ -364,38 +363,40 @@ int TaskList::update_list()
 void TaskList::check_working_errors()
 {
     Config& config = Config::getInstance();
-    
-    std::string qstr = str(boost::format(
-        "SELECT `id`\
-            FROM `{pref}gdaemon_tasks`\
-            WHERE `ds_id` = %1% AND `status` = 'working'"
-        ) % config.ds_id
-    );
 
-    // TODO: DB -> API
-    /*
-    db_elems results;
-    if (db->query(&qstr[0],&results) == -1){
-        std::cerr << "Error query" << std::endl;
-        return;
-    }
+    RestClient::Connection* conn = new RestClient::Connection(config.api_host);
 
-    for (auto itv = results.rows.begin(); itv != results.rows.end(); ++itv) {
-        ulong task_id = (ulong)atoi(itv->row["id"].c_str());
+    conn->AppendHeader("Authorization", "Bearer " + config.api_key);
+    RestClient::Response r = conn->get("/gdaemon_api/tasks/get_working/" + std::to_string(config.ds_id));
 
-        if (std::find(taskids.begin(), taskids.end(), task_id) == taskids.end()) {
-            std::string qstr = str(
-                boost::format(
-                    "UPDATE `{pref}gdaemon_tasks` SET `status` = 'error' WHERE `id` = %1%"
-                ) % task_id
-            );
+    if (r.code != 200) {
+        std::cerr << "RestClient error: " << r.code << std::endl;
+    } else {
+        Json::Value jvalue;
+        Json::Reader jreader(Json::Features::strictMode());
 
-            if (db->query(&qstr[0]) != 0) {
-                std::cerr << "Query: Update task error" << std::endl;
+        if (jreader.parse(r.body, jvalue, false)) {
+            for (Json::ValueIterator itr = jvalue.begin(); itr != jvalue.end(); itr++) {
+                ulong task_id = (*itr)["id"].asLargestUInt();
+
+                if (std::find(taskids.begin(), taskids.end(), task_id) == taskids.end()) {
+
+                    // TODO: Update task. Set error status
+                    /*
+                    std::string qstr = str(
+                            boost::format(
+                                    "UPDATE `{pref}gdaemon_tasks` SET `status` = 'error' WHERE `id` = %1%"
+                            ) % task_id
+                    );
+
+                    if (db->query(&qstr[0]) != 0) {
+                        std::cerr << "Query: Update task error" << std::endl;
+                    }
+                     */
+                }
             }
         }
     }
-     */
 }
 
 // ---------------------------------------------------------------------
