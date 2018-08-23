@@ -6,10 +6,7 @@
 
 #include <boost/format.hpp>
 
-#include <jsoncpp/json/json.h>
-
-#include "restclient-cpp/connection.h"
-#include <restclient-cpp/restclient.h>
+#include "functions/restapi.h"
 
 #ifdef _WIN32
     #include <windows.h>
@@ -95,25 +92,19 @@ DedicatedServer::DedicatedServer()
     last_stats_update = time(0);
 
     std::cout << "Getting Dedicated server init data" << std::endl;
-    RestClient::Connection* conn = new RestClient::Connection(config.api_host);
 
-    conn->AppendHeader("Authorization", "Bearer " + config.api_key);
-    RestClient::Response r = conn->get("/gdaemon_api/get_init_data/" + std::to_string(ds_id));
+    try {
+        Json::Value jvalue = Gameap::Rest::get("/gdaemon_api/dedicated_servers/get_init_data/" + std::to_string(ds_id));
 
-    if (r.code != 200) {
-        std::cerr << "RestClient error: " << r.code << std::endl;
-    } else {
-        Json::Value jvalue;
-        Json::Reader jreader(Json::Features::strictMode());
-
-        if (jreader.parse(r.body, jvalue, false)) {
-            script_start = jvalue["script_start"].asString();
-            script_stop = jvalue["script_stop"].asString();
-            script_restart = jvalue["script_restart"].asString();
-            script_status = jvalue["script_status"].asString();
-            script_get_console = jvalue["script_get_console"].asString();
-            script_send_command = jvalue["script_send_command"].asString();
-        }
+        script_start = jvalue["script_start"].asString();
+        script_stop = jvalue["script_stop"].asString();
+        script_restart = jvalue["script_restart"].asString();
+        script_status = jvalue["script_status"].asString();
+        script_get_console = jvalue["script_get_console"].asString();
+        script_send_command = jvalue["script_send_command"].asString();
+    } catch (Gameap::Rest::RestapiException &exception) {
+        // Try later
+        std::cerr << exception.what() << std::endl;
     }
 }
 

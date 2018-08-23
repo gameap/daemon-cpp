@@ -8,11 +8,7 @@
 
 #include <cstring>
 
-#include "restclient-cpp/connection.h"
-#include <restclient-cpp/restclient.h>
-
-#include <jsoncpp/json/json.h>
-
+#include "functions/restapi.h"
 #include "functions/gsystem.h"
 
 namespace bp = ::boost::process;
@@ -33,7 +29,7 @@ void Task::run()
 
     std::string qstr;
 
-    qstr = str(boost::format("UPDATE `{pref}gdaemon_tasks` SET `status` = 'working', `time_stchange` = %1% WHERE `id` = %2%") % time(0) % task_id);
+    // qstr = str(boost::format("UPDATE `{pref}gdaemon_tasks` SET `status` = 'working', `time_stchange` = %1% WHERE `id` = %2%") % time(0) % task_id);
 
     // TODO: DB -> API
     /*
@@ -312,47 +308,45 @@ int TaskList::update_list()
     Config& config = Config::getInstance();
 
     std::cout << "Updating waiting tasks list" << std::endl;
-    RestClient::Connection* conn = new RestClient::Connection(config.api_host);
 
-    conn->AppendHeader("Authorization", "Bearer " + config.api_key);
-    RestClient::Response r = conn->get("/gdaemon_api/tasks/get_waiting/" + std::to_string(config.ds_id));
+    Json::Value jvalue;
 
-    if (r.code != 200) {
-        std::cerr << "RestClient error: " << r.code << std::endl;
-    } else {
-        Json::Value jvalue;
-        Json::Reader jreader(Json::Features::strictMode());
+    try {
+        jvalue = Gameap::Rest::get("/gdaemon_api/tasks/get_waiting/" + std::to_string(config.ds_id));
 
-        if (jreader.parse(r.body, jvalue, false)) {
-            for( Json::ValueIterator itr = jvalue.begin() ; itr != jvalue.end() ; itr++ ) {
-                ulong task_id = (*itr)["id"].asLargestUInt();
-                if (std::find(taskids.begin(), taskids.end(), task_id) != taskids.end()) {
-                    continue;
-                }
+    } catch (Gameap::Rest::RestapiException &exception) {
+        // Try later
+        std::cerr << exception.what() << std::endl;
+        return -1;
+    }
 
-                if ((*itr)["task"].asString() == "") {
-                    continue;
-                }
-
-                Task * task = new Task(
-                        task_id,
-                        (*itr)["dedicated_server_id"].asLargestUInt(),
-                        (*itr)["server_id"].asLargestUInt(),
-                        (*itr)["task"].asCString(),
-                        (*itr)["data"].isNull() ? "" : (*itr)["data"].asCString(),
-                        (*itr)["cmd"].isNull() ? "" : (*itr)["cmd"].asCString(),
-                        TASK_WAITING // (ushort)(*itr)["status"].asUInt()
-                );
-
-                if ((*itr)["run_aft_id"].asUInt() != 0) {
-                    task->run_after((ulong)(*itr)["run_aft_id"].asUInt());
-                } else {
-                    task->run_after(0);
-                }
-
-                insert(task);
-            }
+    for( Json::ValueIterator itr = jvalue.begin() ; itr != jvalue.end() ; itr++ ) {
+        ulong task_id = (*itr)["id"].asLargestUInt();
+        if (std::find(taskids.begin(), taskids.end(), task_id) != taskids.end()) {
+            continue;
         }
+
+        if ((*itr)["task"].asString() == "") {
+            continue;
+        }
+
+        Task * task = new Task(
+                task_id,
+                (*itr)["dedicated_server_id"].asLargestUInt(),
+                (*itr)["server_id"].asLargestUInt(),
+                (*itr)["task"].asCString(),
+                (*itr)["data"].isNull() ? "" : (*itr)["data"].asCString(),
+                (*itr)["cmd"].isNull() ? "" : (*itr)["cmd"].asCString(),
+                TASK_WAITING // (ushort)(*itr)["status"].asUInt()
+        );
+
+        if ((*itr)["run_aft_id"].asUInt() != 0) {
+            task->run_after((ulong)(*itr)["run_aft_id"].asUInt());
+        } else {
+            task->run_after(0);
+        }
+
+        insert(task);
     }
 
     return 0;
@@ -364,37 +358,34 @@ void TaskList::check_working_errors()
 {
     Config& config = Config::getInstance();
 
-    RestClient::Connection* conn = new RestClient::Connection(config.api_host);
+    Json::Value jvalue;
 
-    conn->AppendHeader("Authorization", "Bearer " + config.api_key);
-    RestClient::Response r = conn->get("/gdaemon_api/tasks/get_working/" + std::to_string(config.ds_id));
+    try {
+        jvalue = Gameap::Rest::get("/gdaemon_api/tasks/get_working/" + std::to_string(config.ds_id));
 
-    if (r.code != 200) {
-        std::cerr << "RestClient error: " << r.code << std::endl;
-    } else {
-        Json::Value jvalue;
-        Json::Reader jreader(Json::Features::strictMode());
+    } catch (Gameap::Rest::RestapiException &exception) {
+        // Try later
+        std::cerr << exception.what() << std::endl;
+        return;
+    }
 
-        if (jreader.parse(r.body, jvalue, false)) {
-            for (Json::ValueIterator itr = jvalue.begin(); itr != jvalue.end(); itr++) {
-                ulong task_id = (*itr)["id"].asLargestUInt();
+    for (Json::ValueIterator itr = jvalue.begin(); itr != jvalue.end(); itr++) {
+        ulong task_id = (*itr)["id"].asLargestUInt();
 
-                if (std::find(taskids.begin(), taskids.end(), task_id) == taskids.end()) {
+        if (std::find(taskids.begin(), taskids.end(), task_id) == taskids.end()) {
 
-                    // TODO: Update task. Set error status
-                    /*
-                    std::string qstr = str(
-                            boost::format(
-                                    "UPDATE `{pref}gdaemon_tasks` SET `status` = 'error' WHERE `id` = %1%"
-                            ) % task_id
-                    );
+            // TODO: Update task. Set error status
+            /*
+            std::string qstr = str(
+                    boost::format(
+                            "UPDATE `{pref}gdaemon_tasks` SET `status` = 'error' WHERE `id` = %1%"
+                    ) % task_id
+            );
 
-                    if (db->query(&qstr[0]) != 0) {
-                        std::cerr << "Query: Update task error" << std::endl;
-                    }
-                     */
-                }
+            if (db->query(&qstr[0]) != 0) {
+                std::cerr << "Query: Update task error" << std::endl;
             }
+             */
         }
     }
 }
