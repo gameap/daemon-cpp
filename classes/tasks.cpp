@@ -8,6 +8,11 @@
 
 #include <cstring>
 
+#include "restclient-cpp/connection.h"
+#include <restclient-cpp/restclient.h>
+
+#include <jsoncpp/json/json.h>
+
 #include "functions/gsystem.h"
 
 namespace bp = ::boost::process;
@@ -305,52 +310,51 @@ int TaskList::delete_task(std::vector<Task *>::iterator it)
 int TaskList::update_list()
 {
     Config& config = Config::getInstance();
-    
-    std::string qstr = str(boost::format(
-        "SELECT `id`, `run_aft_id`, `ds_id`, `server_id`, `task`, `data`, `cmd`, status+0 AS status\
-            FROM `{pref}gdaemon_tasks`\
-            WHERE `ds_id` = %1% AND `status` = 'waiting'"
-        ) % config.ds_id
-    );
-            
 
-    db_elems results;
-    // TODO: DB -> API
-    /*
-    if (db->query(&qstr[0],&results) == -1){
-        std::cerr << "Error query" << std::endl;
-        return -1;
-    }
-     */
+    std::cout << "Updating waiting tasks list" << std::endl;
+    RestClient::Connection* conn = new RestClient::Connection(config.api_host);
 
-    // Task tasks;
-    // TODO: DB -> API
-    /*
-    for (auto itv = results.rows.begin(); itv != results.rows.end(); ++itv) {
-            ulong task_id = (ulong)atoi(itv->row["id"].c_str());
-            if (std::find(taskids.begin(), taskids.end(), task_id) != taskids.end()) {
-                continue;
+    conn->AppendHeader("Authorization", "Bearer " + config.api_key);
+    RestClient::Response r = conn->get("/gdaemon_api/tasks/get_waiting/" + std::to_string(config.ds_id));
+
+    if (r.code != 200) {
+        std::cerr << "RestClient error: " << r.code << std::endl;
+    } else {
+        Json::Value jvalue;
+        Json::Reader jreader(Json::Features::strictMode());
+
+        if (jreader.parse(r.body, jvalue, false)) {
+            for( Json::ValueIterator itr = jvalue.begin() ; itr != jvalue.end() ; itr++ ) {
+
+                ulong task_id = (*itr)["id"].asLargestUInt();
+                if (std::find(taskids.begin(), taskids.end(), task_id) != taskids.end()) {
+                    continue;
+                }
+
+                if ((*itr)["task"].asString() == "") {
+                    continue;
+                }
+
+                Task * task = new Task(
+                        task_id,
+                        (*itr)["dedicated_server_id"].asLargestUInt(),
+                        (*itr)["server_id"].asLargestUInt(),
+                        (*itr)["task"].asCString(),
+                        (*itr)["data"].isNull() ? "" : (*itr)["data"].asCString(),
+                        (*itr)["cmd"].isNull() ? "" : (*itr)["cmd"].asCString(),
+                        TASK_WAITING // (ushort)(*itr)["status"].asUInt()
+                );
+
+                if ((*itr)["run_aft_id"].asUInt() != 0) {
+                    task->run_after((ulong)(*itr)["run_aft_id"].asUInt());
+                } else {
+                    task->run_after(0);
+                }
+
+                insert(task);
             }
-             
-            Task * task = new Task(
-                task_id,
-                (ulong)atoi(itv->row["ds_id"].c_str()),
-                (ulong)atoi(itv->row["server_id"].c_str()),
-                itv->row["task"].c_str(),
-                itv->row["data"].c_str(),
-                itv->row["cmd"].c_str(),
-                (ushort)atoi(itv->row["status"].c_str())
-            );
-
-            if (itv->row["run_aft_id"] != "") {
-                task->run_after((ulong)atoi(itv->row["run_aft_id"].c_str()));
-            } else {
-                task->run_after(0);
-            }
-            
-            insert(task);
+        }
     }
-     */
 
     return 0;
 }

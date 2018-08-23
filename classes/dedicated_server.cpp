@@ -88,17 +88,17 @@ DedicatedServer::DedicatedServer()
             std::cout << "space capacity [" << *it << "]: " << drv_space[*it] << std::endl;
             drives.push_back(*it);
         } catch (fs::filesystem_error &e) {
-            std::cout << "error get space: " << e.what() << std::endl;
-            return;
+            std::cerr << "error get space: " << e.what() << std::endl;
         }
     }
 
     last_stats_update = time(0);
 
+    std::cout << "Getting Dedicated server init data" << std::endl;
     RestClient::Connection* conn = new RestClient::Connection(config.api_host);
 
     conn->AppendHeader("Authorization", "Bearer " + config.api_key);
-    RestClient::Response r = conn->get("/gdaemon_api/get_ds/" + std::to_string(ds_id));
+    RestClient::Response r = conn->get("/gdaemon_api/get_init_data/" + std::to_string(ds_id));
 
     if (r.code != 200) {
         std::cerr << "RestClient error: " << r.code << std::endl;

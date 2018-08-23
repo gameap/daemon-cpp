@@ -50,7 +50,9 @@ int check_tasks()
     boost::thread_group     tasks_thrs;
 
     std::string output = "";
-    while (true) {
+
+    tasks.stop = false;
+    while (!tasks.stop) {
         tasks.update_list();
         for (std::vector<Task *>::iterator it = tasks.begin(); !tasks.is_end(it); it = tasks.next(it)) {
 

@@ -136,6 +136,8 @@ public:
 
     std::vector<Task *>::iterator next(std::vector<Task *>::iterator curit);
     bool is_end(std::vector<Task *>::iterator curit);
+
+    bool stop;
 };
 
 
