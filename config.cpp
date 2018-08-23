@@ -24,19 +24,11 @@ int Config::parse()
                       ? pt.get<uint>("listen_port")
                       : 31717;
 
+        api_host        = pt.get<std::string>("api_host");
+        api_key         = pt.get<std::string>("api_key");
+
         daemon_login     = pt.get<std::string>("daemon_login");
         daemon_password  = pt.get<std::string>("daemon_password");
-
-        db_driver       = pt.get<std::string>("db_driver");
-        db_host         = pt.get<std::string>("db_host");
-        db_user         = pt.get<std::string>("db_user");
-        db_passwd       = pt.get<std::string>("db_passwd");
-        db_name         = pt.get<std::string>("db_name");
-        db_port         = pt.get<uint>("db_port");
-        
-        db_prefix       = pt.count("db_prefix") > 0
-                          ? pt.get<std::string>("db_prefix")
-                          : "";
 
         pub_key_file    = pt.get<std::string>("pub_key_file");
 

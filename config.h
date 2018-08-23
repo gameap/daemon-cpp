@@ -24,16 +24,11 @@ public:
     uint ds_id;
     uint listen_port;
 
+    std::string api_host;
+    std::string api_key;
+
     std::string daemon_login;
     std::string daemon_password;
-
-    std::string db_driver;
-    std::string db_host;
-    std::string db_user;
-    std::string db_passwd;
-    std::string db_name;
-    uint db_port;
-    std::string db_prefix;
 
     std::string pub_key_file;
 
