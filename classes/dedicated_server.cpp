@@ -6,6 +6,11 @@
 
 #include <boost/format.hpp>
 
+#include <jsoncpp/json/json.h>
+
+#include "restclient-cpp/connection.h"
+#include <restclient-cpp/restclient.h>
+
 #ifdef _WIN32
     #include <windows.h>
     #include <stdio.h>
@@ -90,38 +95,26 @@ DedicatedServer::DedicatedServer()
 
     last_stats_update = time(0);
 
-    // TODO: DB -> API
-    /*
-    std::string qstr = str(boost::format("SELECT `script_start`, `script_stop`, `script_restart`, `script_status`, `script_get_console`, `script_send_command`\
-            FROM `{pref}dedicated_servers`\
-            WHERE `id` = '%1%'") % ds_id);
+    RestClient::Connection* conn = new RestClient::Connection(config.api_host);
 
-    db_elems results;
-    if (db->query(&qstr[0], &results) == -1) {
-        fprintf(stdout, "Error query\n");
-        return;
+    conn->AppendHeader("Authorization", "Bearer " + config.api_key);
+    RestClient::Response r = conn->get("/gdaemon_api/get_ds/" + std::to_string(ds_id));
+
+    if (r.code != 200) {
+        std::cerr << "RestClient error: " << r.code << std::endl;
+    } else {
+        Json::Value jvalue;
+        Json::Reader jreader(Json::Features::strictMode());
+
+        if (jreader.parse(r.body, jvalue, false)) {
+            script_start = jvalue["script_start"].asString();
+            script_stop = jvalue["script_stop"].asString();
+            script_restart = jvalue["script_restart"].asString();
+            script_status = jvalue["script_status"].asString();
+            script_get_console = jvalue["script_get_console"].asString();
+            script_send_command = jvalue["script_send_command"].asString();
+        }
     }
-
-    if (results.rows.size() <= 0) {
-        throw std::runtime_error("DS id not found");
-    }
-
-    script_start        = results.rows[0].row["script_start"];
-    script_stop         = results.rows[0].row["script_stop"];
-    script_restart      = results.rows[0].row["script_restart"];
-    script_status       = results.rows[0].row["script_status"];
-    script_get_console  = results.rows[0].row["script_get_console"];
-    script_send_command = results.rows[0].row["script_send_command"];
-
-    db_elems timeresults;
-    if (db->query("SELECT UNIX_TIMESTAMP() AS `timestamp`", &timeresults) == -1) {
-        std::cerr << "Timestamp get failed (DB query)" << std::endl;
-        return;
-    }
-
-    db_timediff = (time(0) - atoi(timeresults.rows[0].row["timestamp"].c_str()));
-    std::cout << "DB Timediff: " << db_timediff << std::endl;
-     */
 }
 
 // ---------------------------------------------------------------------
