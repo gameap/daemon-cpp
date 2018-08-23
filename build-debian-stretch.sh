@@ -10,6 +10,7 @@ apt-get -y install build-essential cmake
 apt-get -y install libboost-dev libboost-system-dev libboost-filesystem-dev libboost-iostreams-dev libboost-thread-dev
 apt-get -y --allow-unauthenticated install libboost-process-dev libbinn-dev
 apt-get -y install libjsoncpp-dev libssl-dev libmysqlclient-dev
+apt-get -y install libcpprest-dev
 
 cmake .
 make

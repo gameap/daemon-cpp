@@ -57,7 +57,6 @@ link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs)
 set(SOURCES_CPP
     config.cpp
     daemon.cpp
-    db/db.cpp
     daemon_server.cpp
     file_server.cpp
     functions/gcrypt.cpp
@@ -83,18 +82,18 @@ endif()
 add_executable(gameap-daemon ${SOURCES_CPP})
 
 if (WIN32)
-	target_link_libraries (gameap-daemon gcc stdc++ ws2_32 wsock32 binn boost_system boost_filesystem boost_iostreams boost_thread crypto ssl jsoncpp)
+	target_link_libraries (gameap-daemon gcc stdc++ ws2_32 wsock32 binn boost_system boost_filesystem boost_iostreams boost_thread crypto ssl jsoncpp restclient-cpp curl)
 
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -march=i686 -static" )
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -march=i686 -static" )
 endif()
 
 if (UNIX)
-    # target_compile_definitions(gameap-daemon PRIVATE NON_DAEMON)
+    target_compile_definitions(gameap-daemon PRIVATE NON_DAEMON)
     # target_compile_definitions(gameap-daemon PRIVATE SYSCTL_DAEMON)
     target_compile_definitions(gameap-daemon PRIVATE GDADEMON_LIB_PATH="/usr/lib/gameap-daemon")
 
-	target_link_libraries (gameap-daemon binn boost_system boost_filesystem boost_iostreams boost_thread pthread crypto jsoncpp dl crypto)
+	target_link_libraries (gameap-daemon binn boost_system boost_filesystem boost_iostreams boost_thread pthread crypto jsoncpp dl crypto restclient-cpp curl)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -g" )
