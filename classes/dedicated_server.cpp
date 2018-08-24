@@ -78,7 +78,7 @@ DedicatedServer::DedicatedServer()
 	fs::space_info spi;
 
     // check filesystem
-    for (std::vector<std::string>::iterator it = config.drives_list.begin(); it != config.drives_list.end(); ++it) {
+    for (auto it = config.drives_list.begin(); it != config.drives_list.end(); ++it) {
         try {
             spi = fs::space(*it);
             drv_space[*it] = spi.capacity;

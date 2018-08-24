@@ -17,6 +17,7 @@
 #undef BOOST_NO_CXX11_SCOPED_ENUMS
 #include <boost/format.hpp>
 
+#include "functions/restapi.h"
 #include "functions/gsystem.h"
 #include "functions/gstring.h"
 
@@ -718,27 +719,22 @@ int GameServersList::update_list()
     Config& config = Config::getInstance();
     db_elems results;
 
-    std::string qstr = str(
-        boost::format("SELECT `id` FROM `{pref}servers` WHERE `ds_id` = %1%")
-            % config.ds_id
-    );
+    Json::Value jvalue;
 
-    // TODO: DB -> API
-    /*
-    if (db->query(&qstr[0], &results) == -1) {
-        fprintf(stdout, "Error query\n");
+    try {
+        jvalue = Gameap::Rest::get("/gdaemon_api/servers/get_id_list/" + std::to_string(config.ds_id));
+    } catch (Gameap::Rest::RestapiException &exception) {
+        // Try later
+        std::cerr << exception.what() << std::endl;
         return -1;
     }
-     */
 
-    // TODO: DB -> API
-    /*
-    for (auto itv = results.rows.begin(); itv != results.rows.end(); ++itv) {
-        ulong server_id = (ulong)atoi(itv->row["id"].c_str());
+    for (Json::ValueIterator itr = jvalue.begin(); itr != jvalue.end(); ++itr) {
+        ulong server_id = (*itr)["id"].asUInt64();
 
         if (servers_list.find(server_id) == servers_list.end()) {
             try {
-                GameServer * gserver = new GameServer(server_id);
+                auto * gserver = new GameServer(server_id);
                 servers_list.insert(
                     servers_list.end(),
                     std::pair<ulong, GameServer *>(server_id, gserver)
@@ -748,7 +744,6 @@ int GameServersList::update_list()
             }
         }
     }
-     */
 
     return 0;
 }
