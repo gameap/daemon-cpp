@@ -21,6 +21,7 @@ namespace Gameap::Rest {
         std::string msg_;
     };
 
+    Json::Value get_token();
     Json::Value get(const std::string& uri);
 }
 
