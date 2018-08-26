@@ -96,6 +96,9 @@ DedicatedServer::DedicatedServer()
     try {
         Json::Value jvalue = Gameap::Rest::get("/gdaemon_api/dedicated_servers/get_init_data/" + std::to_string(ds_id));
 
+        // TODO: Check work path!
+
+        work_path = jvalue["work_path"].asString();
         script_start = jvalue["script_start"].asString();
         script_stop = jvalue["script_stop"].asString();
         script_restart = jvalue["script_restart"].asString();
@@ -646,4 +649,9 @@ std::string DedicatedServer::get_script_cmd(ushort script)
             return script_send_command;
             break;
     }
+}
+
+std::string DedicatedServer::get_work_path()
+{
+    return work_path;
 }

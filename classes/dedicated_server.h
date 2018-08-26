@@ -66,6 +66,23 @@ struct ds_stats {
 };
 
 class DedicatedServer {
+public:
+	static DedicatedServer& getInstance() {
+		static DedicatedServer instance;
+		return instance;
+	}
+
+	int stats_process();
+	int update_db();
+
+	int get_net_load(std::map<std::string, netstats> &ifstat);
+	int get_cpu_load(std::vector<float> &cpu_percent);
+
+	std::string get_work_path();
+
+	int get_ping(ushort &ping);
+
+	std::string get_script_cmd(ushort script);
 private:
     ushort cpu_count;
     uintmax_t ram_total;
@@ -93,6 +110,8 @@ private:
 
     ulong ds_id;
 
+	std::string work_path;
+
     std::string script_start;
     std::string script_stop;
     std::string script_restart;
@@ -103,21 +122,6 @@ private:
     DedicatedServer();
     DedicatedServer( const DedicatedServer&);
     DedicatedServer& operator=( DedicatedServer& );
-public:
-    static DedicatedServer& getInstance() {
-        static DedicatedServer instance;
-        return instance;
-    }
-
-    int stats_process();
-    int update_db();
-
-    int get_net_load(std::map<std::string, netstats> &ifstat);
-    int get_cpu_load(std::vector<float> &cpu_percent);
-
-    int get_ping(ushort &ping);
-
-    std::string get_script_cmd(ushort script);
 };
 
 /* End namespace GameAP */

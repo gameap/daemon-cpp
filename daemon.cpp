@@ -28,7 +28,7 @@
 #include "classes/game_server.h"
 
 #include "functions/gcrypt.h"
-
+#include "functions/restapi.h"
 
 
 // #include <string>
@@ -152,15 +152,23 @@ int run_daemon()
     Config& config = Config::getInstance();
 
     if (config.parse() == -1) {
-		std::cout << "Config parse error" << std::endl;
+		std::cerr << "Config parse error" << std::endl;
         return -1;
     }
 
-    boost::thread ctsk_thr(check_tasks);
+    try {
+        Gameap::Rest::get_token();
+    } catch (Gameap::Rest::RestapiException &exception) {
+        std::cerr << exception.what() << std::endl;
+        return -1;
+    }
+
     boost::thread daemon_server(run_server, config.listen_port);
 
     DedicatedServer& deds = DedicatedServer::getInstance();
     GameServersList& gslist = GameServersList::getInstance();
+
+    boost::thread ctsk_thr(check_tasks);
 
     while (true) {
         deds.stats_process();

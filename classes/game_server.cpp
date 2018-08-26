@@ -29,31 +29,6 @@ namespace fs = boost::filesystem;
 namespace bp = ::boost::process;
 using namespace boost::process;
 using namespace boost::process::initializers;
-/*
-
-bp::child start_child() 
-{ 
-    std::string exec = "ls";
-
-    std::vector<std::string> args; 
-    args.push_back("--version");
-
-    bp::context ctx; 
-    ctx.stdout_behavior = bp::silence_stream(); 
-
-    return bp::launch(exec, args, ctx); 
-} 
-
-int GameServers::start_server()
-{
-    bp::child c = start_child(); 
-
-    bp::pistream &is = c.get_stdout(); 
-    std::string line; 
-    while (std::getline(is, line)) 
-        std::cout << line << std::endl; 
-}
-*/
 
 // ---------------------------------------------------------------------
 
@@ -63,70 +38,67 @@ GameServer::GameServer(ulong mserver_id)
     last_update_vars = 0;
 
     staft_crash_disabled = false;
-    
-    _update_vars();
+
+    try {
+        _update_vars();
+    } catch (std::exception &e) {
+        std::cerr << "Server update vars error: " << e.what() << std::endl;
+    }
 }
 
 // ---------------------------------------------------------------------
 
 void GameServer::_update_vars()
 {
-    if (time(0) - last_update_vars < TIME_UPDDIFF) {
+    if (time(nullptr) - last_update_vars < TIME_UPDDIFF) {
         return;
     }
 
-    // TODO: DB -> API
-    /*
-    std::string qstr = str(boost::format(
-        "SELECT {pref}servers.*,\
-            {pref}games.remote_repository AS game_remote_repository, {pref}games.local_repository AS game_local_repository,\
-            {pref}dedicated_servers.work_path,\
-            {pref}games.start_code AS g_start_code,\
-            {pref}game_types.remote_repository AS gt_remote_repository, {pref}game_types.local_repository AS gt_local_repository, {pref}game_types.aliases AS gt_aliases\
-        FROM `{pref}servers`\
-        RIGHT JOIN {pref}dedicated_servers ON {pref}dedicated_servers.id={pref}servers.ds_id\
-        RIGHT JOIN {pref}games ON {pref}games.code={pref}servers.game\
-        RIGHT JOIN {pref}game_types ON {pref}game_types.id={pref}servers.game_type\
-        WHERE {pref}servers.`id` = %1%\
-        LIMIT 1\
-        "
-    ) % server_id);
+    DedicatedServer& dedicatedServer = DedicatedServer::getInstance();
 
-    db_elems results;
-    if (db->query(&qstr[0], &results) == -1) {
-        std::cerr << "Error query" << std::endl;
+    Json::Value jvalue;
+
+    try {
+        jvalue = Gameap::Rest::get("/gdaemon_api/servers/" + std::to_string(server_id));
+    } catch (Gameap::Rest::RestapiException &exception) {
+        // Try later
+        std::cerr << exception.what() << std::endl;
         return;
     }
 
-    if (results.rows.size() <= 0) {
-        throw std::runtime_error("Server id not found");
+    if (jvalue.size() == 0) {
+        throw("Empty API response");
     }
 
-    work_path = results.rows[0].row["work_path"];   // DS dir
-    work_path /= results.rows[0].row["dir"];        // Game server dir
-    user        = results.rows[0].row["su_user"];        // User
+    work_path = dedicatedServer.get_work_path();
 
-    ip              = results.rows[0].row["server_ip"];
-    server_port     = (ulong)atoi(results.rows[0].row["server_port"].c_str());
-    query_port      = (ulong)atoi(results.rows[0].row["query_port"].c_str());
-    rcon_port       = (ulong)atoi(results.rows[0].row["rcon_port"].c_str());
+    work_path /= jvalue["dir"].isString()
+                 ? jvalue["dir"].asString()
+                 : throw("Empty game server directory");
 
-    start_command   = results.rows[0].row["start_command"];
-    game_scode      = results.rows[0].row["g_start_code"];
+    user            = jvalue["su_user"].asString();
 
-    game_localrep  = results.rows[0].row["game_local_repository"];
-    game_remrep    = results.rows[0].row["game_remote_repository"];
-    gt_localrep    = results.rows[0].row["gt_local_repository"];
-    gt_remrep      = results.rows[0].row["gt_remote_repository"];
+    ip              = jvalue["server_ip"].asString();
+    server_port     = jvalue["server_port"].asUInt();
+    query_port      = jvalue["query_port"].asUInt();
+    rcon_port       = jvalue["rcon_port"].asUInt();
+
+    start_command   = jvalue["start_command"].asString();
+    game_scode      = jvalue["code_name"].asString();
+
+    game_localrep  = jvalue["game"]["local_repository"].asString();
+    game_remrep    = jvalue["game"]["remote_repository"].asString();
+
+    gt_localrep    = jvalue["game_mod"]["local_repository"].asString();
+    gt_remrep      = jvalue["game_mod"]["remote_repository"].asString();
 
     // Replace os shortcode
     game_localrep   = str_replace("{os}", OS, game_localrep);
     game_remrep     = str_replace("{os}", OS, game_remrep);
     gt_localrep     = str_replace("{os}", OS, gt_localrep);
     gt_remrep       = str_replace("{os}", OS, gt_remrep);
-    
-    staft_crash = (bool)atoi(results.rows[0].row["start_after_crash"].c_str());
 
+    staft_crash = jvalue["start_after_crash"].asBool();
 
     cmd_output      = "";
 
@@ -137,51 +109,50 @@ void GameServer::_update_vars()
 
         Json::Reader jreader(Json::Features::strictMode());
 
-        if (jreader.parse(results.rows[0].row["gt_aliases"], jaliases, false)) {
-            for( Json::ValueIterator itr = jaliases.begin() ; itr != jaliases.end() ; itr++ ) {
-                
-                if ((*itr)["default_value"].isNull()) {
-                    aliases.insert(std::pair<std::string, std::string>((*itr)["alias"].asString(), ""));
-                }
-                else if ((*itr)["default_value"].isString()) {
-                    aliases.insert(std::pair<std::string, std::string>((*itr)["alias"].asString(), (*itr)["default_value"].asString()));
-                }
-                else if ((*itr)["default_value"].isInt()) {
-                    aliases.insert(std::pair<std::string, std::string>((*itr)["alias"].asString(), std::to_string((*itr)["default_value"].asInt())));
-                }
-                else {
-                    std::cerr << "Unknown alias type: " << (*itr)["default_value"] << std::endl;
-                }
+        jaliases = jvalue["game_mod"]["vars"];
+
+        for( Json::ValueIterator itr = jaliases.begin() ; itr != jaliases.end() ; itr++ ) {
+
+            if ((*itr)["default_value"].isNull()) {
+                aliases.insert(std::pair<std::string, std::string>((*itr)["alias"].asString(), ""));
+            }
+            else if ((*itr)["default_value"].isString()) {
+                aliases.insert(std::pair<std::string, std::string>((*itr)["alias"].asString(), (*itr)["default_value"].asString()));
+            }
+            else if ((*itr)["default_value"].isInt()) {
+                aliases.insert(std::pair<std::string, std::string>((*itr)["alias"].asString(), std::to_string((*itr)["default_value"].asInt())));
+            }
+            else {
+                std::cerr << "Unknown alias type: " << (*itr)["default_value"] << std::endl;
             }
         }
 
-        if (jreader.parse(results.rows[0].row["aliases"], jaliases, false)) {
-            for( Json::ValueIterator itr = jaliases.begin() ; itr != jaliases.end() ; itr++ ) {
-                if ((*itr).isString()) {
-                    if (aliases.find(itr.key().asString()) == aliases.end()) {
-                        aliases.insert(std::pair<std::string, std::string>(itr.key().asString(), (*itr).asString()));
-                    } else {
-                        aliases[itr.key().asString()] = (*itr).asString();
-                    }
-                }
-                else if ((*itr).isInt()) {
-                    if (aliases.find(itr.key().asString()) == aliases.end()) {
-                        aliases.insert(std::pair<std::string, std::string>(itr.key().asString(), std::to_string((*itr).asInt())));
-                    } else {
-                        aliases[itr.key().asString()] = std::to_string((*itr).asInt());
-                    }
+        Json::Value server_vars = jvalue["vars"];;
+
+        for( Json::ValueIterator itr = server_vars.begin() ; itr != server_vars.end() ; itr++ ) {
+            if ((*itr).isString()) {
+                if (aliases.find(itr.key().asString()) == aliases.end()) {
+                    aliases.insert(std::pair<std::string, std::string>(itr.key().asString(), (*itr).asString()));
                 } else {
-                    std::cerr << "Unknown alias type: " << (*itr) << std::endl;
+                    aliases[itr.key().asString()] = (*itr).asString();
                 }
+            }
+            else if ((*itr).isInt()) {
+                if (aliases.find(itr.key().asString()) == aliases.end()) {
+                    aliases.insert(std::pair<std::string, std::string>(itr.key().asString(), std::to_string((*itr).asInt())));
+                } else {
+                    aliases[itr.key().asString()] = std::to_string((*itr).asInt());
+                }
+            } else {
+                std::cerr << "Unknown alias type: " << (*itr) << std::endl;
             }
         }
     }
     catch (std::exception &e) {
         std::cerr << "Aliases error: " << e.what() << std::endl;
     }
-     */
 
-    last_update_vars = time(0);
+    last_update_vars = time(nullptr);
 }
 
 // ---------------------------------------------------------------------
@@ -660,7 +631,11 @@ int GameServer::cmd_exec(std::string cmd)
 
 bool GameServer::status_server()
 {
-    _update_vars();
+    try {
+        _update_vars();
+    } catch (std::exception &e) {
+        std::cerr << "Server update vars error: " << e.what() << std::endl;
+    }
 
     fs::path p(work_path);
     p /= "pid.txt";
@@ -722,7 +697,7 @@ int GameServersList::update_list()
     Json::Value jvalue;
 
     try {
-        jvalue = Gameap::Rest::get("/gdaemon_api/servers/get_id_list/" + std::to_string(config.ds_id));
+        jvalue = Gameap::Rest::get("/gdaemon_api/servers?fields[servers]=id");
     } catch (Gameap::Rest::RestapiException &exception) {
         // Try later
         std::cerr << exception.what() << std::endl;
@@ -730,11 +705,13 @@ int GameServersList::update_list()
     }
 
     for (Json::ValueIterator itr = jvalue.begin(); itr != jvalue.end(); ++itr) {
-        ulong server_id = (*itr)["id"].asUInt64();
+        ulong server_id = (*itr)["id"].asUInt();
 
         if (servers_list.find(server_id) == servers_list.end()) {
+
+            GameServer * gserver = new GameServer(server_id);
+
             try {
-                auto * gserver = new GameServer(server_id);
                 servers_list.insert(
                     servers_list.end(),
                     std::pair<ulong, GameServer *>(server_id, gserver)

@@ -27,7 +27,8 @@ namespace fs = boost::filesystem;
 
 #define PID_FILE "/var/run/gdaemon.pid"
 // #define PID_FILE "gdaemon.pid"
-#define LOG_DIRECTORY "/var/log/gameap-daemon"
+//#define LOG_DIRECTORY "/var/log/gameap-daemon"
+#define LOG_DIRECTORY "log"
 
 #define CHILD_NEED_WORK			1
 #define CHILD_NEED_TERMINATE	2
