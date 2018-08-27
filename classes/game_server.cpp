@@ -39,6 +39,9 @@ GameServer::GameServer(ulong mserver_id)
 
     staft_crash_disabled = false;
 
+    cmd_output = new std::string;
+    (*cmd_output).reserve(10240);
+
     try {
         _update_vars();
     } catch (std::exception &e) {
@@ -100,7 +103,7 @@ void GameServer::_update_vars()
 
     staft_crash = jvalue["start_after_crash"].asBool();
 
-    cmd_output      = "";
+    *cmd_output      = "";
 
     aliases.clear();
 
@@ -160,7 +163,7 @@ void GameServer::_update_vars()
 void GameServer::_append_cmd_output(std::string line)
 {
     line.append("\n");
-    cmd_output.append(line);
+    (*cmd_output).append(line);
 }
 
 // ---------------------------------------------------------------------
@@ -168,15 +171,22 @@ void GameServer::_append_cmd_output(std::string line)
 // size_t GameServer::get_cmd_output(std::string * output, size_t position)
 int GameServer::get_cmd_output(std::string * str_out)
 {
-    *str_out = cmd_output;
+    *str_out = *cmd_output;
     return 0;
+}
+
+// ---------------------------------------------------------------------
+
+std::string GameServer::get_cmd_output()
+{
+    return *cmd_output;
 }
 
 // ---------------------------------------------------------------------
 
 void GameServer::clear_cmd_output()
 {
-    cmd_output.clear();
+    (*cmd_output).clear();
 }
 
 // ---------------------------------------------------------------------
@@ -290,18 +300,9 @@ int GameServer::update_server()
 
     // Update installed = 2. In process
     {
-        std::string qstr = str(boost::format(
-            "UPDATE {pref}servers SET `installed` = 2\
-                WHERE {pref}servers.`id` = %1%"
-        ) % server_id);
-
-        // TODO: DB -> API
-        /*
-        if (db->query(&qstr[0]) == -1) {
-            fprintf(stdout, "Error query\n");
-            return -1;
-        }
-         */
+        Json::Value jdata;
+        jdata["installed"] = 2;
+        Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(server_id), jdata);
     }
 
     std::cout << "Update Start" << std::endl;
@@ -445,18 +446,10 @@ int GameServer::update_server()
 
     // Update installed = 1
     {
-        std::string qstr = str(boost::format(
-            "UPDATE {pref}servers SET `installed` = 1\
-                WHERE {pref}servers.`id` = %1%"
-        ) % server_id);
+        Json::Value jdata;
+        jdata["installed"] = 1;
 
-        // TODO: DB -> API
-        /*
-        if (db->query(&qstr[0]) == -1) {
-            fprintf(stdout, "Error query\n");
-            return -1;
-        }
-         */
+        Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(server_id), jdata);
     }
 
     return 0;
@@ -506,7 +499,7 @@ int GameServer::_exec(std::string cmd)
 
     while (!is.eof()) {
         std::getline(is, s);
-        cmd_output.append(s + "\n");
+        (*cmd_output).append(s + "\n");
     }
     
     auto exit_code = wait_for_exit(c);
@@ -586,18 +579,9 @@ int GameServer::delete_server()
 
     // installed = 0.
     {
-        std::string qstr = str(boost::format(
-            "UPDATE {pref}servers SET `installed` = 0\
-                WHERE {pref}servers.`id` = %1%"
-        ) % server_id);
-
-        // TODO: DB -> API
-        /*
-        if (db->query(&qstr[0]) == -1) {
-            fprintf(stdout, "Error query\n");
-            return -1;
-        }
-         */
+        Json::Value jdata;
+        jdata["installed"] = 0;
+        Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(server_id), jdata);
     }
 
     try {
@@ -645,44 +629,44 @@ bool GameServer::status_server()
     std::ifstream pidfile;
     pidfile.open(p.string(), std::ios::in);
 
-    if (!pidfile.good()) {
-        std::cerr << "Pidfile " << p <<  " not found" << std::endl;
-        return false;
-    }
-    
-    pidfile.getline(bufread, 32);
-    pidfile.close();
-    
-    ulong pid = atoi(bufread);
-    // std::cout << "bufread: " << bufread << std::endl;
-    // std::cout << "atoi(bufread): " << atoi(bufread) << std::endl;
-
     bool active = false;
-    if (pid != 0) {
-        #ifdef __linux__
+
+    if (pidfile.good()) {
+        pidfile.getline(bufread, 32);
+        pidfile.close();
+
+        ulong pid = atoi(bufread);
+        // std::cout << "bufread: " << bufread << std::endl;
+        // std::cout << "atoi(bufread): " << atoi(bufread) << std::endl;
+
+        if (pid != 0) {
+#ifdef __linux__
             active = (kill(pid, 0) == 0) ? 1 : 0;
 
-        #elif _WIN32
+#elif _WIN32
             HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, pid);
             DWORD ret = WaitForSingleObject(process, 0);
             CloseHandle(process);
             active = (ret == WAIT_TIMEOUT);
-        #endif
+#endif
+        }
+    } else {
+        std::cerr << "Pidfile " << p <<  " not found" << std::endl;
+        active = false;
     }
 
-    std::string qstr = str(
-        boost::format("UPDATE `{pref}servers` SET `process_active` = '%1%', `last_process_check` = '%2%' WHERE `id` = %3%")
-            % (int)active
-            % time(0)
-            % server_id
-    );
+    Json::Value jdata;
+    jdata["process_active"] = (int)active;
 
-    // TODO: DB -> API
-    /*
-    if (db->query(&qstr[0]) == -1) {
-        std::cerr << "Update db error (status_server)" << std::endl;
-    }
-     */
+    std::time_t now = std::time(nullptr);
+    std::tm * ptm = std::localtime(&now);
+    char buffer[32];
+    std::strftime(buffer, 32, "%F %T", ptm);
+    // delete ptm;
+
+    jdata["last_process_check"] = buffer;
+
+    Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(server_id), jdata);
 
     return (bool)active;
 }

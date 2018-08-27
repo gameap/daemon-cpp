@@ -67,7 +67,7 @@ set(SOURCES_CPP
     classes/dedicated_server.cpp
     classes/game_server.cpp
     classes/tasks.cpp
-        functions/restapi.cpp functions/restapi.h)
+        functions/restapi.cpp functions/restapi.h status.cpp status.h)
 
 if (WIN32)
     list(APPEND SOURCES_CPP control_windows.cpp)

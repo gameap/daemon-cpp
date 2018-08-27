@@ -89,7 +89,7 @@ DedicatedServer::DedicatedServer()
         }
     }
 
-    last_stats_update = time(0);
+    last_stats_update = time(nullptr);
 
     std::cout << "Getting Dedicated server init data" << std::endl;
 

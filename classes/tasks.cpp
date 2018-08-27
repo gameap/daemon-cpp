@@ -29,29 +29,18 @@ void Task::run()
 
     std::string qstr;
 
-    Json::Value jdata;
-    jdata["status"] = status;
-    jdata["time_stchange"] = (uint)task_started;
-    Gameap::Rest::put("/gdaemon_api/tasks/" + std::to_string(task_id), jdata);
+    try {
+        Json::Value jdata;
+        jdata["status"] = status;
+        jdata["time_stchange"] = (uint) task_started;
+        Gameap::Rest::put("/gdaemon_api/tasks/" + std::to_string(task_id), jdata);
+    } catch (Gameap::Rest::RestapiException &exception) {
+        std::cerr << "Error updating task status [to status code " + std::to_string(status) + "]: "
+                  << exception.what()
+                  << std::endl;
 
-    // qstr = str(boost::format("UPDATE `{pref}gdaemon_tasks` SET `status` = 'working', `time_stchange` = %1% WHERE `id` = %2%") % time(0) % task_id);
-
-    // TODO: DB -> API
-    /*
-    if (db->query(&qstr[0]) == -1) {
-        std::cerr << "Update task status in DB error" << std::endl;
+        return;
     }
-     */
-    
-    // if (db->query(
-        // "SELECT `id`, `ds_id`, `server_id`, `task`, `data`, `cmd`, status+0 AS status\
-            // FROM `{pref}gdaemon_tasks`\
-            // WHERE `status` = 'waiting'",
-        // &results) == -1
-    // ){
-        // fprintf(stdout, "Error query\n");
-        // return -1;
-    // }
 
     std::cout << "task: " << task << std::endl;
 
@@ -184,15 +173,19 @@ void Task::run()
 
     if (result_status == 0) {
         status = success;
-        qstr = str(boost::format("UPDATE `{pref}gdaemon_tasks` SET `status` = 'success', `time_stchange` = %1%  WHERE `id` = %2%") % time(0) % task_id);
-        // TODO: DB -> API
-        // db->query(&qstr[0]);
     }
     else {
         status = error;
-        qstr = str(boost::format("UPDATE `{pref}gdaemon_tasks` SET `status` = 'error', `time_stchange` = %1% WHERE `id` = %2%") % time(0) % task_id);
-        // TODO: DB -> API
-        // db->query(&qstr[0]);
+    }
+
+    try {
+        Json::Value jdata;
+        jdata["status"] = status;
+        Gameap::Rest::put("/gdaemon_api/tasks/" + std::to_string(task_id), jdata);
+    } catch (Gameap::Rest::RestapiException &exception) {
+        std::cerr << "Error updating task status [to status code " + std::to_string(status) + "]: "
+                  << exception.what()
+                  << std::endl;
     }
 }
 
@@ -240,7 +233,7 @@ int Task::_single_exec(std::string cmd)
 
 void Task::_append_cmd_output(std::string line)
 {
-    cmd_output = cmd_output + line + '\n';
+    cmd_output = cmd_output + line + std::to_string('\n');
 }
 
 // ---------------------------------------------------------------------
@@ -249,10 +242,14 @@ std::string Task::get_output()
 {
     if (server_id != 0 && gserver != nullptr) {
         std::string output;
-        
+
+        /*
         if (gserver->get_cmd_output(&output) == -1) {
             return "";
         }
+         */
+
+        output = gserver->get_cmd_output();
 
         // std::cout << "output: " << output << std::endl;
         // std::cout << "cur_outpos: " << cur_outpos << std::endl;
@@ -262,7 +259,7 @@ std::string Task::get_output()
             std::string output_part = output.substr(cur_outpos, output.size());
             cur_outpos += (output.size() - cur_outpos);
 
-            return output_part;
+            return output_part + std::to_string('\n');
         } else {
             return "";
         }
@@ -316,7 +313,6 @@ int TaskList::update_list()
 
     try {
         jvalue = Gameap::Rest::get("/gdaemon_api/tasks?filter[status]=waiting&append=status_num");
-
     } catch (Gameap::Rest::RestapiException &exception) {
         // Try later
         std::cerr << exception.what() << std::endl;
@@ -367,7 +363,6 @@ void TaskList::check_working_errors()
 
     try {
         jvalue = Gameap::Rest::get("/gdaemon_api/tasks?filter[status]=working&append=status_num");
-
     } catch (Gameap::Rest::RestapiException &exception) {
         // Try later
         std::cerr << exception.what() << std::endl;
@@ -383,9 +378,15 @@ void TaskList::check_working_errors()
 
         if (std::find(taskids.begin(), taskids.end(), task_id) == taskids.end()) {
 
-            Json::Value jdata;
-            jdata["status"] = error;
-            Gameap::Rest::put("/gdaemon_api/tasks/" + std::to_string(task_id), jdata);
+            try {
+                Json::Value jdata;
+                jdata["status"] = error;
+                Gameap::Rest::put("/gdaemon_api/tasks/" + std::to_string(task_id), jdata);
+            } catch (Gameap::Rest::RestapiException &exception) {
+                std::cerr << "Error updating task status [to status code " + std::to_string(error) + "]: "
+                          << exception.what()
+                          << std::endl;
+            }
         }
     }
 }

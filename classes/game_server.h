@@ -63,7 +63,7 @@ private:
 
     fs::path work_path;
 
-    std::string cmd_output;
+    std::string *cmd_output;
 
     int _unpack_archive(fs::path const & archive);
     
@@ -82,6 +82,7 @@ public:
     GameServer(ulong mserver_id);
     
     ~GameServer() {
+        delete cmd_output;
         std::cout << "Game Server Destruct" << std::endl;
     }
     
@@ -101,6 +102,7 @@ public:
     
     // size_t get_cmd_output(std::string * output, size_t position);
     int get_cmd_output(std::string * str_out);
+    std::string get_cmd_output();
     void clear_cmd_output();
 };
 

@@ -30,8 +30,11 @@
 #include "functions/gcrypt.h"
 #include "functions/restapi.h"
 
+#include "status.h"
 
-// #include <string>
+#ifdef __linux__
+#include <csignal>
+#endif
 
 using namespace GameAP;
 
@@ -95,21 +98,17 @@ int check_tasks()
                 }
 
                 if (output != "") {
-                    // TODO: DB -> API
-                    /*
-                    output = db->real_escape_string(&output[0]);
+                    Json::Value jdata;
+                    jdata["output"] = output;
 
-                    std::string qstr = str(
-                        boost::format(
-                            "UPDATE `{pref}gdaemon_tasks` SET `output` = CONCAT(IFNULL(output,''), '%1%') WHERE `id` = %2%"
-                        ) % output  % (**it).get_id()
-                    );
-
-
-                    if (db->query(&qstr[0]) == 0) {
+                    try {
+                        Gameap::Rest::put("/gdaemon_api/tasks/" + std::to_string((**it).get_id()) + "/output", jdata);
                         output = "";
+                    } catch (Gameap::Rest::RestapiException &exception) {
+                        std::cerr << "Output updating error: "
+                                  << exception.what()
+                                  << std::endl;
                     }
-                     */
                 }
             }
 
@@ -149,6 +148,24 @@ int run_daemon()
 {
     std::cout << "Start" << std::endl;
 
+    #ifdef __linux__
+        /*
+        sigset_t mask;
+        struct sigaction act;
+
+        sigaddset(&mask, SIGUSR1);
+
+        act.sa_handler = sighandler;
+        act.sa_flags = SA_SIGINFO;
+        act.sa_mask = mask;
+
+        sigaction(SIGUSR1, &act, nullptr);
+         */
+        std::signal(SIGUSR1, sighandler);
+    #endif
+
+
+
     Config& config = Config::getInstance();
 
     if (config.parse() == -1) {
@@ -167,6 +184,9 @@ int run_daemon()
 
     DedicatedServer& deds = DedicatedServer::getInstance();
     GameServersList& gslist = GameServersList::getInstance();
+
+    // Change working directory
+    boost::filesystem::current_path(deds.get_work_path());
 
     boost::thread ctsk_thr(check_tasks);
 
