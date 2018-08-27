@@ -98,10 +98,9 @@ int check_tasks()
                 }
 
                 if (output != "") {
-                    Json::Value jdata;
-                    jdata["output"] = output;
-
                     try {
+                        Json::Value jdata;
+                        jdata["output"] = output;
                         Gameap::Rest::put("/gdaemon_api/tasks/" + std::to_string((**it).get_id()) + "/output", jdata);
                         output = "";
                     } catch (Gameap::Rest::RestapiException &exception) {

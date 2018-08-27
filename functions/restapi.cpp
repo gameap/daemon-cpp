@@ -98,6 +98,41 @@ namespace Gameap::Rest {
         }
     }
 
+    /**
+     *
+     * @param uri
+     * @param data
+     */
+    void post(const std::string& uri, Json::Value data)
+    {
+        Config& config = Config::getInstance();
+
+        Json::FastWriter jwriter;
+
+        RestClient::Connection* conn = new RestClient::Connection(config.api_host);
+
+        conn->AppendHeader("X-Auth-Token", api_token);
+        conn->AppendHeader("Content-Type", "application/json");
+
+        std::string dt = jwriter.write(data);
+
+        RestClient::Response response = conn->post(uri, jwriter.write(data));
+
+        if (response.code == 201) {
+            std::cout << "API. Resource Created" << std::endl;
+        } else {
+            std::cerr << "RestClient HTTP response code: " << response.code << std::endl;
+            std::cerr << "URL: " << config.api_host << uri << std::endl;
+
+            throw RestapiException("RestClient error");
+        }
+    }
+
+    /**
+     *
+     * @param uri
+     * @param data
+     */
     void put(const std::string& uri, Json::Value data)
     {
         Config& config = Config::getInstance();

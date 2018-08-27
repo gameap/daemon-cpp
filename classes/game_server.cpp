@@ -38,11 +38,6 @@ GameServer::GameServer(ulong mserver_id)
     last_update_vars = 0;
 
     staft_crash_disabled = false;
-
-    //std::shared_ptr<std::string> cmd_output(new std::string);
-
-    //(*cmd_output).reserve(10240);
-
     cmd_output = std::make_shared<std::string> ("");
 
     try {
@@ -663,7 +658,6 @@ bool GameServer::status_server()
     std::tm * ptm = std::localtime(&now);
     char buffer[32];
     std::strftime(buffer, 32, "%F %T", ptm);
-    // delete ptm;
 
     jdata["last_process_check"] = buffer;
 

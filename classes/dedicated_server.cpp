@@ -123,7 +123,7 @@ int DedicatedServer::stats_process()
     stats.reserve(1);
     cur_stats.cpu_load.reserve(cpu_count);
 
-    cur_stats.time = time(0);
+    cur_stats.time = time(nullptr);
 
     #ifdef _WIN32
         cur_stats.loa[0] = 0; cur_stats.loa[1] = 0; cur_stats.loa[2] = 0;
@@ -237,7 +237,7 @@ int DedicatedServer::stats_process()
         // << "cur_stats.ifstats[lo].txp: " << cur_stats.ifstats["lo"].txp << std::endl
     // << std::endl;
 
-    last_stats_update = time(0);
+    last_stats_update = time(nullptr);
 
     return 0;
 }
@@ -358,7 +358,7 @@ int DedicatedServer::get_net_load(std::map<std::string, netstats> &ifstats)
         }
 	#endif
 
-    time_t current_time = time(0);
+    time_t current_time = time(nullptr);
 
     if (last_ifstat_time != 0 && current_time > last_ifstat_time) {
 
@@ -383,7 +383,7 @@ int DedicatedServer::get_net_load(std::map<std::string, netstats> &ifstats)
     }
 
     last_ifstats        = current_ifstats;
-    last_ifstat_time    = time(0);
+    last_ifstat_time    = time(nullptr);
 
     return 0;
 }
@@ -412,7 +412,7 @@ int DedicatedServer::get_cpu_load(std::vector<float> &cpu_percent)
     ushort readsize = 128 * cpu_count;
     char buf[10240];
 
-    time_t cpustat_time = time(0);
+    time_t cpustat_time = time(nullptr);
 
     #ifdef _WIN32
         std::string wmic_result;
@@ -594,21 +594,31 @@ int DedicatedServer::update_db()
             drvspace +=  str(boost::format("%1% %2% %3%") % (*itd).first % (*itd).second % drv_space[(*itd).first]) + "\n";
         }
 
-        // TODO: DB -> API
-        /*
-        std::string qstr = str(
-            boost::format(
-                "INSERT INTO `{pref}ds_stats` (`ds_id`, `time`, `loa`, `ram`, `cpu`, `ifstat`, `ping`, `drvspace`)\
-                VALUES ('%1%', %2%, '%3%', '%4%', '%5%', '%6%', %7%, '%8%')"
-            ) % ds_id % ((*it).time-db_timediff) % loa % ram % cpu % ifstat % ping % drvspace
-        );
+        try {
+            Json::Value jdata;
+            jdata["dedicated_server_id"] = std::to_string(ds_id);
+            jdata["loa"] = loa;
+            jdata["ram"] = ram;
+            jdata["cpu"] = cpu;
+            jdata["ifstat"] = ifstat;
+            jdata["ping"] = ping;
+            jdata["drvspace"] = drvspace;
 
-        if (db->query(&qstr[0]) == 0) {
+            std::time_t time = (*it).time;
+            std::tm * ptm = std::localtime(&time);
+            char buffer[32];
+            std::strftime(buffer, 32, "%F %T", ptm);
+
+            jdata["time"] = buffer;
+
+            Gameap::Rest::post("/gdaemon_api/ds_stats", jdata);
             insert_complete.push_back(it);
-        } else {
-            break;
+
+        } catch (Gameap::Rest::RestapiException &exception) {
+            std::cerr << "Output updating error: "
+                      << exception.what()
+                      << std::endl;
         }
-         */
     }
 
     // Clear completed

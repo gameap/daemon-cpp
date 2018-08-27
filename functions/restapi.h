@@ -23,6 +23,7 @@ namespace Gameap::Rest {
 
     int get_token();
     Json::Value get(const std::string& uri);
+    void post(const std::string& uri, Json::Value data);
     void put(const std::string& uri, Json::Value data);
 }
 
