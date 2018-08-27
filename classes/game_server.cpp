@@ -39,8 +39,11 @@ GameServer::GameServer(ulong mserver_id)
 
     staft_crash_disabled = false;
 
-    cmd_output = new std::string;
-    (*cmd_output).reserve(10240);
+    //std::shared_ptr<std::string> cmd_output(new std::string);
+
+    //(*cmd_output).reserve(10240);
+
+    cmd_output = std::make_shared<std::string> ("");
 
     try {
         _update_vars();
@@ -102,8 +105,6 @@ void GameServer::_update_vars()
     gt_remrep       = str_replace("{os}", OS, gt_remrep);
 
     staft_crash = jvalue["start_after_crash"].asBool();
-
-    *cmd_output      = "";
 
     aliases.clear();
 

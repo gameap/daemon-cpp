@@ -259,7 +259,7 @@ std::string Task::get_output()
             std::string output_part = output.substr(cur_outpos, output.size());
             cur_outpos += (output.size() - cur_outpos);
 
-            return output_part + std::to_string('\n');
+            return output_part;
         } else {
             return "";
         }
