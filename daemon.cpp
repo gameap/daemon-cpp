@@ -98,6 +98,7 @@ int check_tasks()
                 }
 
                 if (output != "") {
+
                     try {
                         Json::Value jdata;
                         jdata["output"] = output;
@@ -179,7 +180,8 @@ int run_daemon()
         return -1;
     }
 
-    boost::thread daemon_server(run_server, config.listen_port);
+    //boost::thread daemon_server(run_server, config.listen_port);
+    boost::thread daemon_server(boost::bind(&run_server, config.listen_port));
 
     DedicatedServer& deds = DedicatedServer::getInstance();
     GameServersList& gslist = GameServersList::getInstance();

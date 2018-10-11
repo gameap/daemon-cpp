@@ -57,13 +57,12 @@ DedicatedServer::DedicatedServer()
 	#elif __linux__
 
         struct sysinfo sysi;
-        sysinfo(&sysi);
 
         ram_total = sysi.totalram/1024; // kB
 
         // Check interfaces
         for (std::vector<std::string>::iterator it = config.if_list.begin(); it != config.if_list.end(); ++it) {
-            if (fs::is_directory(str(boost::format("/sys/class/net/%s") % *it))) {
+            if (fs::is_directory(boost::str(boost::format("/sys/class/net/%s") % *it))) {
                 interfaces.push_back(*it);
             }
         }
@@ -99,8 +98,14 @@ DedicatedServer::DedicatedServer()
         // TODO: Check work path!
 
         work_path = jvalue["work_path"].asString();
+
+        script_install = jvalue["script_install"].asString();
+        script_reinstall = jvalue["script_reinstall"].asString();
+        script_update = jvalue["script_update"].asString();
         script_start = jvalue["script_start"].asString();
+        script_pause = jvalue["script_pause"].asString();
         script_stop = jvalue["script_stop"].asString();
+        script_kill = jvalue["script_kill"].asString();
         script_restart = jvalue["script_restart"].asString();
         script_status = jvalue["script_status"].asString();
         script_get_console = jvalue["script_get_console"].asString();
@@ -144,14 +149,8 @@ int DedicatedServer::stats_process()
     #elif __linux__
         getloadavg(cur_stats.loa, 3);
 
-        struct sysinfo sysi;
-        sysinfo(&sysi);
-
         // Get cpu load
         get_cpu_load(cur_stats.cpu_load);
-
-        // Get ram load
-        // cur_stats.ram_us = (sysi.totalram - sysi.freeram)/1024; // kB
 
         // Cached ram
         char buf[1024];
@@ -336,22 +335,22 @@ int DedicatedServer::get_net_load(std::map<std::string, netstats> &ifstats)
     #elif __linux__
         for (std::vector<std::string>::iterator it = interfaces.begin(); it != interfaces.end(); ++it) {
             std::ifstream netstats;
-            netstats.open(str(boost::format("/sys/class/net/%s/statistics/rx_bytes") % *it), std::ios::in);
+            netstats.open(boost::str(boost::format("/sys/class/net/%s/statistics/rx_bytes") % *it), std::ios::in);
             netstats.getline(bufread, 32);
             current_ifstats[*it].rxb = strtoull(bufread, NULL, 10);
             netstats.close();
 
-            netstats.open(str(boost::format("/sys/class/net/%s/statistics/tx_bytes") % *it), std::ios::in);
+            netstats.open(boost::str(boost::format("/sys/class/net/%s/statistics/tx_bytes") % *it), std::ios::in);
             netstats.getline(bufread, 32);
             current_ifstats[*it].txb = strtoull(bufread, NULL, 10);
             netstats.close();
 
-            netstats.open(str(boost::format("/sys/class/net/%s/statistics/rx_packets") % *it), std::ios::in);
+            netstats.open(boost::str(boost::format("/sys/class/net/%s/statistics/rx_packets") % *it), std::ios::in);
             netstats.getline(bufread, 32);
             current_ifstats[*it].rxp = strtoull(bufread, NULL, 10);
             netstats.close();
 
-            netstats.open(str(boost::format("/sys/class/net/%s/statistics/tx_packets") % *it), std::ios::in);
+            netstats.open(boost::str(boost::format("/sys/class/net/%s/statistics/tx_packets") % *it), std::ios::in);
             netstats.getline(bufread, 32);
             current_ifstats[*it].txp = strtoull(bufread, NULL, 10);
             netstats.close();
@@ -556,16 +555,16 @@ int DedicatedServer::update_db()
         ushort ping = 0;
 
         // Load average
-        std::string loa = str(boost::format("%.2f %.2f %.2f") % (*it).loa[0] % (*it).loa[1] % (*it).loa[2]);
+        std::string loa = boost::str(boost::format("%.2f %.2f %.2f") % (*it).loa[0] % (*it).loa[1] % (*it).loa[2]);
 
         // Ram
-        std::string ram = str(boost::format("%1% %2% %3%") % (*it).ram_us % (*it).ram_cache % ram_total);
+        std::string ram = boost::str(boost::format("%1% %2% %3%") % (*it).ram_us % (*it).ram_cache % ram_total);
 
         // Cpu
         std::string cpu = "";
         for (int i = 0; i < (*it).cpu_load.size(); ++i) {
             // std::cout << "CPU #" << i << " " << (*it).cpu_load[i] << std::endl;
-            cpu +=  str(boost::format("%.2f") % (*it).cpu_load[i]) + " ";
+            cpu +=  boost::str(boost::format("%.2f") % (*it).cpu_load[i]) + " ";
         }
 
         // If stat
@@ -574,7 +573,7 @@ int DedicatedServer::update_db()
             itd != (*it).ifstats.end();
             ++itd
         ) {
-            ifstat +=  str(boost::format("%1% %2% %3% %4% %5%")
+            ifstat +=  boost::str(boost::format("%1% %2% %3% %4% %5%")
                 % (*itd).first
                 % (*itd).second.rxb
                 % (*itd).second.txb
@@ -591,7 +590,7 @@ int DedicatedServer::update_db()
             itd != (*it).drv_us_space.end();
             ++itd
         ) {
-            drvspace +=  str(boost::format("%1% %2% %3%") % (*itd).first % (*itd).second % drv_space[(*itd).first]) + "\n";
+            drvspace +=  boost::str(boost::format("%1% %2% %3%") % (*itd).first % (*itd).second % drv_space[(*itd).first]) + "\n";
         }
 
         try {

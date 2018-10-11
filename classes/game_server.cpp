@@ -6,9 +6,6 @@
 
 #include <jsoncpp/json/json.h>
 
-#include <sys/types.h>
-#include <signal.h>
-
 #include "config.h"
 #include "db/db.h"
 #include "game_server.h"
@@ -67,7 +64,7 @@ void GameServer::_update_vars()
         return;
     }
 
-    if (jvalue.size() == 0) {
+    if (jvalue.empty()) {
         throw("Empty API response");
     }
 
@@ -288,7 +285,7 @@ int GameServer::stop_server()
 
 int GameServer::update_server()
 {
-    if (status_server() == true) {
+    if (status_server()) {
         if (stop_server() == -1) {
             return -1;
         }
@@ -307,18 +304,18 @@ int GameServer::update_server()
     ushort gt_install_from =    INST_NO_SOURCE;
 
     // Install game
-    if (game_localrep.size() > 0)       game_install_from = INST_FROM_LOCREP;
-    else if (game_remrep.size() > 0)    game_install_from = INST_FROM_REMREP;
-    else if (false)                     game_install_from = INST_FROM_STEAM;
+    if (game_localrep.empty())       game_install_from = INST_FROM_LOCREP;
+    else if (game_remrep.empty())    game_install_from = INST_FROM_REMREP;
+    //else if (false)                     game_install_from = INST_FROM_STEAM;
     else {
         // No Source to install =(
         std::cerr << "No source to intall" << std::endl;
         return -1;
     }
 
-    if (gt_localrep.size() > 0)         gt_install_from = INST_FROM_LOCREP;
-    else if (gt_remrep.size() > 0)      gt_install_from = INST_FROM_REMREP;
-    else if (false)                     gt_install_from = INST_FROM_STEAM;
+    if (gt_localrep.empty())         gt_install_from = INST_FROM_LOCREP;
+    else if (gt_remrep.empty())      gt_install_from = INST_FROM_REMREP;
+    // else if (false)                  gt_install_from = INST_FROM_STEAM;
     else {
         // No Source to install. No return -1
     }
@@ -372,13 +369,13 @@ int GameServer::update_server()
         _copy_dir(source_path, work_path);
     }
     else if (game_install_from == INST_FROM_REMREP) {
-        std::string cmd = str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % work_path.string());
+        std::string cmd = boost::str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % work_path.string());
 
         if (_exec(cmd) == -1) {
             return -1;
         }
         
-        std::string archive = str(boost::format("%1%/%2%") % work_path.string() % source_path.filename().string());
+        std::string archive = boost::str(boost::format("%1%/%2%") % work_path.string() % source_path.filename().string());
         
         _unpack_archive(archive);
         fs::remove(archive);
@@ -421,13 +418,13 @@ int GameServer::update_server()
         _copy_dir(source_path, work_path);
     }
     else if (gt_install_from == INST_FROM_REMREP) {
-        std::string cmd = str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % work_path.string());
+        std::string cmd = boost::str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % work_path.string());
 
         if (_exec(cmd) == -1) {
             return -1;
         }
         
-        std::string archive = str(boost::format("%1%/%2%") % work_path.string() % source_path.filename().string());
+        std::string archive = boost::str(boost::format("%1%/%2%") % work_path.string() % source_path.filename().string());
         
         _unpack_archive(archive);
         fs::remove(archive);
@@ -435,7 +432,7 @@ int GameServer::update_server()
 
     #ifdef __linux__
         if (user != "") {
-            std::string cmd = str(boost::format("chown -R %1% %2%") % user % work_path.string());
+            std::string cmd = boost::str(boost::format("chown -R %1% %2%") % user % work_path.string());
             _exec(cmd);
         }
     #endif
@@ -458,11 +455,11 @@ int GameServer::_unpack_archive(fs::path const & archive)
     std::string cmd;
 
     #ifdef __linux__
-        if (archive.extension().string() == ".xz")           cmd = str(boost::format("tar -xpvJf %1% -C %2%") % archive.string() % work_path.string());
-        else if (archive.extension().string() == ".gz")      cmd = str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
-        else if (archive.extension().string() == ".bz2")     cmd = str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
-        else if (archive.extension().string() == ".tar")     cmd = str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
-        else cmd = str(boost::format("unzip -o %1% -d %2%") % archive.string() % work_path.string());
+        if (archive.extension().string() == ".xz")           cmd = boost::str(boost::format("tar -xpvJf %1% -C %2%") % archive.string() % work_path.string());
+        else if (archive.extension().string() == ".gz")      cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
+        else if (archive.extension().string() == ".bz2")     cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
+        else if (archive.extension().string() == ".tar")     cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
+        else cmd = boost::str(boost::format("unzip -o %1% -d %2%") % archive.string() % work_path.string());
     #elif _WIN32
         cmd = str(boost::format("7z x %1% -aoa -o%2%") % archive.string() % work_path.string());
     #endif
@@ -567,7 +564,7 @@ bool GameServer::_copy_dir(
 
 int GameServer::delete_server()
 {
-    if (status_server() == true) {
+    if (status_server()) {
         if (stop_server() == -1) {
             return -1;
         }
@@ -631,14 +628,10 @@ bool GameServer::status_server()
         pidfile.getline(bufread, 32);
         pidfile.close();
 
-        ulong pid = atoi(bufread);
-        // std::cout << "bufread: " << bufread << std::endl;
-        // std::cout << "atoi(bufread): " << atoi(bufread) << std::endl;
-
+        uint pid = static_cast<uint>(atol(bufread));
         if (pid != 0) {
 #ifdef __linux__
-            active = (kill(pid, 0) == 0) ? 1 : 0;
-
+            active = (kill(pid, 0) == 0);
 #elif _WIN32
             HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, pid);
             DWORD ret = WaitForSingleObject(process, 0);

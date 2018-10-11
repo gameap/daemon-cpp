@@ -45,6 +45,13 @@
 
 #include "typedefs.h"
 
+#define DS_PREFER_INSTALL_METHOD_AUTO         0
+#define DS_PREFER_INSTALL_METHOD_COPY         1
+#define DS_PREFER_INSTALL_METHOD_DOWNLOAD     2
+#define DS_PREFER_INSTALL_METHOD_SCRIPT       3
+#define DS_PREFER_INSTALL_METHOD_STEAM        4
+#define DS_PREFER_INSTALL_METHOD_NONE         5
+
 namespace GameAP {
 
 // struct ds_res {
@@ -112,8 +119,14 @@ private:
 
 	std::string work_path;
 
+    ushort prefer_installation_method;
+    std::string script_install;
+    std::string script_reinstall;
+    std::string script_update;
     std::string script_start;
+    std::string script_pause;
     std::string script_stop;
+    std::string script_kill;
     std::string script_restart;
     std::string script_status;
     std::string script_get_console;
