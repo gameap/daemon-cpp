@@ -31,6 +31,7 @@ DedicatedServer::DedicatedServer()
     Config& config = Config::getInstance();
 
     ds_id = config.ds_id;
+    prefer_installation_method = DS_PREFER_INSTALL_METHOD_AUTO;
 
     stats_update_period = config.stats_update_period;
     db_update_period    = config.stats_db_update_period;

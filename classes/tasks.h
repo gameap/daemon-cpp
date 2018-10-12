@@ -12,6 +12,18 @@
 #define TASK_ERROR      3
 #define TASK_SUCCESS    4
 
+#define TASK_GAME_SERVER_START      "gsstart"
+#define TASK_GAME_SERVER_PAUSE      "gspause" // NOT implemented
+#define TASK_GAME_SERVER_STOP       "gsstop"
+#define TASK_GAME_SERVER_KILL       "gskill" // NOT implemented
+#define TASK_GAME_SERVER_RESTART    "gsrest"
+#define TASK_GAME_SERVER_INSTALL    "gsinst"
+#define TASK_GAME_SERVER_REINSTALL  "gsreinst" // NOT implemented
+#define TASK_GAME_SERVER_UPDATE     "gsupd"
+#define TASK_GAME_SERVER_DELETE     "gsdel"
+#define TASK_GAME_SERVER_MOVE       "gsmove"
+#define TASK_GAME_SERVER_EXECUTE    "cmdexec"
+
 namespace GameAP {
 
 class Task {

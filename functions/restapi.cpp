@@ -1,7 +1,6 @@
 #include <cstdio>
 #include <iostream>
 
-#include "restclient-cpp/connection.h"
 #include <restclient-cpp/restclient.h>
 
 #include <jsoncpp/json/json.h>

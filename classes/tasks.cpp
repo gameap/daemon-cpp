@@ -47,7 +47,7 @@ void Task::run()
     int result_status;
     GameServersList& gslist = GameServersList::getInstance();
     
-    if (! strcmp(task, "gsstart")) {
+    if (! strcmp(task, TASK_GAME_SERVER_START)) {
         try {
             gserver = gslist.get_server(server_id);
 
@@ -67,7 +67,7 @@ void Task::run()
             std::cerr << "gsstart error: " << e.what() << std::endl;
         }
     }
-    else if (! strcmp(task, "gsstop")) {
+    else if (! strcmp(task, TASK_GAME_SERVER_STOP)) {
         try {
             gserver = gslist.get_server(server_id);
             
@@ -87,7 +87,7 @@ void Task::run()
             std::cerr << "gsstop error: " << e.what() << std::endl;
         }
     }
-    else if (! strcmp(task, "gsrest")) {
+    else if (! strcmp(task, TASK_GAME_SERVER_RESTART)) {
         try {
             gserver = gslist.get_server(server_id);
             
@@ -108,7 +108,7 @@ void Task::run()
             std::cerr << "gsstop error: " << e.what() << std::endl;
         }
     }
-    else if (!strcmp(task, "gsinst") || !strcmp(task, "gsupd")) {
+    else if (!strcmp(task, TASK_GAME_SERVER_INSTALL) || !strcmp(task, TASK_GAME_SERVER_UPDATE)) {
         try {
             gserver = gslist.get_server(server_id);
             
@@ -124,7 +124,7 @@ void Task::run()
             std::cerr << "gsinst error: " << e.what() << std::endl;
         }
     }
-    else if (! strcmp(task, "gsdel")) {
+    else if (! strcmp(task, TASK_GAME_SERVER_DELETE)) {
         try {
             gserver = gslist.get_server(server_id);
             
@@ -141,12 +141,12 @@ void Task::run()
             std::cerr << "gsdelete error: " << e.what() << std::endl;
         }
     }
-    else if (! strcmp(task, "gsmove")) {
+    else if (! strcmp(task, TASK_GAME_SERVER_MOVE)) {
         // Move game server to other ds
         gserver = gslist.get_server(server_id);
         gserver->clear_cmd_output();
     }
-    else if (! strcmp(task, "cmdexec")) {
+    else if (! strcmp(task, TASK_GAME_SERVER_EXECUTE)) {
         try {
             if (server_id != 0) {
                 gserver = gslist.get_server(server_id);
