@@ -131,6 +131,7 @@ private:
     std::string script_status;
     std::string script_get_console;
     std::string script_send_command;
+    std::string script_delete;
 
     DedicatedServer();
     DedicatedServer( const DedicatedServer&);

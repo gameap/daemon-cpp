@@ -111,6 +111,7 @@ DedicatedServer::DedicatedServer()
         script_status = jvalue["script_status"].asString();
         script_get_console = jvalue["script_get_console"].asString();
         script_send_command = jvalue["script_send_command"].asString();
+        script_delete = jvalue["script_delete"].asString();
     } catch (Gameap::Rest::RestapiException &exception) {
         // Try later
         std::cerr << exception.what() << std::endl;
