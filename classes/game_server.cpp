@@ -7,7 +7,6 @@
 #include <jsoncpp/json/json.h>
 
 #include "config.h"
-#include "db/db.h"
 #include "game_server.h"
 
 #include <boost/filesystem.hpp>
@@ -664,7 +663,6 @@ bool GameServer::status_server()
 int GameServersList::update_list()
 {
     Config& config = Config::getInstance();
-    db_elems results;
 
     Json::Value jvalue;
 

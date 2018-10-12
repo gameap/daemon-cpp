@@ -4,7 +4,6 @@
 #include <iostream>
 #include <vector>
 
-#include "db/db.h"
 #include "classes/game_server.h"
 
 #define TASK_WAITING    1

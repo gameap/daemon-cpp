@@ -22,8 +22,6 @@ cmake_minimum_required(VERSION 2.8)
 set (CMAKE_CXX_STANDARD 11)
 add_definitions(-std=c++11)
 
-add_subdirectory(db)
-
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/build/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/build/lib)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_HOME_DIRECTORY}/build/lib)

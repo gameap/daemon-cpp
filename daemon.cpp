@@ -20,7 +20,6 @@
 #include "daemon_server.h"
 #include "dl.h"
 
-#include "db/db.h"
 #include "config.h"
 
 #include "classes/tasks.h"

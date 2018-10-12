@@ -1,7 +1,6 @@
 #include "consts.h"
 
 #include "config.h"
-#include "db/db.h"
 #include "dedicated_server.h"
 
 #include <boost/format.hpp>

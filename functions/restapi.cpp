@@ -8,7 +8,7 @@
 #include "restapi.h"
 #include "config.h"
 
-namespace Gameap::Rest {
+namespace Gameap { namespace Rest {
 
     /**
      * API Token
@@ -156,4 +156,4 @@ namespace Gameap::Rest {
             throw RestapiException("RestClient error");
         }
     }
-}
+}}
