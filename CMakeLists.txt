@@ -38,7 +38,7 @@ endif()
 #	set(Boost_USE_STATIC_LIBS ON)
 #endif()
 
-find_package(Boost REQUIRED COMPONENTS system filesystem thread)
+find_package(Boost REQUIRED COMPONENTS system filesystem iostreams thread)
 if(NOT Boost_FOUND)
 	message(SEND_ERROR "Failed to find boost components")
 	return()
@@ -70,35 +70,27 @@ set(SOURCES_CPP
 )
 
 if (WIN32)
-    list(APPEND SOURCES_CPP control_windows.cpp)
-endif()
-
-if (UNIX)
+    set(GDAEMON_SOURCES_CPP control_windows.cpp)
+elseif(UNIX)
     link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs)
-
-    list(APPEND SOURCES_CPP control_linux.cpp)
+    set(GDAEMON_SOURCES_CPP control_linux.cpp)
 endif()
 
-add_executable(gameap-daemon ${SOURCES_CPP})
+add_executable(gameap-daemon ${SOURCES_CPP} ${GDAEMON_SOURCES_CPP})
 
 if (WIN32)
 	target_link_libraries (gameap-daemon gcc stdc++ ws2_32 wsock32 binn boost_system boost_filesystem boost_iostreams boost_thread crypto ssl jsoncpp restclient-cpp curl)
 
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -march=i686 -static" )
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -march=i686 -static" )
-endif()
-
-if (UNIX)
+elseif(UNIX)
     target_compile_definitions(gameap-daemon PRIVATE NON_DAEMON)
     # target_compile_definitions(gameap-daemon PRIVATE SYSCTL_DAEMON)
     target_compile_definitions(gameap-daemon PRIVATE GDADEMON_LIB_PATH="${GDAEMON_LIBPATH}")
 
 	target_link_libraries (gameap-daemon
         binn
-        Boost::system
-        Boost::filesystem
-        Boost::iostreams
-        Boost::thread
+        ${Boost_LIBRARIES}
         pthread
         crypto
         jsoncpp
@@ -107,6 +99,38 @@ if (UNIX)
         restclient-cpp
         curl
     )
+
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -g" )
+endif()
+
+#--------------------------------------------------------------------------------------------------------
+# Tests
+#--------------------------------------------------------------------------------------------------------
+
+add_executable(run_tests ${SOURCES_CPP} tests/run_tests.cpp)
+
+if (WIN32)
+    target_link_libraries (gameap-daemon gcc stdc++ ws2_32 wsock32 binn boost_system boost_filesystem boost_iostreams boost_thread crypto ssl jsoncpp restclient-cpp curl)
+
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -march=i686 -static" )
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -march=i686 -static" )
+elseif(UNIX)
+    target_compile_definitions(run_tests PRIVATE NON_DAEMON)
+    # target_compile_definitions(gameap-daemon PRIVATE SYSCTL_DAEMON)
+    target_compile_definitions(gameap-daemon PRIVATE GDADEMON_LIB_PATH="${GDAEMON_LIBPATH}")
+
+    target_link_libraries (run_tests
+            binn
+            ${Boost_LIBRARIES}
+            pthread
+            crypto
+            jsoncpp
+            dl
+            crypto
+            restclient-cpp
+            curl
+            )
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -g" )
