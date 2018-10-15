@@ -20,11 +20,10 @@
 #include "classes/tasks.h"
 
 using namespace GameAP;
+using namespace boost::process;
 
 namespace fs = boost::filesystem;
 namespace bp = ::boost::process;
-using namespace boost::process;
-using namespace boost::process::initializers;
 
 // ---------------------------------------------------------------------
 
@@ -475,26 +474,14 @@ int GameServer::_exec(std::string cmd)
     std::cout << "CMD Exec: " << cmd << std::endl;
     _append_cmd_output(fs::current_path().string() + "# " + cmd);
 
-    boost::process::pipe out = boost::process::create_pipe();
+    bp::pipe out = bp::pipe();
+    bp:child c = exec(cmd, out);
 
-    boost::iostreams::file_descriptor_source source(out.source, boost::iostreams::close_handle);
-    boost::iostreams::stream<boost::iostreams::file_descriptor_source> is(source);
-    std::string s;
-
-    child c = exec(cmd, out);
-
-    #ifdef _WIN32
-        last_pid = c.proc_info.dwProcessId;
-    #elif __linux__
-        last_pid = c.pid;
-    #endif
-
-    while (!is.eof()) {
-        std::getline(is, s);
-        (*cmd_output).append(s + "\n");
+    bp::ipstream is(out);
+    std::string line;
+    while (c.running() && std::getline(is, line)) {
+        (*cmd_output).append(line + "\n");
     }
-    
-    auto exit_code = wait_for_exit(c);
 
     return 0;
 }

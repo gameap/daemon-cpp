@@ -9,83 +9,58 @@
 #endif 
 
 namespace GameAP {
-    
-    
-using namespace boost::process;
-using namespace boost::process::initializers;
-using namespace boost::iostreams;
 
-// ---------------------------------------------------------------------
+    using namespace boost::process;
+    using namespace boost::iostreams;
 
-int exec(const std::string &cmd, std::string &out)
-{
-    boost::process::pipe pout = boost::process::create_pipe();
-    
-    try {
-        file_descriptor_sink sinkout(pout.sink, close_handle);
-        
-		#ifdef __GNUC__
-			child c = execute(
-				run_exe(boost::process::shell_path()),
-				set_args(std::vector<std::string>{PROC_SHELL, SHELL_PREF, cmd}),
-				bind_stderr(sinkout),
-				bind_stdout(sinkout),
-				throw_on_error()
-			);
-		#elif _WIN32
-			// wchar_t* szArgs = new wchar_t[strlen(cmd.c_str()) + 1];
-			// mbstowcs(szArgs, cmd.c_str(), strlen(cmd.c_str()) + 1);
+    namespace bp = boost::process;
 
-			child c = execute(
-				set_cmd_line(cmd),
-				bind_stderr(sinkout),
-				bind_stdout(sinkout),
-				throw_on_error()
-			);
-		#endif
-    } catch (boost::system::system_error &e) {
-        return -1;
+    // ---------------------------------------------------------------------
+
+    int exec(const std::string &cmd, std::string &out)
+    {
+        try {
+            bp::ipstream is;
+            bp::child child_proccess(cmd, bp::std_out > is, bp::std_err > is);
+
+            std::string s;
+
+            while (child_proccess.running() && std::getline(is, s)) {
+                out.append(s);
+                out.append("\n");
+            }
+        } catch (boost::system::system_error &e) {
+            return -1;
+        }
+
+        return 0;
     }
-    
-    boost::iostreams::file_descriptor_source source(pout.source, boost::iostreams::close_handle);
-    boost::iostreams::stream<boost::iostreams::file_descriptor_source> is(source);
-    std::string s;
 
-    while (!is.eof()) {
-        std::getline(is, s);
-        out = out + s + '\n';
+    // ---------------------------------------------------------------------
+
+    boost::process::child exec(std::string cmd, boost::process::pipe &out)
+    {
+        bp::child child_proccess(cmd, bp::std_out > out, bp::std_err > out);
+        return child_proccess;
     }
-    
-    return 0;
-}
 
+    /*
+    void exec(const std::string &cmd, std::future<std::string> &out)
+    {
+        boost::asio::io_service ios;
 
-// ---------------------------------------------------------------------
+        std::future<std::string> data;
 
-boost::process::child exec(std::string cmd, boost::process::pipe &out)
-{
-    boost::iostreams::file_descriptor_sink sinkout(out.sink, boost::iostreams::close_handle);
+        child c(cmd,
+                bp::std_in.close(),
+                bp::std_out > out,
+                bp::std_err > out,
+                ios
+        );
 
-	#ifdef __GNUC__
-		return execute(
-			run_exe(boost::process::shell_path()),
-			set_args(std::vector<std::string>{PROC_SHELL, SHELL_PREF, cmd}),
-			bind_stderr(sinkout),
-			bind_stdout(sinkout),
-			throw_on_error()
-		);
-	#elif _WIN32
-        wchar_t* szArgs = new wchar_t[strlen(cmd.c_str()) + 1];
-        mbstowcs(szArgs, cmd.c_str(), strlen(cmd.c_str()) + 1);
+        ios.run();
+    }
+     */
 
-		return execute(
-            set_cmd_line(cmd),
-			bind_stderr(sinkout),
-			bind_stdout(sinkout),
-			throw_on_error()
-		);
-	#endif
-}
-
-// End GameAP namespace
+    // End GameAP namespace
 }

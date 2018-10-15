@@ -95,10 +95,7 @@ if (UNIX)
 
 	target_link_libraries (gameap-daemon
         binn
-        Boost::system
-        Boost::filesystem
-        Boost::iostreams
-        Boost::thread
+        ${Boost_LIBRARIES}
         pthread
         crypto
         jsoncpp
