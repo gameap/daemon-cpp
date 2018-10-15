@@ -26,25 +26,23 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/build/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/build/lib)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_HOME_DIRECTORY}/build/lib)
 
+if( "${GDAEMON_LIBPATH}" STREQUAL "" )
+    set(GDAEMON_LIBPATH /usr/lib/gameap-daemon)
+endif()
+
 if (WIN32)
 	set(Boost_USE_STATIC_LIBS ON)
 endif()
 
-if (LINUX)
-	set(Boost_USE_STATIC_LIBS ON)
-endif()
+#if (UNIX)
+#	set(Boost_USE_STATIC_LIBS ON)
+#endif()
 
-find_package(Boost COMPONENTS system filesystem thread REQUIRED)
+find_package(Boost REQUIRED COMPONENTS system filesystem thread)
 if(NOT Boost_FOUND)
 	message(SEND_ERROR "Failed to find boost components")
 	return()
 endif()
-
-# find_package(Boost COMPONENTS thread REQUIRED)
-# if(NOT Boost_FOUND)
-	# message(SEND_ERROR "Failed to find boost::thread.")
-	# return()
-# endif()
 
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -65,7 +63,11 @@ set(SOURCES_CPP
     classes/dedicated_server.cpp
     classes/game_server.cpp
     classes/tasks.cpp
-        functions/restapi.cpp functions/restapi.h status.cpp status.h)
+    functions/restapi.cpp
+    functions/restapi.h
+    status.cpp
+    status.h
+)
 
 if (WIN32)
     list(APPEND SOURCES_CPP control_windows.cpp)
@@ -89,9 +91,22 @@ endif()
 if (UNIX)
     target_compile_definitions(gameap-daemon PRIVATE NON_DAEMON)
     # target_compile_definitions(gameap-daemon PRIVATE SYSCTL_DAEMON)
-    target_compile_definitions(gameap-daemon PRIVATE GDADEMON_LIB_PATH="/usr/lib/gameap-daemon")
+    target_compile_definitions(gameap-daemon PRIVATE GDADEMON_LIB_PATH="${GDAEMON_LIBPATH}")
 
-	target_link_libraries (gameap-daemon binn boost_system boost_filesystem boost_iostreams boost_thread pthread crypto jsoncpp dl crypto restclient-cpp curl)
+	target_link_libraries (gameap-daemon
+        binn
+        Boost::system
+        Boost::filesystem
+        Boost::iostreams
+        Boost::thread
+        pthread
+        crypto
+        jsoncpp
+        dl
+        crypto
+        restclient-cpp
+        curl
+    )
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -g" )
