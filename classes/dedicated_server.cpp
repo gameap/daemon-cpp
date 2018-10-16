@@ -549,6 +549,7 @@ int DedicatedServer::update_db()
 
     std::vector<std::vector<ds_stats>::iterator>insert_complete;
 
+
     for (std::vector<ds_stats>::iterator it = stats.begin();
         it != stats.end();
         ++it
@@ -618,6 +619,8 @@ int DedicatedServer::update_db()
             std::cerr << "Output updating error: "
                       << exception.what()
                       << std::endl;
+
+            insert_complete.push_back(it);
         }
     }
 
