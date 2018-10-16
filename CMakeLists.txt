@@ -17,8 +17,6 @@ if (UNIX)
     SET(CMAKE_CXX_COMPILER     g++)
 endif()
 
-cmake_minimum_required(VERSION 2.8)
-
 set (CMAKE_CXX_STANDARD 11)
 add_definitions(-std=c++11)
 
@@ -32,17 +30,48 @@ endif()
 
 if (WIN32)
 	set(Boost_USE_STATIC_LIBS ON)
+elseif(UNIX)
+	set(Boost_USE_STATIC_LIBS ON)
 endif()
-
-#if (UNIX)
-#	set(Boost_USE_STATIC_LIBS ON)
-#endif()
 
 find_package(Boost REQUIRED COMPONENTS system filesystem iostreams thread)
 if(NOT Boost_FOUND)
 	message(SEND_ERROR "Failed to find boost components")
 	return()
 endif()
+
+find_package(PkgConfig REQUIRED)
+if(NOT PkgConfig_FOUND)
+    message(SEND_ERROR "Failed to find PkgConfig")
+    return()
+endif()
+
+pkg_check_modules(JSONCPP jsoncpp REQUIRED)
+link_libraries(${JSONCPP_LIBRARIES})
+
+find_library(BINN_LIBRARY
+    NAMES libbinn binn
+    HINTS "${CMAKE_PREFIX_PATH}"
+)
+
+if( "${BINN_LIBRARY}" STREQUAL "NOTFOUND" )
+    message( FATAL_ERROR "Failed to find binn" )
+endif()
+message( STATUS "Found binn: ${BINN_LIBRARY}" )
+
+find_library(RESTCLIENT_LIBRARY
+    NAMES librestclient-cpp restclient-cpp
+    HINTS "${CMAKE_PREFIX_PATH}"
+)
+
+if( "${RESTCLIENT_LIBRARY}" STREQUAL "RESTCLIENT_LIBRARY-NOTFOUND" )
+    message( FATAL_ERROR "Failed to find restclient-cpp" )
+endif()
+message( STATUS "Found restclient-cpp: ${RESTCLIENT_LIBRARY}" )
+
+find_package(Threads REQUIRED)
+find_package(OpenSSL REQUIRED)
+find_package(CURL REQUIRED)
 
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -89,15 +118,14 @@ elseif(UNIX)
     target_compile_definitions(gameap-daemon PRIVATE GDADEMON_LIB_PATH="${GDAEMON_LIBPATH}")
 
 	target_link_libraries (gameap-daemon
-        binn
+        ${BINN_LIBRARY}
         ${Boost_LIBRARIES}
-        pthread
-        crypto
-        jsoncpp
-        dl
-        crypto
-        restclient-cpp
-        curl
+        ${JSONCPP_LIBRARIES}
+        ${CMAKE_THREAD_LIBS_INIT}
+        ${OPENSSL_LIBRARIES}
+        ${RESTCLIENT_LIBRARY}
+        ${CURL_LIBRARIES}
+        ${CMAKE_DL_LIBS}
     )
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
@@ -111,26 +139,25 @@ endif()
 add_executable(run_tests ${SOURCES_CPP} tests/run_tests.cpp)
 
 if (WIN32)
-    target_link_libraries (gameap-daemon gcc stdc++ ws2_32 wsock32 binn boost_system boost_filesystem boost_iostreams boost_thread crypto ssl jsoncpp restclient-cpp curl)
+    target_link_libraries (run_tests gcc stdc++ ws2_32 wsock32 binn boost_system boost_filesystem boost_iostreams boost_thread crypto ssl jsoncpp restclient-cpp curl)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -march=i686 -static" )
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -march=i686 -static" )
 elseif(UNIX)
     target_compile_definitions(run_tests PRIVATE NON_DAEMON)
     # target_compile_definitions(gameap-daemon PRIVATE SYSCTL_DAEMON)
-    target_compile_definitions(gameap-daemon PRIVATE GDADEMON_LIB_PATH="${GDAEMON_LIBPATH}")
+    target_compile_definitions(run_tests PRIVATE GDADEMON_LIB_PATH="${GDAEMON_LIBPATH}")
 
     target_link_libraries (run_tests
-            binn
-            ${Boost_LIBRARIES}
-            pthread
-            crypto
-            jsoncpp
-            dl
-            crypto
-            restclient-cpp
-            curl
-            )
+        ${BINN_LIBRARY}
+        ${Boost_LIBRARIES}
+        ${JSONCPP_LIBRARIES}
+        ${CMAKE_THREAD_LIBS_INIT}
+        ${OPENSSL_LIBRARIES}
+        ${RESTCLIENT_LIBRARY}
+        ${CURL_LIBRARIES}
+        ${CMAKE_DL_LIBS}
+    )
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -g" )
