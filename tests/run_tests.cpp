@@ -30,7 +30,7 @@ void gsystem_test()
 
     // exec
     out = "";
-    cmd = "echo TEST";
+    cmd = "./tests/execute_cmd.sh";
     GameAP::exec(cmd, out);
 
     // Debug print
@@ -40,12 +40,11 @@ void gsystem_test()
     assert(out == "TEST\n");
 
     out = "";
-    cmd = "echo ERROR > /dev/stderr";
+    cmd = "./tests/error_cmd.sh";
     GameAP::exec(cmd, out);
     assert(out == "ERROR\n");
 
-    // pipes
-    cmd = "echo 1;sleep 5;echo 2;echo 3;sleep 5;echo 4;";
+    cmd = "./tests/sleep_cmd.sh";
     out = "";
     bp::pipe out_pipe = bp::pipe();
     bp::child c = GameAP::exec(cmd, out_pipe);

@@ -1,0 +1,1 @@
+echo ERROR > /dev/stderr
