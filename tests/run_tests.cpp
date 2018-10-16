@@ -5,56 +5,62 @@
 
 #include <boost/process.hpp>
 
+namespace bp = ::boost::process;
+
 void gsystem_test()
 {
     std::string cmd;
     std::string out;
 
     // exec
+    out = "";
     cmd = "echo TEST";
-
     GameAP::exec(cmd, out);
-    assert(out == "TEST\n\n");
+    assert(out == "TEST\n");
+
+    out = "";
+    cmd = "echo ERROR > /dev/stderr";
+    GameAP::exec(cmd, out);
+    assert(out == "ERROR\n");
 
     // pipes
     cmd = "echo 1;sleep 5;echo 2;echo 3;sleep 5;echo 4;";
     out = "";
-    boost::process::pipe out_pipe = boost::process::create_pipe();
+    bp::pipe out_pipe = bp::pipe();
+    bp::child c = GameAP::exec(cmd, out_pipe);
 
-    boost::iostreams::file_descriptor_source source(out_pipe.source, boost::iostreams::close_handle);
-    boost::iostreams::stream<boost::iostreams::file_descriptor_source> is(source);
+    bp::ipstream is(out_pipe);
+    std::string line;
 
-    boost::process::child c = GameAP::exec(cmd, out_pipe);
     std::string s;
     time_t start_time;
     time(&start_time);
     int counter = 0;
-    while (!is.eof()) {
-        std::getline(is, s);
+    while (c.running() && std::getline(is, line)) {
 
         switch (counter) {
             case 0:
-                assert(s == "1");
+                assert(line == "1");
                 assert((time(nullptr)-start_time) == 0);
                 break;
 
             case 1:
-                assert(s == "2");
+                assert(line == "2");
                 assert((time(nullptr)-start_time) == 5);
                 break;
 
             case 2:
-                assert(s == "3");
+                assert(line == "3");
                 assert((time(nullptr)-start_time) == 5);
                 break;
 
             case 3:
-                assert(s == "4");
+                assert(line == "4");
                 assert((time(nullptr)-start_time) == 10);
                 break;
 
             case 4:
-                assert(s.empty());
+                assert(line.empty());
                 time_t tim = time(nullptr);
                 assert((time(nullptr)-start_time) == 10);
                 break;
@@ -63,7 +69,7 @@ void gsystem_test()
         counter++;
     }
 
-    auto exit_code = wait_for_exit(c);
+    c.wait();
 }
 
 

@@ -1,3 +1,4 @@
+#include <iostream>
 #include "gsystem.h"
 
 #if defined(BOOST_POSIX_API)
@@ -20,16 +21,20 @@ namespace GameAP {
     int exec(const std::string &cmd, std::string &out)
     {
         try {
-            bp::ipstream is;
-            bp::child child_proccess(cmd, bp::std_out > is, bp::std_err > is);
+            bp::ipstream out_stream;
+            bp::ipstream err_stream;
+            bp::child child_proccess(bp::search_path(PROC_SHELL), args={SHELL_PREF, cmd}, bp::std_out > out_stream, bp::std_err > err_stream);
 
             std::string s;
 
-            while (child_proccess.running() && std::getline(is, s)) {
+            while (child_proccess.running() && (std::getline(out_stream, s) || std::getline(err_stream, s))) {
                 out.append(s);
                 out.append("\n");
             }
-        } catch (boost::system::system_error &e) {
+
+            child_proccess.wait();
+        } catch (boost::process::process_error &e) {
+            std::cerr << "Execute error: " << e.what() << std::endl;
             return -1;
         }
 
@@ -40,8 +45,14 @@ namespace GameAP {
 
     boost::process::child exec(std::string cmd, boost::process::pipe &out)
     {
-        bp::child child_proccess(cmd, bp::std_out > out, bp::std_err > out);
-        return child_proccess;
+        bp::context ctx;
+
+        try {
+            bp::child child_proccess(bp::search_path(PROC_SHELL), args={SHELL_PREF, cmd}, bp::std_out > out);
+            return child_proccess;
+        } catch (boost::process::process_error &e) {
+            std::cerr << "Execute error: " << e.what() << std::endl;
+        }
     }
 
     /*

@@ -218,6 +218,9 @@ int Task::_single_exec(std::string cmd)
         cmd_output.append(line + "\n");
     }
 
+    c.wait();
+    //int result = c.exit_code();
+
     return 0;
 }
 
