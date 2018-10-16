@@ -6,6 +6,7 @@ compiler:
 os:
 - linux
 script: cmake . && make && build/bin/run_tests
+env: CC='gcc-8' CXX='g++-8'
 addons:
   apt:
     update: true
