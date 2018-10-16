@@ -1,11 +1,27 @@
 #include <iostream>
 
 #include <cassert>
-#include <functions/gsystem.h>
-
 #include <boost/process.hpp>
 
+#include <functions/gsystem.h>
+
 namespace bp = ::boost::process;
+
+std::string string_to_hex(const std::string& input)
+{
+    static const char* const lut = "0123456789ABCDEF";
+    size_t len = input.length();
+
+    std::string output;
+    output.reserve(2 * len);
+    for (size_t i = 0; i < len; ++i)
+    {
+        const unsigned char c = input[i];
+        output.push_back(lut[c >> 4]);
+        output.push_back(lut[c & 15]);
+    }
+    return output;
+}
 
 void gsystem_test()
 {
@@ -16,6 +32,11 @@ void gsystem_test()
     out = "";
     cmd = "echo TEST";
     GameAP::exec(cmd, out);
+
+    // Debug print
+    std::cout << "out: \"" << out << "\"" << std::endl;
+    std::cout << "out[hex]: \"" << string_to_hex(out) << "\"" << std::endl;
+
     assert(out == "TEST\n");
 
     out = "";
@@ -77,5 +98,6 @@ int main()
 {
     std::cout << "Tests Started" << std::endl;
 
+    std::cout << "Run gsystem_test" << std::endl;
     gsystem_test();
 }
