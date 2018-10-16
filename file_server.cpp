@@ -4,7 +4,7 @@
 #include "config.h"
 
 using boost::asio::ip::tcp;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 /* SERV Commands */
 #define FSERV_NOAUTH        0

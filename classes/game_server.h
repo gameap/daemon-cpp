@@ -5,7 +5,7 @@
 #include <vector> 
 #include <boost/process.hpp>
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <boost/format.hpp>
 
 #include "dedicated_server.h"
@@ -31,7 +31,7 @@
 
 namespace GameAP {
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 class GameServer {
 private:

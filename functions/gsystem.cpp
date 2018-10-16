@@ -2,7 +2,7 @@
 #include "gsystem.h"
 
 #if defined(BOOST_POSIX_API)
-    #define PROC_SHELL "sh"
+    #define PROC_SHELL "/bin/sh"
     #define SHELL_PREF "-c"
 #elif defined(BOOST_WINDOWS_API)
     #define PROC_SHELL "cmd"
@@ -23,7 +23,7 @@ namespace GameAP {
         try {
             bp::ipstream out_stream;
             bp::ipstream err_stream;
-            bp::child child_proccess(bp::search_path(PROC_SHELL), args={SHELL_PREF, cmd}, bp::std_out > out_stream, bp::std_err > err_stream);
+            bp::child child_proccess(PROC_SHELL, args={SHELL_PREF, cmd}, bp::std_out > out_stream, bp::std_err > err_stream);
 
             std::string s;
 
@@ -46,7 +46,7 @@ namespace GameAP {
     boost::process::child exec(std::string cmd, boost::process::pipe &out)
     {
         try {
-            bp::child child_proccess(bp::search_path(PROC_SHELL), args={SHELL_PREF, cmd}, bp::std_out > out);
+            bp::child child_proccess(PROC_SHELL, args={SHELL_PREF, cmd}, bp::std_out > out);
             return child_proccess;
         } catch (boost::process::process_error &e) {
             std::cerr << "Execute error: " << e.what() << std::endl;

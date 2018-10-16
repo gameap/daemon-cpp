@@ -186,7 +186,7 @@ int run_daemon()
     GameServersList& gslist = GameServersList::getInstance();
 
     // Change working directory
-    boost::filesystem::current_path(deds.get_work_path());
+   fs::current_path(deds.get_work_path());
 
     boost::thread ctsk_thr(check_tasks);
 

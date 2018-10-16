@@ -9,7 +9,8 @@
 #include "config.h"
 #include "game_server.h"
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
+
 #undef BOOST_NO_CXX11_SCOPED_ENUMS
 #include <boost/format.hpp>
 
@@ -22,7 +23,7 @@
 using namespace GameAP;
 using namespace boost::process;
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 namespace bp = ::boost::process;
 
 // ---------------------------------------------------------------------
@@ -535,7 +536,7 @@ bool GameServer::_copy_dir(
                 //_append_cmd_output("Copy " + current.string() + "  " + destination.string() + "/" + current.filename().string());
                 
                 if (fs::is_regular_file(current)) {
-                    fs::copy_file(current, destination / current.filename(), fs::copy_option::overwrite_if_exists);
+                    fs::copy_file(current, destination / current.filename(), fs::copy_options::overwrite_existing);
                 }
                 else {
                     fs::copy(current, destination / current.filename());

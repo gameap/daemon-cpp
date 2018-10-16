@@ -1,9 +1,9 @@
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 #include <Windows.h>
 #include <tchar.h>
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 SERVICE_STATUS        g_ServiceStatus = { 0 };
 SERVICE_STATUS_HANDLE g_StatusHandle = NULL;

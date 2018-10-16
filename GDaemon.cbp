@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="GDaemon"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/home/nikita/Git/GDaemon2"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/home/nikita/Git/GDaemon2"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/home/nikita/Git/GDaemon2"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="run_tests">
+				<Option output="/home/nikita/Git/GDaemon2/build/bin/run_tests" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/nikita/Git/GDaemon2/build/bin"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DNON_DAEMON"/>
+					<Add directory="/home/nikita/Git/GDaemon2"/>
+					<Add directory="/home/nikita/Git/GDaemon2/include"/>
+					<Add directory="/usr/include/c++/7"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/7"/>
+					<Add directory="/usr/include/c++/7/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 run_tests"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="run_tests/fast">
+				<Option output="/home/nikita/Git/GDaemon2/build/bin/run_tests" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/nikita/Git/GDaemon2/build/bin"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DNON_DAEMON"/>
+					<Add directory="/home/nikita/Git/GDaemon2"/>
+					<Add directory="/home/nikita/Git/GDaemon2/include"/>
+					<Add directory="/usr/include/c++/7"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/7"/>
+					<Add directory="/usr/include/c++/7/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 run_tests/fast"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="gameap-daemon">
+				<Option output="/home/nikita/Git/GDaemon2/build/bin/gameap-daemon" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/nikita/Git/GDaemon2/build/bin"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DNON_DAEMON"/>
+					<Add option="-DGDADEMON_LIB_PATH=&quot;/usr/lib/gameap-daemon&quot;"/>
+					<Add directory="/home/nikita/Git/GDaemon2"/>
+					<Add directory="/home/nikita/Git/GDaemon2/include"/>
+					<Add directory="/usr/include/c++/7"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/7"/>
+					<Add directory="/usr/include/c++/7/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 gameap-daemon"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="gameap-daemon/fast">
+				<Option output="/home/nikita/Git/GDaemon2/build/bin/gameap-daemon" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/nikita/Git/GDaemon2/build/bin"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DNON_DAEMON"/>
+					<Add option="-DGDADEMON_LIB_PATH=&quot;/usr/lib/gameap-daemon&quot;"/>
+					<Add directory="/home/nikita/Git/GDaemon2"/>
+					<Add directory="/home/nikita/Git/GDaemon2/include"/>
+					<Add directory="/usr/include/c++/7"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/7"/>
+					<Add directory="/usr/include/c++/7/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 gameap-daemon/fast"/>
+					<CompileFile command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j2 -f &quot;/home/nikita/Git/GDaemon2/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/home/nikita/Git/GDaemon2/classes/dedicated_server.cpp">
+			<Option target="run_tests"/>
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/classes/dedicated_server.h">
+			<Option target="run_tests"/>
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/classes/game_server.cpp">
+			<Option target="run_tests"/>
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/classes/game_server.h">
+			<Option target="run_tests"/>
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/classes/tasks.cpp">
+			<Option target="run_tests"/>
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/classes/tasks.h">
+			<Option target="run_tests"/>
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/config.cpp">
+			<Option target="run_tests"/>
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/config.h">
+			<Option target="run_tests"/>
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/control_linux.cpp">
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/daemon.cpp">
+			<Option target="run_tests"/>
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/daemon_server.cpp">
+			<Option target="run_tests"/>
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/daemon_server.h">
+			<Option target="run_tests"/>
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/file_server.cpp">
+			<Option target="run_tests"/>
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/file_server.h">
+			<Option target="run_tests"/>
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/functions/gcrypt.cpp">
+			<Option target="run_tests"/>
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/functions/gcrypt.h">
+			<Option target="run_tests"/>
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/functions/gstring.cpp">
+			<Option target="run_tests"/>
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/functions/gstring.h">
+			<Option target="run_tests"/>
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/functions/gsystem.cpp">
+			<Option target="run_tests"/>
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/functions/gsystem.h">
+			<Option target="run_tests"/>
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/functions/restapi.cpp">
+			<Option target="run_tests"/>
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/functions/restapi.h">
+			<Option target="run_tests"/>
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/status.cpp">
+			<Option target="run_tests"/>
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/status.h">
+			<Option target="run_tests"/>
+			<Option target="gameap-daemon"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/tests/run_tests.cpp">
+			<Option target="run_tests"/>
+		</Unit>
+		<Unit filename="/home/nikita/Git/GDaemon2/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>

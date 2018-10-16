@@ -1,11 +1,14 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.7)
 project(GDaemon)
 
 if (WIN32)
     SET(CMAKE_SYSTEM_NAME      Windows)
     # SET(CMAKE_SYSTEM_PROCESSOR i686)
 
-    SET(CMAKE_C_COMPILER       gcc)
+    if( "${CMAKE_C_COMPILER}" STREQUAL "" )
+        SET(CMAKE_C_COMPILER       gcc)
+    endif()
+
     SET(CMAKE_CXX_COMPILER     g++)
 
     # SET(CMAKE_C_COMPILER       /usr/bin/i686-w64-mingw32-gcc-win32 )
@@ -13,12 +16,13 @@ if (WIN32)
 endif()
 
 if (UNIX)
-    SET(CMAKE_C_COMPILER       gcc)
-    SET(CMAKE_CXX_COMPILER     g++)
+    SET(CMAKE_C_COMPILER       gcc-8)
+    SET(CMAKE_CXX_COMPILER     g++-8)
 endif()
 
-set (CMAKE_CXX_STANDARD 11)
-add_definitions(-std=c++11)
+set (CMAKE_CXX_STANDARD 17)
+add_definitions(-std=c++17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/build/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/build/lib)
@@ -36,7 +40,7 @@ elseif(UNIX)
     endif()
 endif()
 
-find_package(Boost REQUIRED COMPONENTS system filesystem iostreams thread)
+find_package(Boost REQUIRED COMPONENTS system iostreams thread)
 if(NOT Boost_FOUND)
 	message(SEND_ERROR "Failed to find boost components")
 	return()
@@ -129,6 +133,7 @@ elseif(UNIX)
         ${RESTCLIENT_LIBRARY}
         ${CURL_LIBRARIES}
         ${CMAKE_DL_LIBS}
+        stdc++fs
     )
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
@@ -160,6 +165,7 @@ elseif(UNIX)
         ${RESTCLIENT_LIBRARY}
         ${CURL_LIBRARIES}
         ${CMAKE_DL_LIBS}
+        stdc++fs
     )
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )

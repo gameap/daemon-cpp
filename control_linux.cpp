@@ -19,11 +19,11 @@
 
 #include <iostream>
 #include <fstream>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 #include "config.h"
 
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 #define PID_FILE "/var/run/gdaemon.pid"
 // #define PID_FILE "gdaemon.pid"
@@ -224,8 +224,8 @@ int main(int argc, char** argv)
 	        umask(0);
 	        setsid();
 
-	        fs::path exe_path( fs::initial_path<fs::path>() );
-	        exe_path = fs::system_complete( fs::path( argv[0] ) );
+	        fs::path exe_path(fs::current_path());
+            exe_path = fs::absolute( fs::path( argv[0] ) );
 	        fs::current_path(exe_path.parent_path());
 
 	        close(STDIN_FILENO);

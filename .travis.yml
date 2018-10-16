@@ -16,8 +16,8 @@ addons:
         key_url: 'http://packages.gameap.ru/ubuntu/gameap-rep.gpg.key'
     packages:
       - cmake
-      - gcc-4.8
-      - g++-4.8
+      - gcc-8
+      - g++-8
       - libboost1.67-dev
       - libbinn-dev
       - librestclientcpp-dev

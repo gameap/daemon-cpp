@@ -10,7 +10,7 @@ apt-get -qq update
 
 apt-get -y install build-essential make cmake
 
-apt-get -y install libboost-dev libboost-system-dev libboost-filesystem-dev libboost-iostreams-dev libboost-thread-dev
+apt-get -y install libboost-dev libboost-system-dev libboost-iostreams-dev libboost-thread-dev
 apt-get -y --allow-unauthenticated install libbinn-dev libjsoncpp-dev libssl-dev
 apt-get -y install librestclientcpp-dev
 

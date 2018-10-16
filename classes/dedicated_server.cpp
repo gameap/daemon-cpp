@@ -23,7 +23,7 @@
 #endif // _WIN32
 
 using namespace GameAP;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 DedicatedServer::DedicatedServer()
 {
