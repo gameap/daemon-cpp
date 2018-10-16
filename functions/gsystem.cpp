@@ -45,8 +45,6 @@ namespace GameAP {
 
     boost::process::child exec(std::string cmd, boost::process::pipe &out)
     {
-        bp::context ctx;
-
         try {
             bp::child child_proccess(bp::search_path(PROC_SHELL), args={SHELL_PREF, cmd}, bp::std_out > out);
             return child_proccess;
