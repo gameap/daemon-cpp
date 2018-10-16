@@ -10,12 +10,11 @@
 #include "functions/restapi.h"
 #include "functions/gsystem.h"
 
-namespace bp = ::boost::process;
 using namespace boost::process;
-using namespace boost::process::initializers;
-
 using namespace GameAP;
+
 namespace fs = boost::filesystem;
+namespace bp = ::boost::process;
 
 void Task::run()
 {
@@ -210,20 +209,17 @@ int Task::_single_exec(std::string cmd)
     std::cout << "CMD Exec: " << cmd << std::endl;
     _append_cmd_output(fs::current_path().string() + "# " + cmd);
 
-    boost::process::pipe out = boost::process::create_pipe();
+    bp::pipe out = bp::pipe();
+    bp:child c = exec(cmd, out);
 
-    boost::iostreams::file_descriptor_source source(out.source, boost::iostreams::close_handle);
-    boost::iostreams::stream<boost::iostreams::file_descriptor_source> is(source);
-    std::string s;
-
-    child c = exec(cmd, out);
-
-    while (!is.eof()) {
-        std::getline(is, s);
-        cmd_output.append(s + "\n");
+    bp::ipstream is(out);
+    std::string line;
+    while (c.running() && std::getline(is, line)) {
+        cmd_output.append(line + "\n");
     }
-    
-    auto exit_code = wait_for_exit(c);
+
+    c.wait();
+    //int result = c.exit_code();
 
     return 0;
 }
