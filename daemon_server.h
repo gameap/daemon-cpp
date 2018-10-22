@@ -13,6 +13,8 @@
 
 #include <binn.h>
 
+#define MSG_END_SYMBOLS_NUM 4
+
 // ---------------------------------------------------------------------
 
 class DaemonServerSess : public std::enable_shared_from_this<DaemonServerSess> {
