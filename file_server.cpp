@@ -20,6 +20,8 @@ namespace fs = boost::filesystem;
 #define FSERV_FILE_DOWNLOAD 1
 #define FSERV_FILE_UPLOAD   2
 
+#define FSERV_END_SYMBOL '\xFF'
+
 // ---------------------------------------------------------------------
 
 void FileServerSess::start ()
@@ -130,6 +132,7 @@ void FileServerSess::do_write()
     // \LOG SENDBIN
 
     clear_write_vars();
+    clear_read_vars();
     // std::cout << "length:" << length << std::endl;
 
     boost::asio::async_write(socket_, boost::asio::buffer(sendbin, len),
@@ -146,7 +149,7 @@ void FileServerSess::do_write()
 void FileServerSess::clear_read_vars()
 {
     read_length = 0;
-    // memset(read_buf, 0, max_length-1);
+    memset(read_buf, 0, max_length-1);
 }
 
 void FileServerSess::clear_write_vars()
@@ -526,7 +529,7 @@ int FileServerSess::append_end_symbols(char * buf, size_t length)
     if (length == 0) return -1;
 
     for (int i = length; i < length+4; i++) {
-        buf[i] = '\xFF';
+        buf[i] = FSERV_END_SYMBOL;
     }
 
     buf[length+4] = '\x00';
