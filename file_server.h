@@ -36,22 +36,41 @@ public:
 
     uint publ;
 
-
 private:
     void do_read();
     void do_write();
-    
+
+    /**
+     *  Response okay message
+    */
     void write_ok();
-    
-    void response_msg(int snum, const char * sdesc) {
+
+    /**
+    * Response message
+    *
+    * @param snum message code (1 - error, 2 - critical error, 3 - unknown command, 100 - okay)
+    * @param sdesc text message
+    * @param write
+    */
+    void response_msg(unsigned int snum, const char * sdesc, bool write);
+
+    void response_msg(unsigned int snum, const char * sdesc) {
         response_msg(snum, sdesc, false);
     }
-    
-    void response_msg(int snum, const char * sdesc, bool write);
 
+    /**
+     * Clear read variables
+     */
     void clear_read_vars();
+
+    /**
+     * Clear write variables
+     */
     void clear_write_vars();
 
+    /**
+     * Main command operations. Read dir, files, stat
+     */
     void cmd_process();
 
     void open_input_file();
@@ -62,7 +81,21 @@ private:
     void write_file(size_t length);
     void close_output_file();
 
+    /**
+     * Check if read completed
+     *
+     * @param length
+     * @return
+     */
     size_t read_complete(size_t length);
+
+    /**
+     * Add end symbols
+     *
+     * @param buf
+     * @param length
+     * @return
+     */
     int append_end_symbols(char * buf, size_t length);
 
     boost::asio::ip::tcp::socket socket_;
