@@ -44,6 +44,7 @@ private:
      *  Response okay message
     */
     void write_ok();
+    void write_ok(std::string message);
 
     /**
     * Response message
