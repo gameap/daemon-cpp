@@ -3,6 +3,7 @@
 
 #include "file_server.h"
 #include "daemon_server.h"
+#include "classes/dedicated_server.h"
 
 #include "functions/gcrypt.h"
 

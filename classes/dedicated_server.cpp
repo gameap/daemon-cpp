@@ -639,12 +639,36 @@ int DedicatedServer::update_db()
 std::string DedicatedServer::get_script_cmd(ushort script)
 {
     switch (script) {
+        case DS_SCRIPT_INSTALL:
+            return script_install;
+            break;
+
+        case DS_SCRIPT_REINSTALL:
+            return script_reinstall;
+            break;
+
+        case DS_SCRIPT_UPDATE:
+            return script_update;
+            break;
+
         case DS_SCRIPT_START:
             return script_start;
             break;
 
+        case DS_SCRIPT_PAUSE:
+            return script_pause;
+            break;
+
+        case DS_SCRIPT_UNPAUSE:
+            return script_unpause;
+            break;
+
         case DS_SCRIPT_STOP:
             return script_stop;
+            break;
+
+        case DS_SCRIPT_KILL:
+            return script_kill;
             break;
 
         case DS_SCRIPT_RESTART:
