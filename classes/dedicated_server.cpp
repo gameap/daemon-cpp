@@ -104,6 +104,7 @@ DedicatedServer::DedicatedServer()
         script_update = jvalue["script_update"].asString();
         script_start = jvalue["script_start"].asString();
         script_pause = jvalue["script_pause"].asString();
+        script_unpause = jvalue["script_unpause"].asString();
         script_stop = jvalue["script_stop"].asString();
         script_kill = jvalue["script_kill"].asString();
         script_restart = jvalue["script_restart"].asString();

@@ -125,6 +125,7 @@ private:
     std::string script_update;
     std::string script_start;
     std::string script_pause;
+    std::string script_unpause;
     std::string script_stop;
     std::string script_kill;
     std::string script_restart;
