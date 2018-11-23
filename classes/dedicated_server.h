@@ -52,6 +52,26 @@
 #define DS_PREFER_INSTALL_METHOD_STEAM        4
 #define DS_PREFER_INSTALL_METHOD_NONE         5
 
+#define DS_SCRIPT_INSTALL		1
+#define DS_SCRIPT_REINSTALL		2
+#define DS_SCRIPT_UPDATE		3
+#define DS_SCRIPT_START         4
+#define DS_SCRIPT_PAUSE			5
+#define DS_SCRIPT_UNPAUSE		6
+#define DS_SCRIPT_STOP          7
+#define DS_SCRIPT_KILL          8
+#define DS_SCRIPT_RESTART       9
+#define DS_SCRIPT_STATUS        10
+#define DS_SCRIPT_GET_CONSOLE   11
+#define DS_SCRIPT_SEND_CMD      12
+
+// Daemon server
+#define DAEMON_SERVER_MODE_NOAUTH   0
+#define DAEMON_SERVER_MODE_AUTH     1
+#define DAEMON_SERVER_MODE_CMD      2
+#define DAEMON_SERVER_MODE_FILES    3
+
+
 namespace GameAP {
 
 // struct ds_res {
@@ -125,6 +145,7 @@ private:
     std::string script_update;
     std::string script_start;
     std::string script_pause;
+    std::string script_unpause;
     std::string script_stop;
     std::string script_kill;
     std::string script_restart;

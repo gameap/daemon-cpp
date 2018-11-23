@@ -104,6 +104,7 @@ DedicatedServer::DedicatedServer()
         script_update = jvalue["script_update"].asString();
         script_start = jvalue["script_start"].asString();
         script_pause = jvalue["script_pause"].asString();
+        script_unpause = jvalue["script_unpause"].asString();
         script_stop = jvalue["script_stop"].asString();
         script_kill = jvalue["script_kill"].asString();
         script_restart = jvalue["script_restart"].asString();
@@ -549,6 +550,7 @@ int DedicatedServer::update_db()
 
     std::vector<std::vector<ds_stats>::iterator>insert_complete;
 
+
     for (std::vector<ds_stats>::iterator it = stats.begin();
         it != stats.end();
         ++it
@@ -618,6 +620,8 @@ int DedicatedServer::update_db()
             std::cerr << "Output updating error: "
                       << exception.what()
                       << std::endl;
+
+            insert_complete.push_back(it);
         }
     }
 
@@ -635,12 +639,36 @@ int DedicatedServer::update_db()
 std::string DedicatedServer::get_script_cmd(ushort script)
 {
     switch (script) {
+        case DS_SCRIPT_INSTALL:
+            return script_install;
+            break;
+
+        case DS_SCRIPT_REINSTALL:
+            return script_reinstall;
+            break;
+
+        case DS_SCRIPT_UPDATE:
+            return script_update;
+            break;
+
         case DS_SCRIPT_START:
             return script_start;
             break;
 
+        case DS_SCRIPT_PAUSE:
+            return script_pause;
+            break;
+
+        case DS_SCRIPT_UNPAUSE:
+            return script_unpause;
+            break;
+
         case DS_SCRIPT_STOP:
             return script_stop;
+            break;
+
+        case DS_SCRIPT_KILL:
+            return script_kill;
             break;
 
         case DS_SCRIPT_RESTART:

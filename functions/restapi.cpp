@@ -119,6 +119,19 @@ namespace Gameap { namespace Rest {
 
         if (response.code == 201) {
             std::cout << "API. Resource Created" << std::endl;
+        } else if (response.code == 422) {
+            std::cerr << "RestClient HTTP response code: " << response.code << std::endl;
+            std::cerr << "URL: " << config.api_host << uri << std::endl;
+
+            Json::Value jvalue;
+            Json::Reader jreader(Json::Features::strictMode());
+
+            if (jreader.parse(response.body, jvalue, false)) {
+                std::cerr << "Error: " << jvalue["message"].asString() << std::endl;
+            } else {
+                std::cerr << "Error: " << response.body << std::endl;
+            }
+
         } else {
             std::cerr << "RestClient HTTP response code: " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;

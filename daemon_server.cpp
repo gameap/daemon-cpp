@@ -3,6 +3,7 @@
 
 #include "file_server.h"
 #include "daemon_server.h"
+#include "classes/dedicated_server.h"
 
 #include "functions/gcrypt.h"
 
@@ -36,7 +37,7 @@ void DaemonServerSess::do_read()
                         if (read_complete(length)) {
                             Config& config = Config::getInstance();
 
-                            if ((read_length-4) != 256) {
+                            if ((read_length-MSG_END_SYMBOLS_NUM) != 256) {
                                 std::cerr << "Incorrect message (RSA Size error)" << std::endl;
                                 return;
                             }
@@ -119,7 +120,7 @@ size_t DaemonServerSess::read_complete(size_t length)
     if (read_length <= 4) return 0;
 
     int found = 0;
-    for (int i = read_length; i > read_length-length && found < 4; i--) {
+    for (int i = read_length; i > read_length-length && found < MSG_END_SYMBOLS_NUM; i--) {
         if (read_buf[i-1] == '\xFF') found++;
     }
 
@@ -132,12 +133,12 @@ int DaemonServerSess::append_end_symbols(char * buf, size_t length)
 {
     if (length == 0) return -1;
 
-    for (int i = length; i < length+4; i++) {
+    for (int i = length; i < length + MSG_END_SYMBOLS_NUM; i++) {
         buf[i] = '\xFF';
     }
 
-    buf[length+4] = '\x00';
-    return length+4;
+    buf[length + MSG_END_SYMBOLS_NUM] = '\x00';
+    return length + MSG_END_SYMBOLS_NUM;
 }
 
 // ---------------------------------------------------------------------
