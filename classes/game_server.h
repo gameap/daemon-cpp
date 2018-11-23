@@ -76,6 +76,8 @@ private:
     int _exec(std::string cmd);
     boost::process::child __exec(std::string cmd, boost::process::pipe &out);
 
+    bool _server_status_cmd();
+
     void _update_vars();
     void _append_cmd_output(std::string line);
     

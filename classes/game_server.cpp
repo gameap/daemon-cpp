@@ -188,6 +188,7 @@ void GameServer::replace_shortcodes(std::string &cmd)
     cmd = str_replace("{name}", screen_name, cmd);
     cmd = str_replace("{screen_name}", screen_name, cmd);
     
+    cmd = str_replace("{host}", ip, cmd);
     cmd = str_replace("{ip}", ip, cmd);
     cmd = str_replace("{game}", game_scode, cmd);
 
@@ -484,9 +485,7 @@ int GameServer::_exec(std::string cmd)
     }
 
     c.wait();
-    // int result = c.exit_code();
-
-    return 0;
+    return c.exit_code();
 }
 
 // ---------------------------------------------------------------------
@@ -595,6 +594,28 @@ int GameServer::cmd_exec(std::string cmd)
 
 // ---------------------------------------------------------------------
 
+/**
+ * Check server status.
+ *
+ * @return  True if process active, False if process inactive
+ */
+bool GameServer::_server_status_cmd()
+{
+    DedicatedServer& deds = DedicatedServer::getInstance();
+    std::string status_cmd  = deds.get_script_cmd(DS_SCRIPT_STATUS);
+
+    int result = _exec(status_cmd);
+
+    return (result == 0) ? true : false;
+}
+
+// ---------------------------------------------------------------------
+
+/**
+ * Check server status.
+ *
+ * @return  True if process active, False if process inactive
+ */
 bool GameServer::status_server()
 {
     try {
@@ -603,34 +624,41 @@ bool GameServer::status_server()
         std::cerr << "Server update vars error: " << e.what() << std::endl;
     }
 
-    fs::path p(work_path);
-    p /= "pid.txt";
-
-    char bufread[32];
-
-    std::ifstream pidfile;
-    pidfile.open(p.string(), std::ios::in);
+    DedicatedServer& deds = DedicatedServer::getInstance();
+    std::string status_cmd  = deds.get_script_cmd(DS_SCRIPT_STATUS);
 
     bool active = false;
 
-    if (pidfile.good()) {
-        pidfile.getline(bufread, 32);
-        pidfile.close();
+    if (status_cmd.length() > 0) {
+        active = _server_status_cmd();
+    } else {
+        fs::path p(work_path);
+        p /= "pid.txt";
 
-        uint pid = static_cast<uint>(atol(bufread));
-        if (pid != 0) {
+        char bufread[32];
+
+        std::ifstream pidfile;
+        pidfile.open(p.string(), std::ios::in);
+
+        if (pidfile.good()) {
+            pidfile.getline(bufread, 32);
+            pidfile.close();
+
+            uint pid = static_cast<uint>(atol(bufread));
+            if (pid != 0) {
 #ifdef __linux__
-            active = (kill(pid, 0) == 0);
+                active = (kill(pid, 0) == 0);
 #elif _WIN32
-            HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, pid);
+                HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, pid);
             DWORD ret = WaitForSingleObject(process, 0);
             CloseHandle(process);
             active = (ret == WAIT_TIMEOUT);
 #endif
+            }
+        } else {
+            std::cerr << "Pidfile " << p <<  " not found" << std::endl;
+            active = false;
         }
-    } else {
-        std::cerr << "Pidfile " << p <<  " not found" << std::endl;
-        active = false;
     }
 
     Json::Value jdata;
