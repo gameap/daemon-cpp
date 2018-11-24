@@ -72,6 +72,9 @@ void GameServer::_update_vars()
                  ? jvalue["dir"].asString()
                  : throw("Empty game server directory");
 
+    uuid            = jvalue["uuid"].asString();
+    uuid_short      = jvalue["uuid_short"].asString();
+
     user            = jvalue["su_user"].asString();
 
     ip              = jvalue["server_ip"].asString();
@@ -185,9 +188,10 @@ void GameServer::clear_cmd_output()
 void GameServer::replace_shortcodes(std::string &cmd)
 {
     cmd = str_replace("{dir}", work_path.string(), cmd);
-    cmd = str_replace("{name}", screen_name, cmd);
-    cmd = str_replace("{screen_name}", screen_name, cmd);
-    
+
+    cmd = str_replace("{uuid}", uuid, cmd);
+    cmd = str_replace("{uuid_short}", uuid_short, cmd);
+
     cmd = str_replace("{host}", ip, cmd);
     cmd = str_replace("{ip}", ip, cmd);
     cmd = str_replace("{game}", game_scode, cmd);

@@ -35,7 +35,8 @@ namespace fs = boost::filesystem;
 
 class GameServer {
 private:
-    std::string screen_name;
+    std::string uuid;
+    std::string uuid_short;
 
     ulong server_id;
     std::string ip;
