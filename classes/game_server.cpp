@@ -550,6 +550,11 @@ bool GameServer::_copy_dir(
 
 // ---------------------------------------------------------------------
 
+/**
+ * Delete Game serve
+ *
+ * @return 0 success, -1 error
+ */
 int GameServer::delete_server()
 {
     if (status_server()) {
@@ -565,13 +570,22 @@ int GameServer::delete_server()
         Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(server_id), jdata);
     }
 
-    try {
-        std::cout << "Remove path: " << work_path << std::endl;
-        fs::remove_all(work_path);
-    }
-    catch (fs::filesystem_error &e) {
-        std::cerr << "Error remove: " << e.what() << std::endl;
-        return -1;
+    DedicatedServer& deds = DedicatedServer::getInstance();
+    std::string delete_cmd  = deds.get_script_cmd(DS_SCRIPT_DELETE);
+
+    if (delete_cmd.length() > 0) {
+        replace_shortcodes(delete_cmd);
+        int result = _exec(delete_cmd);
+        return result;
+    } else {
+        try {
+            std::cout << "Remove path: " << work_path << std::endl;
+            fs::remove_all(work_path);
+        }
+        catch (fs::filesystem_error &e) {
+            std::cerr << "Error remove: " << e.what() << std::endl;
+            return -1;
+        }
     }
 
     return 0;
@@ -603,6 +617,7 @@ bool GameServer::_server_status_cmd()
 {
     DedicatedServer& deds = DedicatedServer::getInstance();
     std::string status_cmd  = deds.get_script_cmd(DS_SCRIPT_STATUS);
+    replace_shortcodes(status_cmd);
 
     int result = _exec(status_cmd);
 
@@ -624,10 +639,10 @@ bool GameServer::status_server()
         std::cerr << "Server update vars error: " << e.what() << std::endl;
     }
 
+    bool active = false;
+
     DedicatedServer& deds = DedicatedServer::getInstance();
     std::string status_cmd  = deds.get_script_cmd(DS_SCRIPT_STATUS);
-
-    bool active = false;
 
     if (status_cmd.length() > 0) {
         active = _server_status_cmd();

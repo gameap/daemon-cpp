@@ -686,6 +686,10 @@ std::string DedicatedServer::get_script_cmd(ushort script)
         case DS_SCRIPT_SEND_CMD:
             return script_send_command;
             break;
+
+        case DS_SCRIPT_DELETE:
+            return script_delete;
+            break;
     }
 }
 
