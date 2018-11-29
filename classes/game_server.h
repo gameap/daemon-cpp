@@ -2,7 +2,8 @@
 #define GAME_SERVER_H
 
 #include <string> 
-#include <vector> 
+#include <vector>
+#include <mutex>
 #include <boost/process.hpp>
 
 #include <boost/filesystem.hpp>
@@ -65,6 +66,7 @@ private:
     fs::path work_path;
 
     //std::string *cmd_output;
+    std::mutex cmd_output_mutex;
     std::shared_ptr<std::string> cmd_output;
 
     int _unpack_archive(fs::path const & archive);

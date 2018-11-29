@@ -156,8 +156,12 @@ void GameServer::_update_vars()
 
 void GameServer::_append_cmd_output(std::string line)
 {
+    cmd_output_mutex.lock();
+
     line.append("\n");
     (*cmd_output).append(line);
+
+    cmd_output_mutex.unlock();
 }
 
 // ---------------------------------------------------------------------
@@ -479,17 +483,13 @@ int GameServer::_exec(std::string cmd)
     std::cout << "CMD Exec: " << cmd << std::endl;
     _append_cmd_output(fs::current_path().string() + "# " + cmd);
 
-    bp::pipe out = bp::pipe();
-    bp:child c = exec(cmd, out);
+    std::string out;
+    int exit_code = exec(cmd, out);
 
-    bp::ipstream is(out);
-    std::string line;
-    while (c.running() && std::getline(is, line)) {
-        (*cmd_output).append(line + "\n");
-    }
+    _append_cmd_output(out);
+    _append_cmd_output(boost::str(boost::format("\nExited with %1%\n") % exit_code));
 
-    c.wait();
-    return c.exit_code();
+    return exit_code;
 }
 
 // ---------------------------------------------------------------------
