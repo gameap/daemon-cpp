@@ -20,6 +20,8 @@ namespace GameAP {
 
     int exec(const std::string &cmd, std::string &out)
     {
+        int exit_code;
+
         try {
             bp::ipstream out_stream;
             bp::ipstream err_stream;
@@ -33,12 +35,13 @@ namespace GameAP {
             }
 
             child_proccess.wait();
+            exit_code = child_proccess.exit_code();
         } catch (boost::process::process_error &e) {
             std::cerr << "Execute error: " << e.what() << std::endl;
             return -1;
         }
 
-        return 0;
+        return exit_code;
     }
 
     // ---------------------------------------------------------------------
