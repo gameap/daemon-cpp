@@ -76,8 +76,8 @@ private:
         fs::path const & destination
     );
 
+    int _exec(std::string cmd, bool not_append);
     int _exec(std::string cmd);
-    boost::process::child __exec(std::string cmd, boost::process::pipe &out);
 
     bool _server_status_cmd();
 

@@ -110,17 +110,17 @@ void GameServer::_update_vars()
 
         for( Json::ValueIterator itr = jaliases.begin() ; itr != jaliases.end() ; itr++ ) {
 
-            if ((*itr)["default_value"].isNull()) {
-                aliases.insert(std::pair<std::string, std::string>((*itr)["alias"].asString(), ""));
+            if ((*itr)["default"].isNull()) {
+                aliases.insert(std::pair<std::string, std::string>((*itr)["var"].asString(), ""));
             }
-            else if ((*itr)["default_value"].isString()) {
-                aliases.insert(std::pair<std::string, std::string>((*itr)["alias"].asString(), (*itr)["default_value"].asString()));
+            else if ((*itr)["default"].isString()) {
+                aliases.insert(std::pair<std::string, std::string>((*itr)["var"].asString(), (*itr)["default"].asString()));
             }
-            else if ((*itr)["default_value"].isInt()) {
-                aliases.insert(std::pair<std::string, std::string>((*itr)["alias"].asString(), std::to_string((*itr)["default_value"].asInt())));
+            else if ((*itr)["default"].isInt()) {
+                aliases.insert(std::pair<std::string, std::string>((*itr)["var"].asString(), std::to_string((*itr)["default"].asInt())));
             }
             else {
-                std::cerr << "Unknown alias type: " << (*itr)["default_value"] << std::endl;
+                std::cerr << "Unknown alias type: " << (*itr)["default"] << std::endl;
             }
         }
 
@@ -184,7 +184,9 @@ std::string GameServer::get_cmd_output()
 
 void GameServer::clear_cmd_output()
 {
+    cmd_output_mutex.lock();
     (*cmd_output).clear();
+    cmd_output_mutex.unlock();
 }
 
 // ---------------------------------------------------------------------
@@ -478,18 +480,28 @@ int GameServer::_unpack_archive(fs::path const & archive)
 
 // ---------------------------------------------------------------------
 
-int GameServer::_exec(std::string cmd)
+int GameServer::_exec(std::string cmd, bool not_append)
 {
-    std::cout << "CMD Exec: " << cmd << std::endl;
-    _append_cmd_output(fs::current_path().string() + "# " + cmd);
+    if (!not_append) {
+        _append_cmd_output(fs::current_path().string() + "# " + cmd);
+    }
 
     std::string out;
     int exit_code = exec(cmd, out);
 
-    _append_cmd_output(out);
-    _append_cmd_output(boost::str(boost::format("\nExited with %1%\n") % exit_code));
+    if (!not_append) {
+        _append_cmd_output(out);
+        _append_cmd_output(boost::str(boost::format("Exited with %1%") % exit_code));
+    }
 
     return exit_code;
+}
+
+// ---------------------------------------------------------------------
+
+int GameServer::_exec(std::string cmd)
+{
+    return _exec(cmd, false);
 }
 
 // ---------------------------------------------------------------------
@@ -623,7 +635,7 @@ bool GameServer::_server_status_cmd()
     std::string status_cmd  = deds.get_script_cmd(DS_SCRIPT_STATUS);
     replace_shortcodes(status_cmd);
 
-    int result = _exec(status_cmd);
+    int result = _exec(status_cmd, true);
 
     return (result == 0) ? true : false;
 }
