@@ -18,12 +18,20 @@
 
 typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket;
 
+class Connection : public std::enable_shared_from_this<Connection> {
+public:
+    template <typename... Args>
+    Connection(Args &&... args) noexcept : socket(new ssl_socket(std::forward<Args>(args)...)) {}
+    std::unique_ptr<ssl_socket> socket;
+};
+
+
 // ---------------------------------------------------------------------
 
 class DaemonServerSess : public std::enable_shared_from_this<DaemonServerSess> {
 public:
-    DaemonServerSess(boost::asio::io_service& io_service, boost::asio::ssl::context& context)
-            : socket_(io_service, context)
+    DaemonServerSess(std::shared_ptr<Connection> connection)
+            : connection_(std::move(connection))
     {};
 
     void start();
@@ -42,7 +50,8 @@ private:
     std::string pub_keyfile;
 
     binn *write_binn;
-    ssl_socket socket_;
+    //ssl_socket socket_;
+    std::shared_ptr<Connection> connection_;
 
     ushort sessid;
     ushort mode;
@@ -58,7 +67,7 @@ DaemonServer(boost::asio::io_service& io_service, short port)
         : acceptor_(io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), port)),
           //socket_(io_service, context_)
           io_service_(io_service),
-        context_(boost::asio::ssl::context::sslv23)
+        context_(boost::asio::ssl::context::tlsv12)
 {
         context_.set_options(
                 boost::asio::ssl::context::default_workarounds
@@ -70,6 +79,12 @@ DaemonServer(boost::asio::io_service& io_service, short port)
         context_.use_certificate_chain_file("/home/nikita/Git/GDaemon2/keys/ssl/user.crt");
         context_.use_private_key_file("/home/nikita/Git/GDaemon2/keys/ssl/user.key", boost::asio::ssl::context::pem);
         context_.use_tmp_dh_file("/home/nikita/Git/GDaemon2/keys/ssl/dh2048.pem");
+
+        /**
+         * verify client auth
+         */
+        context_.set_verify_mode(boost::asio::ssl::context::verify_fail_if_no_peer_cert | boost::asio::ssl::context::verify_peer);
+        context_.load_verify_file("/home/nikita/Git/GDaemon2/keys/ssl/user.crt");
 
         start_accept();
 };

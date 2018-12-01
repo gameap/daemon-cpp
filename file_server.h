@@ -14,6 +14,7 @@
 #include <memory>
 #include <utility>
 #include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
 
 #include <boost/filesystem.hpp>
 #include <sys/stat.h>
@@ -26,12 +27,13 @@
 #include <binn.h>
 
 #include "typedefs.h"
+#include "daemon_server.h"
 
 // ---------------------------------------------------------------------
 
 class FileServerSess : public std::enable_shared_from_this<FileServerSess> {
 public:
-    FileServerSess(boost::asio::ip::tcp::socket socket) : socket_(std::move(socket)) {};
+    FileServerSess(std::shared_ptr<Connection> connection) : connection_(std::move(connection)) {};
     void start();
 
     uint publ;
@@ -99,7 +101,7 @@ private:
      */
     int append_end_symbols(char * buf, size_t length);
 
-    boost::asio::ip::tcp::socket socket_;
+    std::shared_ptr<Connection> connection_;
     enum { max_length = 1024 };
     
     size_t read_length;

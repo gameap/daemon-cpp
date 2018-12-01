@@ -11,14 +11,16 @@
 
 ssl_socket::lowest_layer_type& DaemonServerSess::socket()
 {
-    return socket_.lowest_layer();
+    return connection_->socket->lowest_layer();
 }
+
+// ---------------------------------------------------------------------
 
 void DaemonServerSess::handle_handshake(const boost::system::error_code& error) {
     if (!error) {
         do_read();
     } else {
-        delete this;
+        std::cerr << error.message() << std::endl;
     }
 }
 
@@ -34,7 +36,7 @@ void DaemonServerSess::start ()
 
     read_length = 0;
 
-    socket_.async_handshake(boost::asio::ssl::stream_base::server,
+    (*connection_->socket).async_handshake(boost::asio::ssl::stream_base::server,
                             boost::bind(&DaemonServerSess::handle_handshake, this,
                                         boost::asio::placeholders::error));
 }
@@ -47,7 +49,7 @@ void DaemonServerSess::do_read()
         case DAEMON_SERVER_MODE_NOAUTH: {
 
             auto self(shared_from_this());
-            socket_.async_read_some(boost::asio::buffer(read_buf, max_length),
+            (*connection_->socket).async_read_some(boost::asio::buffer(read_buf, max_length),
                 [this, self](boost::system::error_code ec, std::size_t length) {
                     if (!ec) {
                         read_length += length;
@@ -121,14 +123,14 @@ void DaemonServerSess::do_read()
 
         case DAEMON_SERVER_MODE_FILES:
             std::cout << "DAEMON_SERVER_MODE_FILES" << std::endl;
-            //std::make_shared<FileServerSess>(socket_.get_io_service(), context_)->start();
+            std::make_shared<FileServerSess>(std::move(connection_))->start();
             break;
 
         // case DAEMON_SERVER_MODE_SHELL:
             // break;
     }
 
-    delete this;
+    //delete this;
 }
 
 // ---------------------------------------------------------------------
@@ -192,7 +194,7 @@ void DaemonServerSess::do_write(bool rsa_crypt)
     size_t len = 0;
     len = append_end_symbols(&sendbin[0], write_len);
 
-    boost::asio::async_write(socket_, boost::asio::buffer(sendbin, len),
+    boost::asio::async_write(*connection_->socket, boost::asio::buffer(sendbin, len),
         [this, self](boost::system::error_code ec, std::size_t) {
             if (!ec) {
                 do_read();
@@ -204,7 +206,8 @@ void DaemonServerSess::do_write(bool rsa_crypt)
 
 void DaemonServer::start_accept()
 {
-    std::shared_ptr<DaemonServerSess> session = std::make_shared<DaemonServerSess>(io_service_, context_);
+    auto connection = std::make_shared<Connection>(io_service_, context_);
+    std::shared_ptr<DaemonServerSess> session = std::make_shared<DaemonServerSess>(std::move(connection));
 
     acceptor_.async_accept(session->socket(),
                            boost::bind(&DaemonServer::handle_accept, this, session,
@@ -217,7 +220,9 @@ void DaemonServer::start_accept()
 void DaemonServer::handle_accept(std::shared_ptr<DaemonServerSess> session, const boost::system::error_code& error) {
     if (!error) {
         session->start();
-        session = std::make_shared<DaemonServerSess>(io_service_, context_);
+
+        auto connection = std::make_shared<Connection>(io_service_, context_);
+        session = std::make_shared<DaemonServerSess>(std::move(connection));
 
         acceptor_.async_accept(session->socket(),
                                boost::bind(&DaemonServer::handle_accept, this, session,

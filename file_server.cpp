@@ -64,7 +64,7 @@ void FileServerSess::start ()
 void FileServerSess::do_read()
 {
     auto self(shared_from_this());
-    socket_.async_read_some(boost::asio::buffer(read_buf, max_length),
+    (*connection_->socket).async_read_some(boost::asio::buffer(read_buf, max_length),
         [this, self](boost::system::error_code ec, std::size_t length) {
             if (!ec) {
 
@@ -169,7 +169,7 @@ void FileServerSess::do_write()
     clear_write_vars();
     clear_read_vars();
 
-    boost::asio::async_write(socket_, boost::asio::buffer(sendbin, len),
+    boost::asio::async_write(*connection_->socket, boost::asio::buffer(sendbin, len),
          [this, self](boost::system::error_code ec, std::size_t) {
              if (!ec) {
                  do_read();
@@ -587,7 +587,7 @@ void FileServerSess::send_file()
     while (!input_file.eof()) {
         input_file.read(write_buf, (std::streamsize)max_length);
 
-        boost::asio::async_write(socket_, boost::asio::buffer(write_buf, input_file.gcount()),
+        boost::asio::async_write(*connection_->socket, boost::asio::buffer(write_buf, input_file.gcount()),
              [this, self](boost::system::error_code ec, std::size_t) {
                  if (ec) {
                      std::cout << "Write socket error: " << ec << std::endl;
