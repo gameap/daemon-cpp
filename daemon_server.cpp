@@ -9,6 +9,21 @@
 
 // ---------------------------------------------------------------------
 
+ssl_socket::lowest_layer_type& DaemonServerSess::socket()
+{
+    return socket_.lowest_layer();
+}
+
+void DaemonServerSess::handle_handshake(const boost::system::error_code& error) {
+    if (!error) {
+        do_read();
+    } else {
+        delete this;
+    }
+}
+
+// ---------------------------------------------------------------------
+
 void DaemonServerSess::start ()
 {
     write_binn = binn_list();
@@ -18,7 +33,10 @@ void DaemonServerSess::start ()
     pub_keyfile = config.pub_key_file;
 
     read_length = 0;
-    do_read();
+
+    socket_.async_handshake(boost::asio::ssl::stream_base::server,
+                            boost::bind(&DaemonServerSess::handle_handshake, this,
+                                        boost::asio::placeholders::error));
 }
 
 // ---------------------------------------------------------------------
@@ -103,14 +121,14 @@ void DaemonServerSess::do_read()
 
         case DAEMON_SERVER_MODE_FILES:
             std::cout << "DAEMON_SERVER_MODE_FILES" << std::endl;
-            std::make_shared<FileServerSess>(std::move(socket_))->start();
+            //std::make_shared<FileServerSess>(socket_.get_io_service(), context_)->start();
             break;
 
         // case DAEMON_SERVER_MODE_SHELL:
             // break;
     }
 
-    // do_read();
+    delete this;
 }
 
 // ---------------------------------------------------------------------
@@ -184,18 +202,29 @@ void DaemonServerSess::do_write(bool rsa_crypt)
 
 // ---------------------------------------------------------------------
 
-void DaemonServer::do_accept()
+void DaemonServer::start_accept()
 {
-    acceptor_.async_accept(socket_, [this](boost::system::error_code ec)
-    {
-        if (!ec) {
-            std::make_shared<DaemonServerSess>(std::move(socket_))->start();
-        }
+    std::shared_ptr<DaemonServerSess> session = std::make_shared<DaemonServerSess>(io_service_, context_);
 
-        do_accept();
-    });
+    acceptor_.async_accept(session->socket(),
+                           boost::bind(&DaemonServer::handle_accept, this, session,
+                                       boost::asio::placeholders::error)
+    );
 }
 
+// ---------------------------------------------------------------------
+
+void DaemonServer::handle_accept(std::shared_ptr<DaemonServerSess> session, const boost::system::error_code& error) {
+    if (!error) {
+        session->start();
+        session = std::make_shared<DaemonServerSess>(io_service_, context_);
+
+        acceptor_.async_accept(session->socket(),
+                               boost::bind(&DaemonServer::handle_accept, this, session,
+                                           boost::asio::placeholders::error)
+        );
+    }
+}
 // ---------------------------------------------------------------------
 
 int run_server(int port)
