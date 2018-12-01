@@ -20,7 +20,7 @@ void DaemonServerSess::handle_handshake(const boost::system::error_code& error) 
     if (!error) {
         do_read();
     } else {
-        std::cerr << error.message() << std::endl;
+        std::cerr << "Error: (" << error << ") " << error.message()  << std::endl;
     }
 }
 
@@ -228,6 +228,8 @@ void DaemonServer::handle_accept(std::shared_ptr<DaemonServerSess> session, cons
                                boost::bind(&DaemonServer::handle_accept, this, session,
                                            boost::asio::placeholders::error)
         );
+    } else {
+        std::cerr << "Handle Accept error: (" << error << ") " << error.message() << std::endl;
     }
 }
 // ---------------------------------------------------------------------

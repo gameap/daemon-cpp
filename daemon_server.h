@@ -74,17 +74,17 @@ DaemonServer(boost::asio::io_service& io_service, short port)
                 | boost::asio::ssl::context::no_sslv2
                 | boost::asio::ssl::context::single_dh_use);
 
-        //context_.set_password_callback(boost::bind(&DaemonServer::get_password, this));
+        context_.set_password_callback(std::bind(&DaemonServer::get_password, this));
 
-        context_.use_certificate_chain_file("/home/nikita/Git/GDaemon2/keys/ssl/user.crt");
-        context_.use_private_key_file("/home/nikita/Git/GDaemon2/keys/ssl/user.key", boost::asio::ssl::context::pem);
+        context_.use_certificate_chain_file("/home/nikita/Git/gameap-daemon-client/server.pem");
+        context_.use_private_key_file("/home/nikita/Git/gameap-daemon-client/server.pem", boost::asio::ssl::context::pem);
         context_.use_tmp_dh_file("/home/nikita/Git/GDaemon2/keys/ssl/dh2048.pem");
 
         /**
          * verify client auth
          */
         context_.set_verify_mode(boost::asio::ssl::context::verify_fail_if_no_peer_cert | boost::asio::ssl::context::verify_peer);
-        context_.load_verify_file("/home/nikita/Git/GDaemon2/keys/ssl/user.crt");
+        context_.load_verify_file("/home/nikita/Git/gameap-daemon-client/server.pem");
 
         start_accept();
 };
@@ -92,6 +92,10 @@ DaemonServer(boost::asio::io_service& io_service, short port)
 private:
     void start_accept();
     void handle_accept(std::shared_ptr<DaemonServerSess> session, const boost::system::error_code& error);
+
+    std::string get_password() const {
+        return "abracadabra";
+    }
 
     boost::asio::io_service& io_service_;
     boost::asio::ip::tcp::acceptor acceptor_;
