@@ -11,16 +11,28 @@ namespace auth {
 #ifdef _WIN32
         bool check(const char *username, const char *password)
         {
+            Config& config = Config::getInstance();
+
+            if (!config.password_authentication) {
+                return true;
+            }
+
             if (config.daemon_login.length() > 0 && config.daemon_password.length() > 0) {
                 if (username == config.daemon_login && password == config.daemon_password) {
                     return true;
                 }
             }
+
+            return false;
         }
 #else
 
         bool check(const char *username, const char *password) {
             Config& config = Config::getInstance();
+
+            if (!config.password_authentication) {
+                return true;
+            }
 
             if (config.daemon_login.length() > 0 && config.daemon_password.length() > 0) {
                 // Override pam login

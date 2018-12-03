@@ -25,12 +25,15 @@ int Config::parse()
         api_host        = pt.get<std::string>("api_host");
         api_key         = pt.get<std::string>("api_key");
 
-        daemon_login     = pt.get_optional<std::string>("daemon_login").get();
-        daemon_password  = pt.get_optional<std::string>("daemon_password").get();
+        daemon_login     = pt.get_optional<std::string>("daemon_login").get_value_or("");
+        daemon_password  = pt.get_optional<std::string>("daemon_password").get_value_or("");
 
+        password_authentication  = pt.get_optional<bool>("password_authentication").get_value_or(true);
+
+        client_certificate_file = pt.get<std::string>("client_certificate_file");
         certificate_chain_file = pt.get<std::string>("certificate_chain_file");
         private_key_file = pt.get<std::string>("private_key_file");
-        private_key_password = pt.get_optional<std::string>("private_key_password").get();
+        private_key_password = pt.get_optional<std::string>("private_key_password").get_value_or("");
         dh_file = pt.get<std::string>("dh_file");
 
         buf = pt.get_optional<std::string>("if_list");

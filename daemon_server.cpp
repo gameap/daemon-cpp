@@ -53,8 +53,6 @@ void DaemonServerSess::do_read()
                             // Check auth
                             binn *read_binn;
                             read_binn = binn_open(&read_buf[0]);
-                            
-                            std::cout << "read_length: " << read_length << std::endl;
 
                             char *login;
                             char *password;
@@ -90,8 +88,6 @@ void DaemonServerSess::do_read()
                         std::cout << "ERROR: " << ec << std::endl;
                     }
             });
-
-            std::cout << "NOAUTH" << std::endl;
             break;
         }
 
@@ -185,6 +181,12 @@ void DaemonServer::start_accept()
 void DaemonServer::handle_accept(std::shared_ptr<DaemonServerSess> session, const boost::system::error_code& error) {
     if (!error) {
         session->start();
+
+        std::cout << "Client connected: "
+                  << session->socket().remote_endpoint().address().to_string()
+                  << ":"
+                  << session->socket().remote_endpoint().port()
+                << std::endl;
 
         auto connection = std::make_shared<Connection>(io_service_, context_);
         session = std::make_shared<DaemonServerSess>(std::move(connection));
