@@ -64,6 +64,7 @@
 #define DS_SCRIPT_STATUS        10
 #define DS_SCRIPT_GET_CONSOLE   11
 #define DS_SCRIPT_SEND_CMD      12
+#define DS_SCRIPT_DELETE      	13
 
 // Daemon server
 #define DAEMON_SERVER_MODE_NOAUTH   0

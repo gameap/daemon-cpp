@@ -25,6 +25,9 @@
 
 // const BIO_METHOD *     BIO_f_base64(void);
 
+/**
+ * @deprecated
+ */
 namespace GCrypt {
 
     // Crypto crypto;

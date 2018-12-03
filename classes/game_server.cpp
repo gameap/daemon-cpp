@@ -72,6 +72,9 @@ void GameServer::_update_vars()
                  ? jvalue["dir"].asString()
                  : throw("Empty game server directory");
 
+    uuid            = jvalue["uuid"].asString();
+    uuid_short      = jvalue["uuid_short"].asString();
+
     user            = jvalue["su_user"].asString();
 
     ip              = jvalue["server_ip"].asString();
@@ -107,17 +110,17 @@ void GameServer::_update_vars()
 
         for( Json::ValueIterator itr = jaliases.begin() ; itr != jaliases.end() ; itr++ ) {
 
-            if ((*itr)["default_value"].isNull()) {
-                aliases.insert(std::pair<std::string, std::string>((*itr)["alias"].asString(), ""));
+            if ((*itr)["default"].isNull()) {
+                aliases.insert(std::pair<std::string, std::string>((*itr)["var"].asString(), ""));
             }
-            else if ((*itr)["default_value"].isString()) {
-                aliases.insert(std::pair<std::string, std::string>((*itr)["alias"].asString(), (*itr)["default_value"].asString()));
+            else if ((*itr)["default"].isString()) {
+                aliases.insert(std::pair<std::string, std::string>((*itr)["var"].asString(), (*itr)["default"].asString()));
             }
-            else if ((*itr)["default_value"].isInt()) {
-                aliases.insert(std::pair<std::string, std::string>((*itr)["alias"].asString(), std::to_string((*itr)["default_value"].asInt())));
+            else if ((*itr)["default"].isInt()) {
+                aliases.insert(std::pair<std::string, std::string>((*itr)["var"].asString(), std::to_string((*itr)["default"].asInt())));
             }
             else {
-                std::cerr << "Unknown alias type: " << (*itr)["default_value"] << std::endl;
+                std::cerr << "Unknown alias type: " << (*itr)["default"] << std::endl;
             }
         }
 
@@ -153,8 +156,12 @@ void GameServer::_update_vars()
 
 void GameServer::_append_cmd_output(std::string line)
 {
+    cmd_output_mutex.lock();
+
     line.append("\n");
     (*cmd_output).append(line);
+
+    cmd_output_mutex.unlock();
 }
 
 // ---------------------------------------------------------------------
@@ -177,7 +184,9 @@ std::string GameServer::get_cmd_output()
 
 void GameServer::clear_cmd_output()
 {
+    cmd_output_mutex.lock();
     (*cmd_output).clear();
+    cmd_output_mutex.unlock();
 }
 
 // ---------------------------------------------------------------------
@@ -185,9 +194,10 @@ void GameServer::clear_cmd_output()
 void GameServer::replace_shortcodes(std::string &cmd)
 {
     cmd = str_replace("{dir}", work_path.string(), cmd);
-    cmd = str_replace("{name}", screen_name, cmd);
-    cmd = str_replace("{screen_name}", screen_name, cmd);
-    
+
+    cmd = str_replace("{uuid}", uuid, cmd);
+    cmd = str_replace("{uuid_short}", uuid_short, cmd);
+
     cmd = str_replace("{host}", ip, cmd);
     cmd = str_replace("{ip}", ip, cmd);
     cmd = str_replace("{game}", game_scode, cmd);
@@ -470,22 +480,28 @@ int GameServer::_unpack_archive(fs::path const & archive)
 
 // ---------------------------------------------------------------------
 
-int GameServer::_exec(std::string cmd)
+int GameServer::_exec(std::string cmd, bool not_append)
 {
-    std::cout << "CMD Exec: " << cmd << std::endl;
-    _append_cmd_output(fs::current_path().string() + "# " + cmd);
-
-    bp::pipe out = bp::pipe();
-    bp:child c = exec(cmd, out);
-
-    bp::ipstream is(out);
-    std::string line;
-    while (c.running() && std::getline(is, line)) {
-        (*cmd_output).append(line + "\n");
+    if (!not_append) {
+        _append_cmd_output(fs::current_path().string() + "# " + cmd);
     }
 
-    c.wait();
-    return c.exit_code();
+    std::string out;
+    int exit_code = exec(cmd, out);
+
+    if (!not_append) {
+        _append_cmd_output(out);
+        _append_cmd_output(boost::str(boost::format("Exited with %1%") % exit_code));
+    }
+
+    return exit_code;
+}
+
+// ---------------------------------------------------------------------
+
+int GameServer::_exec(std::string cmd)
+{
+    return _exec(cmd, false);
 }
 
 // ---------------------------------------------------------------------
@@ -550,6 +566,11 @@ bool GameServer::_copy_dir(
 
 // ---------------------------------------------------------------------
 
+/**
+ * Delete Game serve
+ *
+ * @return 0 success, -1 error
+ */
 int GameServer::delete_server()
 {
     if (status_server()) {
@@ -565,13 +586,22 @@ int GameServer::delete_server()
         Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(server_id), jdata);
     }
 
-    try {
-        std::cout << "Remove path: " << work_path << std::endl;
-        fs::remove_all(work_path);
-    }
-    catch (fs::filesystem_error &e) {
-        std::cerr << "Error remove: " << e.what() << std::endl;
-        return -1;
+    DedicatedServer& deds = DedicatedServer::getInstance();
+    std::string delete_cmd  = deds.get_script_cmd(DS_SCRIPT_DELETE);
+
+    if (delete_cmd.length() > 0) {
+        replace_shortcodes(delete_cmd);
+        int result = _exec(delete_cmd);
+        return result;
+    } else {
+        try {
+            std::cout << "Remove path: " << work_path << std::endl;
+            fs::remove_all(work_path);
+        }
+        catch (fs::filesystem_error &e) {
+            std::cerr << "Error remove: " << e.what() << std::endl;
+            return -1;
+        }
     }
 
     return 0;
@@ -603,8 +633,9 @@ bool GameServer::_server_status_cmd()
 {
     DedicatedServer& deds = DedicatedServer::getInstance();
     std::string status_cmd  = deds.get_script_cmd(DS_SCRIPT_STATUS);
+    replace_shortcodes(status_cmd);
 
-    int result = _exec(status_cmd);
+    int result = _exec(status_cmd, true);
 
     return (result == 0) ? true : false;
 }
@@ -624,10 +655,10 @@ bool GameServer::status_server()
         std::cerr << "Server update vars error: " << e.what() << std::endl;
     }
 
+    bool active = false;
+
     DedicatedServer& deds = DedicatedServer::getInstance();
     std::string status_cmd  = deds.get_script_cmd(DS_SCRIPT_STATUS);
-
-    bool active = false;
 
     if (status_cmd.length() > 0) {
         active = _server_status_cmd();

@@ -2,7 +2,8 @@
 #define GAME_SERVER_H
 
 #include <string> 
-#include <vector> 
+#include <vector>
+#include <mutex>
 #include <boost/process.hpp>
 
 #include <boost/filesystem.hpp>
@@ -35,7 +36,8 @@ namespace fs = boost::filesystem;
 
 class GameServer {
 private:
-    std::string screen_name;
+    std::string uuid;
+    std::string uuid_short;
 
     ulong server_id;
     std::string ip;
@@ -64,6 +66,7 @@ private:
     fs::path work_path;
 
     //std::string *cmd_output;
+    std::mutex cmd_output_mutex;
     std::shared_ptr<std::string> cmd_output;
 
     int _unpack_archive(fs::path const & archive);
@@ -73,8 +76,8 @@ private:
         fs::path const & destination
     );
 
+    int _exec(std::string cmd, bool not_append);
     int _exec(std::string cmd);
-    boost::process::child __exec(std::string cmd, boost::process::pipe &out);
 
     bool _server_status_cmd();
 

@@ -72,6 +72,16 @@ if( "${RESTCLIENT_LIBRARY}" STREQUAL "RESTCLIENT_LIBRARY-NOTFOUND" )
 endif()
 message( STATUS "Found restclient-cpp: ${RESTCLIENT_LIBRARY}" )
 
+find_library(CRYPT_LIBRARY
+    NAMES libcrypt crypt
+    HINTS "${CMAKE_PREFIX_PATH}"
+)
+
+if( "${CRYPT_LIBRARY}" STREQUAL "CRYPT_LIBRARY-NOTFOUND" )
+    message( FATAL_ERROR "Failed to find crypt" )
+endif()
+message( STATUS "Found crypt: ${CRYPT_LIBRARY}" )
+
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(CURL REQUIRED)
@@ -87,18 +97,14 @@ set(SOURCES_CPP
     daemon.cpp
     daemon_server.cpp
     file_server.cpp
-    functions/gcrypt.cpp
     functions/gstring.cpp
     functions/gsystem.cpp
-    #classes/crypto.cpp
-    #classes/base64.cpp
     classes/dedicated_server.cpp
     classes/game_server.cpp
     classes/tasks.cpp
     functions/restapi.cpp
-    functions/restapi.h
+    functions/auth.cpp
     status.cpp
-    status.h
 )
 
 if (WIN32)
@@ -129,6 +135,7 @@ elseif(UNIX)
         ${RESTCLIENT_LIBRARY}
         ${CURL_LIBRARIES}
         ${CMAKE_DL_LIBS}
+        ${CRYPT_LIBRARY}
     )
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
@@ -160,6 +167,7 @@ elseif(UNIX)
         ${RESTCLIENT_LIBRARY}
         ${CURL_LIBRARIES}
         ${CMAKE_DL_LIBS}
+        ${CRYPT_LIBRARY}
     )
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
