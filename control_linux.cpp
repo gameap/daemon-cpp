@@ -75,7 +75,7 @@ static void signal_error(int sig, siginfo_t *si, void *ptr)
 
 // ---------------------------------------------------------------------
 
-void set_pid_file(char* filename)
+void set_pid_file(const char* filename)
 {
     FILE* f;
 

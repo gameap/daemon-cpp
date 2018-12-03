@@ -67,15 +67,20 @@ find_library(RESTCLIENT_LIBRARY
     HINTS "${CMAKE_PREFIX_PATH}"
 )
 
+if( "${RESTCLIENT_LIBRARY}" STREQUAL "RESTCLIENT_LIBRARY-NOTFOUND" )
+    message( FATAL_ERROR "Failed to find restclient-cpp" )
+endif()
+message( STATUS "Found restclient-cpp: ${RESTCLIENT_LIBRARY}" )
+
 find_library(CRYPT_LIBRARY
     NAMES libcrypt crypt
     HINTS "${CMAKE_PREFIX_PATH}"
 )
 
-if( "${RESTCLIENT_LIBRARY}" STREQUAL "RESTCLIENT_LIBRARY-NOTFOUND" )
-    message( FATAL_ERROR "Failed to find restclient-cpp" )
+if( "${CRYPT_LIBRARY}" STREQUAL "CRYPT_LIBRARY-NOTFOUND" )
+    message( FATAL_ERROR "Failed to find crypt" )
 endif()
-message( STATUS "Found restclient-cpp: ${RESTCLIENT_LIBRARY}" )
+message( STATUS "Found crypt: ${CRYPT_LIBRARY}" )
 
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
@@ -162,6 +167,7 @@ elseif(UNIX)
         ${RESTCLIENT_LIBRARY}
         ${CURL_LIBRARIES}
         ${CMAKE_DL_LIBS}
+        ${CRYPT_LIBRARY}
     )
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
