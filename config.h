@@ -30,11 +30,10 @@ public:
     std::string daemon_login;
     std::string daemon_password;
 
-    std::string pub_key_file;
-
-    std::string crypt_key;
-    std::string allowed_ip_str;
-    uint port;
+    std::string certificate_chain_file;
+    std::string private_key_file;
+    std::string private_key_password;
+    std::string dh_file;
 
     std::vector<std::string> if_list;
     std::vector<std::string> drives_list;

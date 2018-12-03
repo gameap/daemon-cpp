@@ -5,7 +5,22 @@
 #include "daemon_server.h"
 #include "classes/dedicated_server.h"
 
-#include "functions/gcrypt.h"
+// ---------------------------------------------------------------------
+
+ssl_socket::lowest_layer_type& DaemonServerSess::socket()
+{
+    return connection_->socket->lowest_layer();
+}
+
+// ---------------------------------------------------------------------
+
+void DaemonServerSess::handle_handshake(const boost::system::error_code& error) {
+    if (!error) {
+        do_read();
+    } else {
+        std::cerr << "Error: (" << error << ") " << error.message()  << std::endl;
+    }
+}
 
 // ---------------------------------------------------------------------
 
@@ -15,10 +30,12 @@ void DaemonServerSess::start ()
     mode = DAEMON_SERVER_MODE_NOAUTH;
 
     Config& config = Config::getInstance();
-    pub_keyfile = config.pub_key_file;
 
     read_length = 0;
-    do_read();
+
+    (*connection_->socket).async_handshake(boost::asio::ssl::stream_base::server,
+                            boost::bind(&DaemonServerSess::handle_handshake, shared_from_this(),
+                                        boost::asio::placeholders::error));
 }
 
 // ---------------------------------------------------------------------
@@ -29,7 +46,7 @@ void DaemonServerSess::do_read()
         case DAEMON_SERVER_MODE_NOAUTH: {
 
             auto self(shared_from_this());
-            socket_.async_read_some(boost::asio::buffer(read_buf, max_length),
+            (*connection_->socket).async_read_some(boost::asio::buffer(read_buf, max_length),
                 [this, self](boost::system::error_code ec, std::size_t length) {
                     if (!ec) {
                         read_length += length;
@@ -37,18 +54,9 @@ void DaemonServerSess::do_read()
                         if (read_complete(length)) {
                             Config& config = Config::getInstance();
 
-                            if ((read_length-MSG_END_SYMBOLS_NUM) != 256) {
-                                std::cerr << "Incorrect message (RSA Size error)" << std::endl;
-                                return;
-                            }
-
-                            // Decrypt without end chars
-                            char * decstring;
-                            GCrypt::rsa_pub_decrypt(&decstring, &read_buf[0], read_length-4, &pub_keyfile[0]);
-
                             // Check auth
                             binn *read_binn;
-                            read_binn = binn_open((void*)decstring);
+                            read_binn = binn_open(&read_buf[0]);
                             
                             std::cout << "read_length: " << read_length << std::endl;
 
@@ -81,7 +89,7 @@ void DaemonServerSess::do_read()
                                 binn_list_add_str(write_binn, (char *)"Auth failed");
                             }
 
-                            do_write(true);
+                            do_write();
                         }
                     }
                     else {
@@ -103,14 +111,12 @@ void DaemonServerSess::do_read()
 
         case DAEMON_SERVER_MODE_FILES:
             std::cout << "DAEMON_SERVER_MODE_FILES" << std::endl;
-            std::make_shared<FileServerSess>(std::move(socket_))->start();
+            std::make_shared<FileServerSess>(std::move(connection_))->start();
             break;
 
         // case DAEMON_SERVER_MODE_SHELL:
             // break;
     }
-
-    // do_read();
 }
 
 // ---------------------------------------------------------------------
@@ -143,7 +149,7 @@ int DaemonServerSess::append_end_symbols(char * buf, size_t length)
 
 // ---------------------------------------------------------------------
 
-void DaemonServerSess::do_write(bool rsa_crypt)
+void DaemonServerSess::do_write()
 {
     read_length = 0;
     memset(read_buf, 0, max_length-1);
@@ -153,28 +159,13 @@ void DaemonServerSess::do_write(bool rsa_crypt)
 
     size_t write_len = 0;
 
-    if (rsa_crypt == true) {
-        char buf[binn_size(write_binn)+1];
-        char * encstring;
-        size_t length = GCrypt::rsa_pub_encrypt(&encstring, (char*)binn_ptr(write_binn), binn_size(write_binn), &pub_keyfile[0]);
+    memcpy(sendbin, (char*)binn_ptr(write_binn), binn_size(write_binn));
+    write_len = binn_size(write_binn);
 
-        if (length == -1) {
-            // Crypt error
-            return;
-        }
-        
-        memcpy(sendbin, encstring, length);
-        write_len = length;
-    }
-    else {
-        memcpy(sendbin, (char*)binn_ptr(write_binn), binn_size(write_binn));
-        write_len = binn_size(write_binn);
-    }
-    
     size_t len = 0;
     len = append_end_symbols(&sendbin[0], write_len);
 
-    boost::asio::async_write(socket_, boost::asio::buffer(sendbin, len),
+    boost::asio::async_write(*connection_->socket, boost::asio::buffer(sendbin, len),
         [this, self](boost::system::error_code ec, std::size_t) {
             if (!ec) {
                 do_read();
@@ -184,18 +175,34 @@ void DaemonServerSess::do_write(bool rsa_crypt)
 
 // ---------------------------------------------------------------------
 
-void DaemonServer::do_accept()
+void DaemonServer::start_accept()
 {
-    acceptor_.async_accept(socket_, [this](boost::system::error_code ec)
-    {
-        if (!ec) {
-            std::make_shared<DaemonServerSess>(std::move(socket_))->start();
-        }
+    auto connection = std::make_shared<Connection>(io_service_, context_);
+    std::shared_ptr<DaemonServerSess> session = std::make_shared<DaemonServerSess>(std::move(connection));
 
-        do_accept();
-    });
+    acceptor_.async_accept(session->socket(),
+                           boost::bind(&DaemonServer::handle_accept, this, session,
+                                       boost::asio::placeholders::error)
+    );
 }
 
+// ---------------------------------------------------------------------
+
+void DaemonServer::handle_accept(std::shared_ptr<DaemonServerSess> session, const boost::system::error_code& error) {
+    if (!error) {
+        session->start();
+
+        auto connection = std::make_shared<Connection>(io_service_, context_);
+        session = std::make_shared<DaemonServerSess>(std::move(connection));
+
+        acceptor_.async_accept(session->socket(),
+                               boost::bind(&DaemonServer::handle_accept, this, session,
+                                           boost::asio::placeholders::error)
+        );
+    } else {
+        std::cerr << "Handle Accept error: (" << error << ") " << error.message() << std::endl;
+    }
+}
 // ---------------------------------------------------------------------
 
 int run_server(int port)

@@ -30,7 +30,10 @@ int Config::parse()
         daemon_login     = pt.get<std::string>("daemon_login");
         daemon_password  = pt.get<std::string>("daemon_password");
 
-        pub_key_file    = pt.get<std::string>("pub_key_file");
+        certificate_chain_file = pt.get<std::string>("certificate_chain_file");
+        private_key_file = pt.get<std::string>("private_key_file");
+        private_key_password = pt.get_optional<std::string>("private_key_password").get();
+        dh_file = pt.get<std::string>("dh_file");
 
         buf = pt.get_optional<std::string>("if_list");
         if (*buf != "") {
@@ -50,28 +53,11 @@ int Config::parse()
         bufushort = pt.get_optional<ushort>("stats_db_update_period");
         if (*bufushort > 0) stats_db_update_period = *bufushort;
 
-        /*
-        crypt_key = pt.get<std::string>("crypt_key");
-        allowed_ip_str = pt.get<std::string>("allowed_ip");
-        port = pt.get<int>("server_port");
-        */
-
     }
     catch (std::exception &e) {
         std::cerr << "Parse config error: " << e.what() << std::endl;
         return -1;
     }
-
-    /*
-    if (allowed_ip_str != "") {
-        allowed_ip = explode(",", allowed_ip_str);
-
-        int size = allowed_ip.size();
-        for (int i = 0; i < size; i++) {
-            allowed_ip[i] = trim(allowed_ip[i]);
-        }
-    }
-    */
 
     return 0;
 }
