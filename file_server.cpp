@@ -1,6 +1,5 @@
 #include "file_server.h"
 
-#include "functions/gcrypt.h"
 #include "config.h"
 
 #include <boost/format.hpp>

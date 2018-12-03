@@ -5,8 +5,6 @@
 #include "daemon_server.h"
 #include "classes/dedicated_server.h"
 
-#include "functions/gcrypt.h"
-
 // ---------------------------------------------------------------------
 
 ssl_socket::lowest_layer_type& DaemonServerSess::socket()
@@ -32,7 +30,6 @@ void DaemonServerSess::start ()
     mode = DAEMON_SERVER_MODE_NOAUTH;
 
     Config& config = Config::getInstance();
-    pub_keyfile = config.pub_key_file;
 
     read_length = 0;
 

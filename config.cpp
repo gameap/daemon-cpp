@@ -35,7 +35,7 @@ int Config::parse()
         certificate_chain_file = pt.get<std::string>("certificate_chain_file");
         private_key_file = pt.get<std::string>("private_key_file");
         private_key_password = pt.get_optional<std::string>("private_key_password").get();
-        tmp_dh_file = pt.get<std::string>("tmp_dh_file");
+        dh_file = pt.get<std::string>("dh_file");
 
         buf = pt.get_optional<std::string>("if_list");
         if (*buf != "") {

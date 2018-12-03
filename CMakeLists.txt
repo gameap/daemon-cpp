@@ -87,7 +87,6 @@ set(SOURCES_CPP
     daemon.cpp
     daemon_server.cpp
     file_server.cpp
-    functions/gcrypt.cpp
     functions/gstring.cpp
     functions/gsystem.cpp
     #classes/crypto.cpp

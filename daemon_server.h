@@ -49,7 +49,6 @@ private:
     enum { max_length = 1024 };
     size_t read_length;
     char read_buf[max_length];
-    std::string pub_keyfile;
 
     binn *write_binn;
     //ssl_socket socket_;
@@ -84,7 +83,7 @@ DaemonServer(boost::asio::io_service& io_service, short port)
 
         context_.use_certificate_chain_file(config.certificate_chain_file);
         context_.use_private_key_file(config.private_key_file, boost::asio::ssl::context::pem);
-        context_.use_tmp_dh_file(config.tmp_dh_file);
+        context_.use_tmp_dh_file(config.dh_file);
 
         /**
          * verify client auth
