@@ -1,9 +1,9 @@
 #include "consts.h"
-#include "config.h"
 
 #include "file_server.h"
 #include "daemon_server.h"
 #include "classes/dedicated_server.h"
+#include "functions/auth.h"
 
 // ---------------------------------------------------------------------
 
@@ -29,8 +29,6 @@ void DaemonServerSess::start ()
     write_binn = binn_list();
     mode = DAEMON_SERVER_MODE_NOAUTH;
 
-    Config& config = Config::getInstance();
-
     read_length = 0;
 
     (*connection_->socket).async_handshake(boost::asio::ssl::stream_base::server,
@@ -52,8 +50,6 @@ void DaemonServerSess::do_read()
                         read_length += length;
 
                         if (read_complete(length)) {
-                            Config& config = Config::getInstance();
-
                             // Check auth
                             binn *read_binn;
                             read_binn = binn_open(&read_buf[0]);
@@ -70,9 +66,7 @@ void DaemonServerSess::do_read()
                                 return; 
                             }
 
-                            if (config.daemon_login == login
-                                && config.daemon_password == password
-                            ) {
+                            if (gameap::auth::check(login, password)) {
                                 binn_list_add_uint32(write_binn, 100);
                                 binn_list_add_str(write_binn, (char *)"Auth success");
 

@@ -8,11 +8,11 @@
 #endif
 
 struct netstats {
-    uintmax_t rxb;
-    uintmax_t txb;
+    __uintmax_t rxb;
+    __uintmax_t txb;
 
-    uintmax_t rxp;
-    uintmax_t txp;
+    __uintmax_t rxp;
+    __uintmax_t txp;
 };
 
 #endif

@@ -67,6 +67,11 @@ find_library(RESTCLIENT_LIBRARY
     HINTS "${CMAKE_PREFIX_PATH}"
 )
 
+find_library(CRYPT_LIBRARY
+    NAMES libcrypt crypt
+    HINTS "${CMAKE_PREFIX_PATH}"
+)
+
 if( "${RESTCLIENT_LIBRARY}" STREQUAL "RESTCLIENT_LIBRARY-NOTFOUND" )
     message( FATAL_ERROR "Failed to find restclient-cpp" )
 endif()
@@ -89,15 +94,12 @@ set(SOURCES_CPP
     file_server.cpp
     functions/gstring.cpp
     functions/gsystem.cpp
-    #classes/crypto.cpp
-    #classes/base64.cpp
     classes/dedicated_server.cpp
     classes/game_server.cpp
     classes/tasks.cpp
     functions/restapi.cpp
-    functions/restapi.h
+    functions/auth.cpp
     status.cpp
-    status.h
 )
 
 if (WIN32)
@@ -128,6 +130,7 @@ elseif(UNIX)
         ${RESTCLIENT_LIBRARY}
         ${CURL_LIBRARIES}
         ${CMAKE_DL_LIBS}
+        ${CRYPT_LIBRARY}
     )
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )

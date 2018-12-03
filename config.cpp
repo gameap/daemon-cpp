@@ -20,15 +20,13 @@ int Config::parse()
 
         ds_id           = pt.get<uint>("ds_id");
 
-        listen_port = pt.count("listen_port") > 0
-                      ? pt.get<uint>("listen_port")
-                      : 31717;
+        listen_port     = pt.get_optional<uint>("listen_port").get_value_or(31717);
 
         api_host        = pt.get<std::string>("api_host");
         api_key         = pt.get<std::string>("api_key");
 
-        daemon_login     = pt.get<std::string>("daemon_login");
-        daemon_password  = pt.get<std::string>("daemon_password");
+        daemon_login     = pt.get_optional<std::string>("daemon_login").get();
+        daemon_password  = pt.get_optional<std::string>("daemon_password").get();
 
         certificate_chain_file = pt.get<std::string>("certificate_chain_file");
         private_key_file = pt.get<std::string>("private_key_file");
