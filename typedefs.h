@@ -1,6 +1,8 @@
 #ifndef _TYPEDEFS_H
 #define _TYPEDEFS_H
 
+#include <cstdint>
+
 #ifdef _WIN32
     typedef unsigned int uint;
     typedef unsigned short ushort;
@@ -8,11 +10,11 @@
 #endif
 
 struct netstats {
-    __uintmax_t rxb;
-    __uintmax_t txb;
+    uint64_t rxb;
+    uint64_t txb;
 
-    __uintmax_t rxp;
-    __uintmax_t txp;
+    uint64_t rxp;
+    uint64_t txp;
 };
 
 #endif
