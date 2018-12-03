@@ -12,6 +12,7 @@ master          |[![Build Status](https://travis-ci.org/gameap/GDaemon2.svg?bran
   - [Windows](#compiling-on-windows)
 - [Configuration](#configuration)
 - [Creating certificates](#creating-certificates)
+- [Clients API](#clients-api)
 
 ## Compiling
 
@@ -37,9 +38,9 @@ Coming soon
 
 ## Configuration
 
-### daemon.cfg
+Configuration file: daemon.cfg
 
-#### Base parameters
+### Base parameters
 
 | Parameter                 | Required              | Type      | Info
 |---------------------------|-----------------------|-----------|------------
@@ -49,16 +50,25 @@ Coming soon
 | api_key                   | yes                   | string    | API Key
 
 
-#### SSL/TLS
+### SSL/TLS
 
 | Parameter                 | Required              | Type      | Info
 |---------------------------|-----------------------|-----------|------------
-| certificate_chain_file    | yes                   | string    | Certificate
-| private_key_file          | yes                   | string    | Private Key
-| private_key_password      | no                    | string    | Private Key Password
+| client_certificate_file   | yes                   | string    | Client Certificate
+| certificate_chain_file    | yes                   | string    | Server Certificate
+| private_key_file          | yes                   | string    | Server Private Key
+| private_key_password      | no                    | string    | Server Private Key Password
 | dh_file                   | yes                   | string    | Diffie-Hellman Certificate
 
-#### Stats
+### Base Authentification
+
+| Parameter                 | Required              | Type      | Info
+|---------------------------|-----------------------|-----------|------------
+| password_authentication   | no                    | boolean   | Login+password authentification
+| daemon_login              | no                    | string    | Login. On Linux if empty or not set will be used Linux PAM
+| daemon_password           | no                    | string    | Password. On Linux if empty or not set will be used Linux PAM
+
+### Stats
 
 | Parameter                 | Required              | Type      | Info
 |---------------------------|-----------------------|-----------|------------
@@ -67,7 +77,7 @@ Coming soon
 | stats_update_period       | no                    | integer   | Stats update period
 | stats_db_update_period    | no                    | integer   | Update database period
 
-#### Example daemon.cfg
+### Example daemon.cfg
 
 ```ini
 ; Dedicated server list
@@ -77,12 +87,16 @@ ds_id=1337
 api_host=localhost
 api_key=h1KhwImgjTsvaOIgQxxQkbKxzOMfybI1U1p0ALq1NB54hNw0d1X3vVWFXpkZZPDH
 
+; Disable login password authentication
+password_authentication=false
+
 ; SSL/TLS
 
-certificate_chain_file=/path/to/server_certificate.pem
-private_key_file=/home/path/to/server_certificate.key
+client_certificate_file=/path/to/client.crt
+certificate_chain_file=/path/to/server.crt
+private_key_file=//path/to/server.key
 private_key_password=abracadabra
-dh_file=/home/path/to/dh2048.pem
+dh_file=/path/to/dh2048.pem
 
 ; Interfase list
 
@@ -103,26 +117,45 @@ stats_update_period=60
 stats_db_update_period=300
 ```
 
-### Creating certificates
+## Creating certificates
 
-Generate:
+Generate root certificate:
 
 ```bash
 openssl genrsa -out rootca.key 2048
 openssl req -x509 -new -nodes -key rootca.key -days 3650 -out rootca.crt
+```
 
+Generate server certificate:
+```bash
 openssl genrsa -out server.key 2048
 openssl req -new -key server.key -out server.csr
 
 openssl x509 -req -in server.csr -CA rootca.crt -CAkey rootca.key -CAcreateserial -out server.crt -days 3650
+```
 
+Generate client certificate:
+
+```bash
+openssl genrsa -out client.key 2048
+openssl req -new -key client.key -out client.csr
+
+openssl x509 -req -in client.csr -CA rootca.crt -CAkey rootca.key -CAcreateserial -out client.crt -days 3650
+```
+
+Generate Diffie-Hellman Certificate:
+```bash
 openssl dhparam -out dh2048.pem 2048
 ```
 
 Configuration:
 ```ini
+client_certificate_file=client.csr
 certificate_chain_file=server.csr
 private_key_file=server.key
 dh_file=/home/path/to/dh2048.pem
 ```
 
+## Clients API
+
+* PHP: https://github.com/et-nik/gameap-daemon-client
