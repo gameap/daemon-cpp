@@ -14,6 +14,8 @@
 
 #include <binn.h>
 
+#include "config.h"
+
 #define MSG_END_SYMBOLS_NUM 4
 
 typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket;
@@ -40,7 +42,7 @@ public:
 
 private:
     int append_end_symbols(char * buf, size_t length);
-    void do_write(bool rsa_crypt);
+    void do_write();
     void do_read();
     size_t read_complete(size_t length);
 
@@ -74,11 +76,15 @@ DaemonServer(boost::asio::io_service& io_service, short port)
                 | boost::asio::ssl::context::no_sslv2
                 | boost::asio::ssl::context::single_dh_use);
 
-        context_.set_password_callback(std::bind(&DaemonServer::get_password, this));
+        Config& config = Config::getInstance();
 
-        context_.use_certificate_chain_file("/home/nikita/Git/gameap-daemon-client/server.pem");
-        context_.use_private_key_file("/home/nikita/Git/gameap-daemon-client/server.pem", boost::asio::ssl::context::pem);
-        context_.use_tmp_dh_file("/home/nikita/Git/GDaemon2/keys/ssl/dh2048.pem");
+        if (config.private_key_password.length() > 0) {
+            context_.set_password_callback(std::bind(&DaemonServer::get_password, this));
+        }
+
+        context_.use_certificate_chain_file(config.certificate_chain_file);
+        context_.use_private_key_file(config.private_key_file, boost::asio::ssl::context::pem);
+        context_.use_tmp_dh_file(config.tmp_dh_file);
 
         /**
          * verify client auth
@@ -94,7 +100,8 @@ private:
     void handle_accept(std::shared_ptr<DaemonServerSess> session, const boost::system::error_code& error);
 
     std::string get_password() const {
-        return "abracadabra";
+        Config& config = Config::getInstance();
+        return config.private_key_password;
     }
 
     boost::asio::io_service& io_service_;

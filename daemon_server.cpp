@@ -37,7 +37,7 @@ void DaemonServerSess::start ()
     read_length = 0;
 
     (*connection_->socket).async_handshake(boost::asio::ssl::stream_base::server,
-                            boost::bind(&DaemonServerSess::handle_handshake, this,
+                            boost::bind(&DaemonServerSess::handle_handshake, shared_from_this(),
                                         boost::asio::placeholders::error));
 }
 
@@ -57,18 +57,9 @@ void DaemonServerSess::do_read()
                         if (read_complete(length)) {
                             Config& config = Config::getInstance();
 
-                            if ((read_length-MSG_END_SYMBOLS_NUM) != 256) {
-                                std::cerr << "Incorrect message (RSA Size error)" << std::endl;
-                                return;
-                            }
-
-                            // Decrypt without end chars
-                            char * decstring;
-                            GCrypt::rsa_pub_decrypt(&decstring, &read_buf[0], read_length-4, &pub_keyfile[0]);
-
                             // Check auth
                             binn *read_binn;
-                            read_binn = binn_open((void*)decstring);
+                            read_binn = binn_open(&read_buf[0]);
                             
                             std::cout << "read_length: " << read_length << std::endl;
 
@@ -101,7 +92,7 @@ void DaemonServerSess::do_read()
                                 binn_list_add_str(write_binn, (char *)"Auth failed");
                             }
 
-                            do_write(true);
+                            do_write();
                         }
                     }
                     else {
@@ -129,8 +120,6 @@ void DaemonServerSess::do_read()
         // case DAEMON_SERVER_MODE_SHELL:
             // break;
     }
-
-    //delete this;
 }
 
 // ---------------------------------------------------------------------
@@ -163,7 +152,7 @@ int DaemonServerSess::append_end_symbols(char * buf, size_t length)
 
 // ---------------------------------------------------------------------
 
-void DaemonServerSess::do_write(bool rsa_crypt)
+void DaemonServerSess::do_write()
 {
     read_length = 0;
     memset(read_buf, 0, max_length-1);
@@ -173,24 +162,9 @@ void DaemonServerSess::do_write(bool rsa_crypt)
 
     size_t write_len = 0;
 
-    if (rsa_crypt == true) {
-        char buf[binn_size(write_binn)+1];
-        char * encstring;
-        size_t length = GCrypt::rsa_pub_encrypt(&encstring, (char*)binn_ptr(write_binn), binn_size(write_binn), &pub_keyfile[0]);
+    memcpy(sendbin, (char*)binn_ptr(write_binn), binn_size(write_binn));
+    write_len = binn_size(write_binn);
 
-        if (length == -1) {
-            // Crypt error
-            return;
-        }
-        
-        memcpy(sendbin, encstring, length);
-        write_len = length;
-    }
-    else {
-        memcpy(sendbin, (char*)binn_ptr(write_binn), binn_size(write_binn));
-        write_len = binn_size(write_binn);
-    }
-    
     size_t len = 0;
     len = append_end_symbols(&sendbin[0], write_len);
 

@@ -36,6 +36,11 @@ public:
     std::string allowed_ip_str;
     uint port;
 
+    std::string certificate_chain_file;
+    std::string private_key_file;
+    std::string private_key_password;
+    std::string tmp_dh_file;
+
     std::vector<std::string> if_list;
     std::vector<std::string> drives_list;
 
