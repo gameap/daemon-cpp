@@ -1,6 +1,7 @@
 #include "consts.h"
 
-#include "file_server.h"
+#include "components/server/files_component.h"
+#include "components/server/commands_component.h"
 #include "daemon_server.h"
 #include "classes/dedicated_server.h"
 #include "functions/auth.h"
@@ -96,16 +97,14 @@ void DaemonServerSess::do_read()
             break;
 
         case DAEMON_SERVER_MODE_CMD:
-            std::cout << "CMD" << std::endl;
+            std::cout << "DAEMON_SERVER_MODE_CMD" << std::endl;
+            std::make_shared<CommandsSession>(std::move(connection_))->start();
             break;
 
         case DAEMON_SERVER_MODE_FILES:
             std::cout << "DAEMON_SERVER_MODE_FILES" << std::endl;
             std::make_shared<FileServerSess>(std::move(connection_))->start();
             break;
-
-        // case DAEMON_SERVER_MODE_SHELL:
-            // break;
     }
 }
 
