@@ -2,11 +2,14 @@
 #include <iostream>
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
+#include <boost/filesystem.hpp>
 
 #include <binn.h>
 
 #include "commands_component.h"
 #include "functions/gsystem.h"
+
+namespace fs = boost::filesystem;
 
 /**
  * Start session
@@ -72,11 +75,29 @@ void CommandsSession::cmd_process()
     switch (command) {
         case COMMAND_EXEC: {
             char * exec_command;
+            char * work_dir;
 
             if (!binn_list_get_str(read_binn, 2, &exec_command)) {
                 response_msg(STATUS_ERROR, "Invalid exec command", true);
                 break;
             }
+
+            if (!binn_list_get_str(read_binn, 3, &work_dir)) {
+                response_msg(STATUS_ERROR, "Invalid work directory", true);
+                break;
+            }
+
+            if (strlen(work_dir) == 0) {
+                response_msg(STATUS_ERROR, "Empty work directory", true);
+                break;
+            }
+
+            if (!fs::is_directory(work_dir)) {
+                response_msg(STATUS_ERROR, "Invalid work directory", true);
+                break;
+            }
+
+            fs::current_path(work_dir);
 
             std::cout << "Executing command: \"" << exec_command << "\"" << std::endl;
             std::string out;
