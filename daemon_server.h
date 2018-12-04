@@ -32,6 +32,11 @@ public:
 
 class DaemonServerSess : public std::enable_shared_from_this<DaemonServerSess> {
 public:
+    static constexpr ushort DAEMON_SERVER_MODE_NOAUTH     = 0;
+    static constexpr ushort DAEMON_SERVER_MODE_AUTH       = 1;
+    static constexpr ushort DAEMON_SERVER_MODE_CMD        = 2;
+    static constexpr ushort DAEMON_SERVER_MODE_FILES      = 3;
+
     DaemonServerSess(std::shared_ptr<Connection> connection)
             : connection_(std::move(connection))
     {};
@@ -47,15 +52,13 @@ private:
     size_t read_complete(size_t length);
 
     enum { max_length = 1024 };
-    size_t read_length;
+    size_t read_length {0};
     char read_buf[max_length];
 
     binn *write_binn;
-    //ssl_socket socket_;
     std::shared_ptr<Connection> connection_;
 
-    ushort sessid;
-    ushort mode;
+    ushort mode {DAEMON_SERVER_MODE_NOAUTH};
 
 };
 

@@ -66,13 +66,6 @@
 #define DS_SCRIPT_SEND_CMD      12
 #define DS_SCRIPT_DELETE      	13
 
-// Daemon server
-#define DAEMON_SERVER_MODE_NOAUTH   0
-#define DAEMON_SERVER_MODE_AUTH     1
-#define DAEMON_SERVER_MODE_CMD      2
-#define DAEMON_SERVER_MODE_FILES    3
-
-
 namespace GameAP {
 
 // struct ds_res {

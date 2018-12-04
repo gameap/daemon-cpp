@@ -18,7 +18,7 @@ namespace GameAP {
 
     // ---------------------------------------------------------------------
 
-    int exec(const std::string &cmd, std::string &out)
+    int exec(const std::string cmd, std::string &out)
     {
         int exit_code;
 
@@ -46,7 +46,7 @@ namespace GameAP {
 
     // ---------------------------------------------------------------------
 
-    boost::process::child exec(std::string cmd, boost::process::pipe &out)
+    boost::process::child exec(const std::string cmd, boost::process::pipe &out)
     {
         try {
             bp::child child_proccess(bp::search_path(PROC_SHELL), args={SHELL_PREF, cmd}, bp::std_out > out);

@@ -1,4 +1,4 @@
-#include "file_server.h"
+#include "files_component.h"
 
 #include "config.h"
 

@@ -1,7 +1,5 @@
-#ifndef FILE_SERVER_H
-#define FILE_SERVER_H
-
-#define FILE_SERVER_H
+#ifndef FILES_COMPONENT_H
+#define FILES_COMPONENT_H
 
 #ifdef _WIN32
 #include <stdio.h>
@@ -35,8 +33,6 @@ class FileServerSess : public std::enable_shared_from_this<FileServerSess> {
 public:
     FileServerSess(std::shared_ptr<Connection> connection) : connection_(std::move(connection)) {};
     void start();
-
-    uint publ;
 
 private:
     void do_read();

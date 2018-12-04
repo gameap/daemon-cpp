@@ -96,7 +96,6 @@ set(SOURCES_CPP
     config.cpp
     daemon.cpp
     daemon_server.cpp
-    file_server.cpp
     functions/gstring.cpp
     functions/gsystem.cpp
     classes/dedicated_server.cpp
@@ -105,6 +104,8 @@ set(SOURCES_CPP
     functions/restapi.cpp
     functions/auth.cpp
     status.cpp
+    components/server/commands_component.cpp
+    components/server/files_component.cpp
 )
 
 if (WIN32)
