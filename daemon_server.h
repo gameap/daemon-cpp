@@ -53,7 +53,7 @@ private:
 
     enum { max_length = 1024 };
     size_t read_length {0};
-    char read_buf[max_length] {""};
+    char read_buf[max_length];
 
     binn *write_binn;
     std::shared_ptr<Connection> connection_;
