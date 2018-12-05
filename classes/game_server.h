@@ -86,6 +86,8 @@ private:
 
     void _update_vars();
     void _append_cmd_output(std::string line);
+
+    void _set_installed(unsigned int status);
     
 public:
     GameServer(ulong mserver_id);

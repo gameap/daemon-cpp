@@ -310,19 +310,23 @@ int GameServer::update_server()
     }
 
     // Update installed = 2. In process
-    {
-        Json::Value jdata;
-        jdata["installed"] = 2;
-        Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(server_id), jdata);
-    }
+    _set_installed(2);
 
     DedicatedServer& deds = DedicatedServer::getInstance();
     std::string update_cmd = deds.get_script_cmd(DS_SCRIPT_UPDATE);
+    std::string steamcmd_path = deds.get_steamcmd_path();
 
     if (update_cmd.length() > 0) {
         replace_shortcodes(update_cmd);
         int result = _exec(update_cmd);
-        return (result == 0) ? 0 : -1;
+
+        if (result == 0) {
+            _set_installed(1);
+            return 0;
+        } else {
+            _set_installed(0);
+            return -1;
+        }
     }
 
     std::cout << "Update Start" << std::endl;
@@ -337,13 +341,14 @@ int GameServer::update_server()
     else if (!game_remrep.empty()) {
         game_install_from = INST_FROM_REMREP;
     }
-    else if (!steam_app_id.empty()) {
+    else if (!steam_app_id.empty() && !steamcmd_path.empty()) {
         game_install_from = INST_FROM_STEAM;
     }
     else {
         // No Source to install =(
         _append_cmd_output("No source to install game");
         std::cerr << "No source to install" << std::endl;
+        _set_installed(0);
         return -1;
     }
 
@@ -391,16 +396,15 @@ int GameServer::update_server()
     }
 
     if (game_install_from == INST_FROM_STEAM) {
-        std::string steamcmd_path = deds.get_steamcmd_path();
+        std::string steamcmd_fullpath = steamcmd_path + "/" + STEAMCMD;
 
-        if (!fs::exists(steamcmd_path + "/" + STEAMCMD)) {
-            std::string error = "SteamCMD not found: " + steamcmd_path + "/" + STEAMCMD;
+        if (!fs::exists(steamcmd_fullpath)) {
+            std::string error = "SteamCMD not found: " + steamcmd_fullpath;
             _append_cmd_output(error);
             std::cerr << error << std::endl;
+            _set_installed(0);
             return -1;
         }
-
-        fs::current_path(steamcmd_path);
 
         std::string additional_parameters = "";
 
@@ -408,10 +412,11 @@ int GameServer::update_server()
             additional_parameters += "+app_set_config \"" + steam_app_set_config + "\"";
         }
 
-        std::string steam_cmd_install = boost::str(boost::format("%1% +login anonymous +force_install_dir %2% +app_update \"%3%\" validate +quit")
-                                             % STEAMCMD // 1
+        std::string steam_cmd_install = boost::str(boost::format("%1% +login anonymous +force_install_dir %2% +app_update \"%3%\" %4% validate +quit")
+                                             % steamcmd_fullpath // 1
                                              % work_path // 2
-                                             % steam_app_id //
+                                             % steam_app_id // 3
+                                             % additional_parameters // 4
         );
 
         bool steamcmd_install_success = false;
@@ -424,6 +429,11 @@ int GameServer::update_server()
                 break;
             }
 
+            if (result != 1) {
+                steamcmd_install_success = false;
+                break;
+            }
+
             ++tries;
         }
 
@@ -432,6 +442,7 @@ int GameServer::update_server()
             _append_cmd_output(error);
             std::cerr << error << std::endl;
 
+            _set_installed(0);
             return -1;
         }
     }
@@ -452,6 +463,7 @@ int GameServer::update_server()
         std::string cmd = boost::str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % work_path.string());
 
         if (_exec(cmd) == -1) {
+            _set_installed(0);
             return -1;
         }
         
@@ -501,6 +513,7 @@ int GameServer::update_server()
         std::string cmd = boost::str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % work_path.string());
 
         if (_exec(cmd) == -1) {
+            _set_installed(0);
             return -1;
         }
         
@@ -518,14 +531,17 @@ int GameServer::update_server()
     #endif
 
     // Update installed = 1
-    {
-        Json::Value jdata;
-        jdata["installed"] = 1;
-
-        Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(server_id), jdata);
-    }
+    _set_installed(1);
 
     return 0;
+}
+
+void GameServer::_set_installed(unsigned int status)
+{
+    Json::Value jdata;
+    jdata["installed"] = status;
+
+    Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(server_id), jdata);
 }
 
 // ---------------------------------------------------------------------

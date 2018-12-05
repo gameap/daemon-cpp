@@ -98,6 +98,7 @@ DedicatedServer::DedicatedServer()
         // TODO: Check work path!
 
         work_path = jvalue["work_path"].asString();
+        steamcmd_path = jvalue["steamcmd_path"].asString();
 
         script_install = jvalue["script_install"].asString();
         script_reinstall = jvalue["script_reinstall"].asString();
