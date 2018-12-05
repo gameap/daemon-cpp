@@ -331,13 +331,13 @@ int GameServer::update_server()
     ushort game_mod_install_from =    INST_NO_SOURCE;
 
     // Install game
-    if (game_localrep.empty() == false) {
+    if (!game_localrep.empty()) {
         game_install_from = INST_FROM_LOCREP;
     }
-    else if (game_remrep.empty() == false) {
+    else if (!game_remrep.empty()) {
         game_install_from = INST_FROM_REMREP;
     }
-    else if (steam_app_id.empty() != false) {
+    else if (!steam_app_id.empty()) {
         game_install_from = INST_FROM_STEAM;
     }
     else {
@@ -347,10 +347,10 @@ int GameServer::update_server()
         return -1;
     }
 
-    if (gt_localrep.empty() == false) {
+    if (!gt_localrep.empty()) {
         game_mod_install_from = INST_FROM_LOCREP;
     }
-    else if (!gt_remrep.empty() == false) {
+    else if (!gt_remrep.empty()) {
         game_mod_install_from = INST_FROM_REMREP;
     }
     // else if (false)                  game_mod_install_from = INST_FROM_STEAM;
@@ -404,7 +404,7 @@ int GameServer::update_server()
 
         std::string additional_parameters = "";
 
-        if (steam_app_set_config.empty() == false) {
+        if (!steam_app_set_config.empty()) {
             additional_parameters += "+app_set_config \"" + steam_app_set_config + "\"";
         }
 
@@ -427,7 +427,7 @@ int GameServer::update_server()
             ++tries;
         }
 
-        if (steamcmd_install_success == false) {
+        if (!steamcmd_install_success) {
             std::string error = "Game installation via SteamCMD failed";
             _append_cmd_output(error);
             std::cerr << error << std::endl;
