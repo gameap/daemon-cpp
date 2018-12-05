@@ -697,3 +697,8 @@ std::string DedicatedServer::get_work_path()
 {
     return work_path;
 }
+
+std::string DedicatedServer::get_steamcmd_path()
+{
+    return steamcmd_path;
+}

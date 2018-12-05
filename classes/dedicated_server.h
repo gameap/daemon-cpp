@@ -100,6 +100,7 @@ public:
 	int get_cpu_load(std::vector<float> &cpu_percent);
 
 	std::string get_work_path();
+	std::string get_steamcmd_path();
 
 	int get_ping(ushort &ping);
 
@@ -132,6 +133,7 @@ private:
     ulong ds_id;
 
 	std::string work_path;
+	std::string steamcmd_path;
 
     ushort prefer_installation_method;
     std::string script_install;

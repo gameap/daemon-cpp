@@ -59,6 +59,9 @@ private:
     std::string gt_localrep;
     std::string gt_remrep;
 
+    std::string steam_app_id;
+    std::string steam_app_set_config;
+
     pid_t last_pid;
 
     time_t last_update_vars;
