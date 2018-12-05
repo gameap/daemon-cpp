@@ -25,6 +25,12 @@ using namespace boost::process;
 namespace fs = boost::filesystem;
 namespace bp = ::boost::process;
 
+#ifdef __linux__
+    #define STEAMCMD "steamcmd.sh"
+#elif _WIN32
+    #define STEAMCMD "steamcmd.exe"
+#endif
+
 // ---------------------------------------------------------------------
 
 GameServer::GameServer(ulong mserver_id)
@@ -87,6 +93,9 @@ void GameServer::_update_vars()
 
     game_localrep  = jvalue["game"]["local_repository"].asString();
     game_remrep    = jvalue["game"]["remote_repository"].asString();
+
+    steam_app_id            = jvalue["game"]["steam_app_id"].asString();
+    steam_app_set_config    = jvalue["game"]["steam_app_set_config"].asString();
 
     gt_localrep    = jvalue["game_mod"]["local_repository"].asString();
     gt_remrep      = jvalue["game_mod"]["remote_repository"].asString();
@@ -301,30 +310,55 @@ int GameServer::update_server()
     }
 
     // Update installed = 2. In process
-    {
-        Json::Value jdata;
-        jdata["installed"] = 2;
-        Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(server_id), jdata);
+    _set_installed(2);
+
+    DedicatedServer& deds = DedicatedServer::getInstance();
+    std::string update_cmd = deds.get_script_cmd(DS_SCRIPT_UPDATE);
+    std::string steamcmd_path = deds.get_steamcmd_path();
+
+    if (update_cmd.length() > 0) {
+        replace_shortcodes(update_cmd);
+        int result = _exec(update_cmd);
+
+        if (result == 0) {
+            _set_installed(1);
+            return 0;
+        } else {
+            _set_installed(0);
+            return -1;
+        }
     }
 
     std::cout << "Update Start" << std::endl;
 
     ushort game_install_from =  INST_NO_SOURCE;
-    ushort gt_install_from =    INST_NO_SOURCE;
+    ushort game_mod_install_from =    INST_NO_SOURCE;
 
     // Install game
-    if (game_localrep.empty())       game_install_from = INST_FROM_LOCREP;
-    else if (game_remrep.empty())    game_install_from = INST_FROM_REMREP;
-    //else if (false)                     game_install_from = INST_FROM_STEAM;
+    if (!game_localrep.empty()) {
+        game_install_from = INST_FROM_LOCREP;
+    }
+    else if (!game_remrep.empty()) {
+        game_install_from = INST_FROM_REMREP;
+    }
+    else if (!steam_app_id.empty() && !steamcmd_path.empty()) {
+        game_install_from = INST_FROM_STEAM;
+    }
     else {
         // No Source to install =(
-        std::cerr << "No source to intall" << std::endl;
+        _append_cmd_output("No source to install game");
+        std::cerr << "No source to install" << std::endl;
+        _set_installed(0);
         return -1;
     }
 
-    if (gt_localrep.empty())         gt_install_from = INST_FROM_LOCREP;
-    else if (gt_remrep.empty())      gt_install_from = INST_FROM_REMREP;
-    // else if (false)                  gt_install_from = INST_FROM_STEAM;
+    if (!gt_localrep.empty()) {
+        game_mod_install_from = INST_FROM_LOCREP;
+    }
+    else if (!gt_remrep.empty()) {
+        game_mod_install_from = INST_FROM_REMREP;
+    }
+    // else if (false)                  game_mod_install_from = INST_FROM_STEAM;
     else {
         // No Source to install. No return -1
     }
@@ -362,7 +396,55 @@ int GameServer::update_server()
     }
 
     if (game_install_from == INST_FROM_STEAM) {
-        // TODO
+        std::string steamcmd_fullpath = steamcmd_path + "/" + STEAMCMD;
+
+        if (!fs::exists(steamcmd_fullpath)) {
+            std::string error = "SteamCMD not found: " + steamcmd_fullpath;
+            _append_cmd_output(error);
+            std::cerr << error << std::endl;
+            _set_installed(0);
+            return -1;
+        }
+
+        std::string additional_parameters = "";
+
+        if (!steam_app_set_config.empty()) {
+            additional_parameters += "+app_set_config \"" + steam_app_set_config + "\"";
+        }
+
+        std::string steam_cmd_install = boost::str(boost::format("%1% +login anonymous +force_install_dir %2% +app_update \"%3%\" %4% validate +quit")
+                                             % steamcmd_fullpath // 1
+                                             % work_path // 2
+                                             % steam_app_id // 3
+                                             % additional_parameters // 4
+        );
+
+        bool steamcmd_install_success = false;
+        uint tries = 0;
+        while (tries < 3) {
+            int result = _exec(steam_cmd_install);
+
+            if (result == 0) {
+                steamcmd_install_success = true;
+                break;
+            }
+
+            if (result != 1) {
+                steamcmd_install_success = false;
+                break;
+            }
+
+            ++tries;
+        }
+
+        if (!steamcmd_install_success) {
+            std::string error = "Game installation via SteamCMD failed";
+            _append_cmd_output(error);
+            std::cerr << error << std::endl;
+
+            _set_installed(0);
+            return -1;
+        }
     }
 
     // Mkdir
@@ -381,6 +463,7 @@ int GameServer::update_server()
         std::string cmd = boost::str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % work_path.string());
 
         if (_exec(cmd) == -1) {
+            _set_installed(0);
             return -1;
         }
         
@@ -392,7 +475,7 @@ int GameServer::update_server()
 
     // Game Type Install
 
-    if (gt_install_from == INST_FROM_LOCREP) {
+    if (game_mod_install_from == INST_FROM_LOCREP) {
 
         if (fs::is_regular_file(gt_localrep)) {
             gt_source = INST_FILE;
@@ -402,17 +485,17 @@ int GameServer::update_server()
             gt_source = INST_DIR;
             source_path = gt_localrep;
         } else {
-            gt_install_from = INST_FROM_REMREP;
+            game_mod_install_from = INST_FROM_REMREP;
         }
 
         if (!fs::exists(source_path)) {
             std::cerr << "Local rep not found: " << source_path << std::endl;
-            gt_install_from = INST_FROM_REMREP;
+            game_mod_install_from = INST_FROM_REMREP;
             source_path = gt_remrep;
         }
     }
 
-    if (gt_install_from == INST_FROM_REMREP) {
+    if (game_mod_install_from == INST_FROM_REMREP) {
         // Check rep available
         // TODO ...
         gt_source = INST_FILE;
@@ -420,16 +503,17 @@ int GameServer::update_server()
     }
 
     // Wget/Copy and unpack
-    if (gt_install_from == INST_FROM_LOCREP && gt_source == INST_FILE) {
+    if (game_mod_install_from == INST_FROM_LOCREP && gt_source == INST_FILE) {
         _unpack_archive(game_localrep);
     }
-    else if (gt_install_from == INST_FROM_LOCREP && gt_source == INST_DIR) {
+    else if (game_mod_install_from == INST_FROM_LOCREP && gt_source == INST_DIR) {
         _copy_dir(source_path, work_path);
     }
-    else if (gt_install_from == INST_FROM_REMREP) {
+    else if (game_mod_install_from == INST_FROM_REMREP) {
         std::string cmd = boost::str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % work_path.string());
 
         if (_exec(cmd) == -1) {
+            _set_installed(0);
             return -1;
         }
         
@@ -447,14 +531,17 @@ int GameServer::update_server()
     #endif
 
     // Update installed = 1
-    {
-        Json::Value jdata;
-        jdata["installed"] = 1;
-
-        Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(server_id), jdata);
-    }
+    _set_installed(1);
 
     return 0;
+}
+
+void GameServer::_set_installed(unsigned int status)
+{
+    Json::Value jdata;
+    jdata["installed"] = status;
+
+    Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(server_id), jdata);
 }
 
 // ---------------------------------------------------------------------

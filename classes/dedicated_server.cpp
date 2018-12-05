@@ -98,6 +98,7 @@ DedicatedServer::DedicatedServer()
         // TODO: Check work path!
 
         work_path = jvalue["work_path"].asString();
+        steamcmd_path = jvalue["steamcmd_path"].asString();
 
         script_install = jvalue["script_install"].asString();
         script_reinstall = jvalue["script_reinstall"].asString();
@@ -696,4 +697,9 @@ std::string DedicatedServer::get_script_cmd(ushort script)
 std::string DedicatedServer::get_work_path()
 {
     return work_path;
+}
+
+std::string DedicatedServer::get_steamcmd_path()
+{
+    return steamcmd_path;
 }
