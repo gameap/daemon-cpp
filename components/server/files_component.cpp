@@ -148,23 +148,12 @@ void FileServerSess::do_write()
 {
     auto self(shared_from_this());
     char sendbin[binn_size(write_binn)+5];
-    // char sendbin[10240];
 
     size_t len = 0;
 
-    // msg = GCrypt::aes_encrypt((char*)binn_ptr(write_binn), aes_key);
     memcpy(sendbin, (char*)binn_ptr(write_binn), binn_size(write_binn));
     len = append_end_symbols(&sendbin[0], binn_size(write_binn));
 
-    // LOG SENDBIN
-    // sleep(1);
-    // time_t curtime = time(0);
-    // std::string binlog = std::string("sendbinn_") + std::to_string(curtime) + std::string(".bin");
-    // std::ofstream binlog_file;
-    // binlog_file.open(binlog, std::ios_base::binary | std::ios_base::trunc);
-    // binlog_file.write(sendbin, len);
-    // \LOG SENDBIN
-    
     clear_write_vars();
     clear_read_vars();
 
@@ -310,14 +299,30 @@ void FileServerSess::cmd_process()
 
                 if (type == FSERV_DETAILS) {
                     fs::path file_path(std::string(std::string(dir) + fs::path::preferred_separator + std::string(dirp->d_name)));
-                    fs::file_status file_status = fs::status(file_path);
+
+                    if (fs::is_symlink(file_path)) {
+                        file_path = fs::read_symlink(file_path);
+                    }
+
+                    if (!fs::exists(file_path)) {
+                        continue;
+                    }
+
+                    fs::file_status file_status = fs::is_symlink(file_path)
+                                                  ? fs::symlink_status(file_path)
+                                                  : fs::status(file_path);
+
+                    if (file_status.type() == fs::file_type::type_unknown) {
+                        continue;
+                    }
 
                     binn_list_add_uint64(file_info, (file_status.type() == fs::file_type::regular_file)
                                                     ? fs::file_size(file_path)
                                                     : 0
                     );
 
-                    binn_list_add_uint64(file_info, (uint64)fs::last_write_time(file_path));
+
+                    binn_list_add_uint64(file_info, (uint64)(fs::last_write_time(file_path)));
 
                     if (file_status.type() == fs::file_type::directory_file) {
                         binn_list_add_uint8(file_info, FSERV_TYPE_DIR);
@@ -586,12 +591,13 @@ void FileServerSess::send_file()
     while (!input_file.eof()) {
         input_file.read(write_buf, (std::streamsize)max_length);
 
-        boost::asio::async_write(*connection_->socket, boost::asio::buffer(write_buf, input_file.gcount()),
-             [this, self](boost::system::error_code ec, std::size_t) {
-                 if (ec) {
-                     std::cout << "Write socket error: " << ec << std::endl;
-                 }
-             });
+        boost::system::error_code ec;
+        (*connection_->socket).write_some(boost::asio::buffer(write_buf, input_file.gcount()), ec);
+
+        if (ec) {
+            std::cout << "Sending file error (" << ec << "): " << ec.message() << std::endl;
+            break;
+        }
     }
 
     std::cout << "File send success" << std::endl;
