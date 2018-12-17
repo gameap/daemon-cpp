@@ -18,12 +18,12 @@ int Config::parse()
         std::cout << "Reading cfg file " << cfg_file.c_str() << std::endl;
         boost::property_tree::ini_parser::read_ini(cfg_file.c_str(), pt);
 
-        ds_id           = pt.get<uint>("ds_id");
+        ds_id           = pt.get_optional<uint>("ds_id").get_value_or(0);;
 
         listen_port     = pt.get_optional<uint>("listen_port").get_value_or(31717);
 
-        api_host        = pt.get<std::string>("api_host");
-        api_key         = pt.get<std::string>("api_key");
+        api_host        = pt.get_optional<std::string>("api_host").get_value_or("");
+        api_key         = pt.get_optional<std::string>("api_key").get_value_or("");
 
         daemon_login     = pt.get_optional<std::string>("daemon_login").get_value_or("");
         daemon_password  = pt.get_optional<std::string>("daemon_password").get_value_or("");

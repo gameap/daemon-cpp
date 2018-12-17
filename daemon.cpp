@@ -9,10 +9,10 @@
 #include <sstream>
 #include <vector>
 #include <map>
-
+#include <chrono>
+#include <thread>
 #include <ctime>
 
-#include <boost/thread.hpp>
 #include <boost/format.hpp>
 
 #include "typedefs.h"
@@ -133,11 +133,7 @@ int check_tasks()
             }
         }
 
-		#ifdef _WIN32
-			Sleep(5000);
-		#else
-			sleep(5);
-		#endif
+        std::this_thread::sleep_for(std::chrono::seconds(5));
     }
 }
 
@@ -145,7 +141,7 @@ int check_tasks()
 
 int run_daemon()
 {
-    std::cout << "Start" << std::endl;
+    std::cout << "Starting..." << std::endl << std::endl;
 
     #ifdef __linux__
         /*
@@ -179,32 +175,43 @@ int run_daemon()
         return -1;
     }
 
-    //boost::thread daemon_server(run_server, config.listen_port);
-    boost::thread daemon_server(boost::bind(&run_server, config.listen_port));
+    auto run_daemon_server = [&]() {
+        std::cout << "Running Daemon Server" << std::endl;
+        run_server(config.listen_port);
+    };
 
-    DedicatedServer& deds = DedicatedServer::getInstance();
-    GameServersList& gslist = GameServersList::getInstance();
+    std::thread daemon_server(run_daemon_server);
 
-    // Change working directory
-    boost::filesystem::current_path(deds.get_work_path());
+    if (config.ds_id == 0) {
+        std::cout << "Empty Dedicated Server ID" << std::endl;
+        std::cout << "Tasks feature disabled" << std::endl;
+        daemon_server.join();
+    } else {
+        DedicatedServer &deds = DedicatedServer::getInstance();
+        GameServersList &gslist = GameServersList::getInstance();
+        TaskList& tasks = TaskList::getInstance();
 
-    boost::thread ctsk_thr(check_tasks);
+        // Change working directory
+        boost::filesystem::current_path(deds.get_work_path());
 
-    while (true) {
-        deds.stats_process();
-        deds.update_db();
+        boost::thread ctsk_thr(check_tasks);
 
-        try {
-            gslist.stats_process();
-        } catch (std::exception &e) {
-            std::cerr << "Game servers stats process error: " << e.what() << std::endl;
+        while (true) {
+            if (tasks.stop) {
+                break;
+            }
+
+            deds.stats_process();
+            deds.update_db();
+
+            try {
+                gslist.stats_process();
+            } catch (std::exception &e) {
+                std::cerr << "Game servers stats process error: " << e.what() << std::endl;
+            }
+
+            std::this_thread::sleep_for(std::chrono::seconds(5));
         }
-
-		#ifdef _WIN32
-			Sleep(5000);
-		#else
-			sleep(5);
-		#endif
     }
 
     return 0;
