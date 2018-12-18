@@ -5,7 +5,8 @@ compiler:
 - g++
 os:
 - linux
-script: cmake . && make && build/bin/run_tests
+#script: cmake . && make && build/bin/run_tests
+script: cmake . && make
 addons:
   apt:
     update: true
