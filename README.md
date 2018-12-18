@@ -3,8 +3,8 @@ The server management daemon
 
 Branches        | Build         |
 ----------------|-------------- | 
-develop         |[![Build Status](https://travis-ci.org/gameap/GDaemon2.svg?branch=develop)](https://travis-ci.org/GameAP/GDaemon2)       |
-master          |[![Build Status](https://travis-ci.org/gameap/GDaemon2.svg?branch=master)](https://travis-ci.org/GameAP/GDaemon2)        |
+develop         |[![Build Status](https://travis-ci.org/gameap/GDaemon2.svg?branch=develop)](https://travis-ci.org/gameap/GDaemon2)       |
+master          |[![Build Status](https://travis-ci.org/gameap/GDaemon2.svg?branch=master)](https://travis-ci.org/gameap/GDaemon2)        |
 
 - [Compiling](#compiling)
   - [Dependencies](#dependencies)
