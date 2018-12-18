@@ -3,7 +3,7 @@
 apt-get -y -qq update
 apt-get -y install curl
 
-curl -fsSL http://packages.gameap.ru/debian/gameap-rep.gpg.key | apt-key add -
+curl -fsSL http://packages.gameap.ru/gameap-rep.gpg.key | apt-key add -
 echo "deb http://packages.gameap.ru/debian jessie main" >> /etc/apt/sources.list
 
 apt-get -qq update
