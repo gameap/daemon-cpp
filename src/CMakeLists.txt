@@ -5,6 +5,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/build/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/build/lib)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_HOME_DIRECTORY}/build/lib)
 
+# set(CMAKE_FIND_LIBRARY_SUFFIXES ".a;.so")
+
 if( "${GDAEMON_LIBPATH}" STREQUAL "" )
     set(GDAEMON_LIBPATH /usr/lib/gameap-daemon)
 endif()
@@ -24,14 +26,15 @@ if(NOT Boost_FOUND)
 endif()
 message( STATUS "Found boost: ${Boost_LIBRARIES}" )
 
-find_package(PkgConfig REQUIRED)
-#if(NOT PkgConfig_FOUND)
-#    message(SEND_ERROR "Failed to find PkgConfig")
-#    return()
-#endif()
+find_library(JSONCPP_LIBRARY
+    NAMES libjson libjsoncpp jsoncpp
+    HINTS "${CMAKE_PREFIX_PATH}"
+    )
 
-pkg_check_modules(JSONCPP jsoncpp REQUIRED)
-link_libraries(${JSONCPP_LIBRARIES})
+if( "${JSONCPP_LIBRARY}" STREQUAL "NOTFOUND" )
+    message( FATAL_ERROR "Failed to find jsoncpp" )
+endif()
+message( STATUS "Found jsoncpp: ${JSONCPP_LIBRARY}" )
 
 find_library(BINN_LIBRARY
     NAMES libbinn binn
@@ -111,13 +114,13 @@ elseif(UNIX)
     target_link_libraries (gameap-daemon
         ${BINN_LIBRARY}
         ${Boost_LIBRARIES}
-        ${JSONCPP_LIBRARIES}
-        ${CMAKE_THREAD_LIBS_INIT}
-        ${OPENSSL_LIBRARIES}
         ${RESTCLIENT_LIBRARY}
         ${CURL_LIBRARIES}
+        ${JSONCPP_LIBRARY}
+        ${OPENSSL_LIBRARIES}
         ${CMAKE_DL_LIBS}
         ${CRYPT_LIBRARY}
+        ${CMAKE_THREAD_LIBS_INIT}
         )
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
