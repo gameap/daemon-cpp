@@ -41,10 +41,16 @@ cd openssl-OpenSSL_1_1_1a
 ./config
 make
 make install
+#ln -s /usr/local/lib64/libssl.so.1.1 /usr/lib64/libssl.so.1.1
+#ln -s /usr/local/lib64/libcrypto.so.1.1 /usr/lib64/libcrypto.so.1.1
+
+#ln -s /usr/local/lib64/libssl.a /usr/lib64/libssl.a
+#ln -s /usr/local/lib64/libcrypto.a /usr/lib64/libcrypto.a
 
 # Compile Curl Library
 cd $ROOTDIR
 wget https://curl.haxx.se/download/curl-7.63.0.tar.gz
+tar -xvf curl-7.63.0.tar.gz
 cd curl-7.63.0
 cmake -DCMAKE_USE_OPENSSL=on .
 make
@@ -68,6 +74,7 @@ make
 make install
 mkdir /usr/local/include/jsoncpp
 mv /usr/local/include/json /usr/local/include/jsoncpp/json
+#ln -s /usr/local/lib64/libjsoncpp.a /usr/lib64/libjsoncpp.a
 
 # Compile GDAEMON
 #--------------------------

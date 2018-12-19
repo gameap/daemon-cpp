@@ -5,21 +5,34 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/build/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/build/lib)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_HOME_DIRECTORY}/build/lib)
 
-# set(CMAKE_FIND_LIBRARY_SUFFIXES ".a;.so")
+if (BUILD_STATIC)
+    set(BUILD_STATIC_BOOST ON)
+
+    message( STATUS "Build static" )
+
+    if (UNIX)
+        set(CMAKE_FIND_LIBRARY_SUFFIXES ".a;.so")
+    endif()
+
+    set(BUILD_SHARED_LIBS OFF)
+    set(CMAKE_EXE_LINKER_FLAGS "-static")
+endif()
 
 if( "${GDAEMON_LIBPATH}" STREQUAL "" )
     set(GDAEMON_LIBPATH /usr/lib/gameap-daemon)
 endif()
 
 if (WIN32)
-    set(Boost_USE_STATIC_LIBS ON)
-elseif(UNIX)
-    if(${USE_STATIC_BOOST})
-        set(Boost_USE_STATIC_LIBS ON)
-    endif()
+    set(BUILD_STATIC_BOOST ON)
 endif()
 
-find_package(Boost REQUIRED COMPONENTS system filesystem iostreams thread)
+if (BUILD_STATIC_BOOST)
+    set(Boost_USE_STATIC_LIBS ON)
+    find_package(Boost REQUIRED COMPONENTS system filesystem iostreams thread)
+else()
+    find_package(Boost REQUIRED COMPONENTS system filesystem iostreams thread)
+endif()
+
 if(NOT Boost_FOUND)
     message(SEND_ERROR "Failed to find boost components")
     return()
@@ -107,8 +120,13 @@ if (WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -march=i686 -static" )
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -march=i686 -static" )
 elseif(UNIX)
-    target_compile_definitions(gameap-daemon PRIVATE NON_DAEMON)
-    # target_compile_definitions(gameap-daemon PRIVATE SYSCTL_DAEMON)
+
+    if(SYSCTL_DAEMON)
+        target_compile_definitions(gameap-daemon PRIVATE SYSCTL_DAEMON)
+    elseif(NON_DAEMON)
+        target_compile_definitions(gameap-daemon PRIVATE NON_DAEMON)
+    endif()
+
     target_compile_definitions(gameap-daemon PRIVATE GDADEMON_LIB_PATH="${GDAEMON_LIBPATH}")
 
     target_link_libraries (gameap-daemon
