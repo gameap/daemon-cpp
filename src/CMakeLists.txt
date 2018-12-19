@@ -5,33 +5,49 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/build/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/build/lib)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_HOME_DIRECTORY}/build/lib)
 
+if (BUILD_STATIC)
+    set(BUILD_STATIC_BOOST ON)
+
+    message( STATUS "Build static" )
+
+    if (UNIX)
+        set(CMAKE_FIND_LIBRARY_SUFFIXES ".a;.so")
+    endif()
+
+    set(BUILD_SHARED_LIBS OFF)
+    set(CMAKE_EXE_LINKER_FLAGS "-static")
+endif()
+
 if( "${GDAEMON_LIBPATH}" STREQUAL "" )
     set(GDAEMON_LIBPATH /usr/lib/gameap-daemon)
 endif()
 
 if (WIN32)
-    set(Boost_USE_STATIC_LIBS ON)
-elseif(UNIX)
-    if(${USE_STATIC_BOOST})
-        set(Boost_USE_STATIC_LIBS ON)
-    endif()
+    set(BUILD_STATIC_BOOST ON)
 endif()
 
-find_package(Boost REQUIRED COMPONENTS system filesystem iostreams thread)
+if (BUILD_STATIC_BOOST)
+    set(Boost_USE_STATIC_LIBS ON)
+    find_package(Boost REQUIRED COMPONENTS system filesystem iostreams thread)
+else()
+    find_package(Boost REQUIRED COMPONENTS system filesystem iostreams thread)
+endif()
+
 if(NOT Boost_FOUND)
     message(SEND_ERROR "Failed to find boost components")
     return()
 endif()
 message( STATUS "Found boost: ${Boost_LIBRARIES}" )
 
-find_package(PkgConfig REQUIRED)
-#if(NOT PkgConfig_FOUND)
-#    message(SEND_ERROR "Failed to find PkgConfig")
-#    return()
-#endif()
+find_library(JSONCPP_LIBRARY
+    NAMES libjson libjsoncpp jsoncpp
+    HINTS "${CMAKE_PREFIX_PATH}"
+    )
 
-pkg_check_modules(JSONCPP jsoncpp REQUIRED)
-link_libraries(${JSONCPP_LIBRARIES})
+if( "${JSONCPP_LIBRARY}" STREQUAL "NOTFOUND" )
+    message( FATAL_ERROR "Failed to find jsoncpp" )
+endif()
+message( STATUS "Found jsoncpp: ${JSONCPP_LIBRARY}" )
 
 find_library(BINN_LIBRARY
     NAMES libbinn binn
@@ -104,20 +120,25 @@ if (WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -march=i686 -static" )
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -march=i686 -static" )
 elseif(UNIX)
-    target_compile_definitions(gameap-daemon PRIVATE NON_DAEMON)
-    # target_compile_definitions(gameap-daemon PRIVATE SYSCTL_DAEMON)
+
+    if(SYSCTL_DAEMON)
+        target_compile_definitions(gameap-daemon PRIVATE SYSCTL_DAEMON)
+    elseif(NON_DAEMON)
+        target_compile_definitions(gameap-daemon PRIVATE NON_DAEMON)
+    endif()
+
     target_compile_definitions(gameap-daemon PRIVATE GDADEMON_LIB_PATH="${GDAEMON_LIBPATH}")
 
     target_link_libraries (gameap-daemon
         ${BINN_LIBRARY}
         ${Boost_LIBRARIES}
-        ${JSONCPP_LIBRARIES}
-        ${CMAKE_THREAD_LIBS_INIT}
-        ${OPENSSL_LIBRARIES}
         ${RESTCLIENT_LIBRARY}
         ${CURL_LIBRARIES}
+        ${JSONCPP_LIBRARY}
+        ${OPENSSL_LIBRARIES}
         ${CMAKE_DL_LIBS}
         ${CRYPT_LIBRARY}
+        ${CMAKE_THREAD_LIBS_INIT}
         )
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
