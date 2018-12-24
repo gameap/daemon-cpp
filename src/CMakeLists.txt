@@ -122,8 +122,10 @@ if (WIN32)
 elseif(UNIX)
 
     if(SYSCTL_DAEMON)
+        message( STATUS "Compiling sysctl daemon" )
         target_compile_definitions(gameap-daemon PRIVATE SYSCTL_DAEMON)
     elseif(NON_DAEMON)
+        message( STATUS "Compiling non daemon" )
         target_compile_definitions(gameap-daemon PRIVATE NON_DAEMON)
     endif()
 

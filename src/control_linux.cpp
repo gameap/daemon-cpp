@@ -27,8 +27,7 @@ namespace fs = boost::filesystem;
 
 #define PID_FILE "/var/run/gdaemon.pid"
 // #define PID_FILE "gdaemon.pid"
-//#define LOG_DIRECTORY "/var/log/gameap-daemon"
-#define LOG_DIRECTORY "log"
+#define LOG_DIRECTORY "/var/log/gameap-daemon"
 
 #define CHILD_NEED_WORK			1
 #define CHILD_NEED_TERMINATE	2
@@ -90,7 +89,7 @@ void set_pid_file(const char* filename)
 
 int monitor_daemon()
 {
-    int      pid;
+    int      pid = -1;
     int      status;
     int      need_start = 1;
     sigset_t sigset;
@@ -103,7 +102,7 @@ int monitor_daemon()
     sigaddset(&sigset, SIGCHLD);
     sigaddset(&sigset, SIGUSR1);
 
-    sigprocmask(SIG_BLOCK, &sigset, NULL);
+    sigprocmask(SIG_BLOCK, &sigset, nullptr);
 
     set_pid_file(PID_FILE);
 
@@ -125,10 +124,10 @@ int monitor_daemon()
             sigact.sa_sigaction = signal_error;
             sigemptyset(&sigact.sa_mask);
 
-            sigaction(SIGFPE, &sigact, 0);
-            sigaction(SIGILL, &sigact, 0);
-            sigaction(SIGSEGV, &sigact, 0);
-            sigaction(SIGBUS, &sigact, 0);
+            sigaction(SIGFPE, &sigact, nullptr);
+            sigaction(SIGILL, &sigact, nullptr);
+            sigaction(SIGSEGV, &sigact, nullptr);
+            sigaction(SIGBUS, &sigact, nullptr);
 
             sigemptyset(&sigset);
 
@@ -137,7 +136,7 @@ int monitor_daemon()
             // sigaddset(&sigset, SIGTERM);
 
             sigaddset(&sigset, SIGUSR1);
-            sigprocmask(SIG_BLOCK, &sigset, NULL);
+            sigprocmask(SIG_BLOCK, &sigset, nullptr);
 
             status = run_daemon();
             exit(status);
