@@ -15,7 +15,7 @@ if (BUILD_STATIC)
     endif()
 
     set(BUILD_SHARED_LIBS OFF)
-    set(CMAKE_EXE_LINKER_FLAGS "-static")
+    set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
 endif()
 
 if( "${GDAEMON_LIBPATH}" STREQUAL "" )
@@ -131,6 +131,11 @@ elseif(UNIX)
 
     target_compile_definitions(gameap-daemon PRIVATE GDADEMON_LIB_PATH="${GDAEMON_LIBPATH}")
 
+    if (BUILD_STATIC)
+        set_target_properties(gameap-daemon PROPERTIES LINK_SEARCH_START_STATIC 1)
+        set_target_properties(gameap-daemon PROPERTIES LINK_SEARCH_END_STATIC 1)
+    endif()
+        
     target_link_libraries (gameap-daemon
         ${BINN_LIBRARY}
         ${Boost_LIBRARIES}
