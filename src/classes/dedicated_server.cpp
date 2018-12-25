@@ -128,7 +128,7 @@ DedicatedServer::DedicatedServer()
         }
 
         if (script_status.empty()) {
-            script_status = "gameap-starter -t status -d {dir} -u {user}"
+            script_status = "gameap-starter -t status -d {dir} -u {user}";
         }
 
 
