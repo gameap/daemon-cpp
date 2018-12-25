@@ -113,6 +113,25 @@ DedicatedServer::DedicatedServer()
         script_get_console = jvalue["script_get_console"].asString();
         script_send_command = jvalue["script_send_command"].asString();
         script_delete = jvalue["script_delete"].asString();
+
+        // Default scripts
+        if (script_start.empty()) {
+            script_start = "gameap-starter -t start -d {dir} -u {user} -c \"{command}\"";
+        }
+
+        if (script_restart.empty()) {
+            script_restart = "gameap-starter -t restart -d {dir} -u {user} -c \"{command}\"";
+        }
+
+        if (script_stop.empty()) {
+            script_stop = "gameap-starter -t stop -d {dir} -u {user}";
+        }
+
+        if (script_status.empty()) {
+            script_status = "gameap-starter -t status -d {dir} -u {user}"
+        }
+
+
     } catch (Gameap::Rest::RestapiException &exception) {
         // Try later
         std::cerr << exception.what() << std::endl;
