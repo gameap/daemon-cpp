@@ -421,7 +421,8 @@ int GameServer::update_server()
 
         bool steamcmd_install_success = false;
         uint tries = 0;
-        while (tries < 3) {
+        while (tries <= 3) {
+            _append_cmd_output("\nSteamCMD installation. Attempt #" + std::to_string(tries) + "\n");
             int result = _exec(steam_cmd_install);
 
             if (result == 0) {
