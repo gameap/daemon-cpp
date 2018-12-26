@@ -67,9 +67,8 @@ private:
 class DaemonServer
 {
 public:
-DaemonServer(boost::asio::io_service& io_service, short port)
-        : acceptor_(io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), port)),
-          //socket_(io_service, context_)
+DaemonServer(boost::asio::io_service& io_service, boost::asio::ip::tcp::endpoint endpoint)
+        : acceptor_(io_service, endpoint),
           io_service_(io_service),
         context_(boost::asio::ssl::context::tlsv12)
 {
@@ -113,6 +112,6 @@ private:
 
 // ---------------------------------------------------------------------
 
-int run_server(int port);
+int run_server(std::string ip, ushort port);
 
 #endif

@@ -200,12 +200,18 @@ void DaemonServer::handle_accept(std::shared_ptr<DaemonServerSess> session, cons
 }
 // ---------------------------------------------------------------------
 
-int run_server(int port)
+int run_server(std::string ip, ushort port)
 {
     try {
         boost::asio::io_service io_service;
 
-        DaemonServer s(io_service, port);
+        boost::asio::ip::tcp::endpoint endpoint = ip.empty()
+                                              ? boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), port)
+                                              : boost::asio::ip::tcp::endpoint(
+                                                      boost::asio::ip::address::from_string(ip),
+                                                      port);
+
+        DaemonServer s(io_service, endpoint);
 
         io_service.run();
     }

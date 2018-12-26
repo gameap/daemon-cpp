@@ -45,7 +45,8 @@ Configuration file: daemon.cfg
 | Parameter                 | Required              | Type      | Info
 |---------------------------|-----------------------|-----------|------------
 | ds_id                     | yes                   | integer   | Dedicated Server ID
-| listen_port               | no (default 31717)    | integer   | Server port
+| listen_ip                 | no (default "0.0.0.0")| string    | Listen IP
+| listen_port               | no (default 31717)    | integer   | Listen port
 | api_host                  | yes                   | string    | API Host
 | api_key                   | yes                   | string    | API Key
 

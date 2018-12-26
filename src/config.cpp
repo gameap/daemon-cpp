@@ -20,6 +20,7 @@ int Config::parse()
 
         ds_id           = pt.get_optional<uint>("ds_id").get_value_or(0);;
 
+        listen_ip     = pt.get_optional<std::string>("listen_ip").get_value_or("");
         listen_port     = pt.get_optional<uint>("listen_port").get_value_or(31717);
 
         api_host        = pt.get_optional<std::string>("api_host").get_value_or("");

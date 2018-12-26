@@ -725,7 +725,7 @@ bool GameServer::_server_status_cmd()
 
     int result = _exec(status_cmd, true);
 
-    return (result == 0) ? true : false;
+    return (result == 0);
 }
 
 // ---------------------------------------------------------------------

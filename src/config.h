@@ -22,6 +22,7 @@ public:
     std::string error_log;
 
     uint ds_id;
+    std::string listen_ip;
     uint listen_port;
 
     std::string api_host;
