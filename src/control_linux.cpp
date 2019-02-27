@@ -20,6 +20,8 @@
 #include <iostream>
 #include <fstream>
 #include <boost/filesystem.hpp>
+#include <boost/format.hpp>
+#include <ctime>
 
 #include "config.h"
 
@@ -27,7 +29,9 @@ namespace fs = boost::filesystem;
 
 #define PID_FILE "/var/run/gdaemon.pid"
 // #define PID_FILE "gdaemon.pid"
-#define LOG_DIRECTORY "/var/log/gameap-daemon"
+#define LOG_DIRECTORY "/var/log/gameap-daemon/"
+#define LOG_MAIN_FILE "main.log"
+#define LOG_ERROR_FILE "error.log"
 
 #define CHILD_NEED_WORK			1
 #define CHILD_NEED_TERMINATE	2
@@ -189,11 +193,30 @@ int main(int argc, char** argv)
 
 	Config& config = Config::getInstance();
 	config.cfg_file = "daemon.cfg";
-	config.output_log = std::string(LOG_DIRECTORY) + "/main.log";
-	config.error_log = std::string(LOG_DIRECTORY) + "/error.log";
+	config.output_log = std::string(LOG_DIRECTORY) + std::string(LOG_MAIN_FILE);
+	config.error_log = std::string(LOG_DIRECTORY) + std::string(LOG_ERROR_FILE);
 
     if (!fs::exists(LOG_DIRECTORY)) {
         fs::create_directory(LOG_DIRECTORY);
+    }
+
+    time_t now = time(nullptr);
+    tm *ltm = localtime(&now);
+    char buffer_time[256];
+    strftime(buffer_time, sizeof(buffer_time), "%Y%m%d_%H%M", ltm);
+
+    if (!fs::exists(config.output_log)) {
+        fs::rename(
+                config.output_log,
+                boost::str(boost::format("%1%/main_%2%%3%.log") % LOG_DIRECTORY % buffer_time)
+                );
+    }
+
+    if (!fs::exists(config.error_log)) {
+        fs::rename(
+                config.output_log,
+                boost::str(boost::format("%1%/error_%2%%3%.log") % LOG_DIRECTORY % buffer_time)
+        );
     }
 
 	for (int i = 0; i < argc - 1; i++) {
@@ -231,8 +254,8 @@ int main(int argc, char** argv)
 	        close(STDOUT_FILENO);
 	        close(STDERR_FILENO);
 
-	        freopen(config.output_log.c_str(), "a+", stdout);
-	        freopen(config.error_log.c_str(), "a+", stderr);
+	        freopen(config.output_log.c_str(), "w", stdout);
+	        freopen(config.error_log.c_str(), "w", stderr);
 
 	        // run_daemon();
 	        monitor_daemon();
