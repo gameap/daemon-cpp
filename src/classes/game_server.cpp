@@ -84,9 +84,16 @@ void GameServer::_update_vars()
     user            = jvalue["su_user"].asString();
 
     ip              = jvalue["server_ip"].asString();
+
     server_port     = jvalue["server_port"].asUInt();
-    query_port      = jvalue["query_port"].asUInt();
-    rcon_port       = jvalue["rcon_port"].asUInt();
+
+    query_port      = jvalue["query_port"].isUInt()
+                        ? jvalue["query_port"].asUInt()
+                        : server_port;
+
+    rcon_port       = jvalue["rcon_port"].isUInt()
+                        ? jvalue["rcon_port"].asUInt()
+                        : server_port;
 
     start_command   = jvalue["start_command"].asString();
     game_scode      = jvalue["code_name"].asString();
