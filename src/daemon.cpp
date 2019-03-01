@@ -191,6 +191,10 @@ int run_daemon()
         GameServersList &gslist = GameServersList::getInstance();
         TaskList& tasks = TaskList::getInstance();
 
+        if (!boost::filesystem::exists(deds.get_work_path())) {
+            boost::filesystem::create_directory(deds.get_work_path());
+        }
+
         // Change working directory
         boost::filesystem::current_path(deds.get_work_path());
 
