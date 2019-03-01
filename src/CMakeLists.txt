@@ -82,6 +82,7 @@ message( STATUS "Found crypt: ${CRYPT_LIBRARY}" )
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(CURL REQUIRED)
+find_package(ZLIB REQUIRED)
 
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -145,6 +146,7 @@ elseif(UNIX)
         ${OPENSSL_LIBRARIES}
         ${CMAKE_DL_LIBS}
         ${CRYPT_LIBRARY}
+        ${ZLIB_LIBRARIES}
         ${CMAKE_THREAD_LIBS_INIT}
         )
 
