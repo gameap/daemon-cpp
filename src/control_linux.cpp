@@ -214,7 +214,7 @@ int main(int argc, char** argv)
 
     if (fs::exists(config.error_log)) {
         fs::rename(
-                config.output_log,
+                config.error_log,
                 boost::str(boost::format("%1%/error_%2%.log") % LOG_DIRECTORY % buffer_time)
         );
     }
