@@ -32,7 +32,7 @@ public:
     std::string daemon_password;
     bool password_authentication;
 
-    std::string client_certificate_file;
+    std::string ca_certificate_file;
     std::string certificate_chain_file;
     std::string private_key_file;
     std::string private_key_password;
