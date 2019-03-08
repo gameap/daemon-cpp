@@ -429,7 +429,7 @@ int GameServer::update_server()
         bool steamcmd_install_success = false;
         uint tries = 0;
         while (tries <= 3) {
-            _append_cmd_output("\nSteamCMD installation. Attempt #" + std::to_string(tries) + "\n");
+            _append_cmd_output("\nSteamCMD installation. Attempt #" + std::to_string(tries+1) + "\n");
             int result = _exec(steam_cmd_install);
 
             if (result == 0) {
@@ -437,7 +437,8 @@ int GameServer::update_server()
                 break;
             }
 
-            if (result != 1) {
+            // Exit code 8: Error! App 'xx' state is 0xE after update job.
+            if (result != 1 && result != 8) {
                 steamcmd_install_success = false;
                 break;
             }

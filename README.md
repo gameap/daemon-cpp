@@ -55,7 +55,7 @@ Configuration file: daemon.cfg
 
 | Parameter                 | Required              | Type      | Info
 |---------------------------|-----------------------|-----------|------------
-| client_certificate_file   | yes                   | string    | Client Certificate
+| ca_certificate_file       | yes                   | string    | CA Certificate
 | certificate_chain_file    | yes                   | string    | Server Certificate
 | private_key_file          | yes                   | string    | Server Private Key
 | private_key_password      | no                    | string    | Server Private Key Password
@@ -151,11 +151,13 @@ openssl dhparam -out dh2048.pem 2048
 
 Configuration:
 ```ini
-client_certificate_file=client.csr
-certificate_chain_file=server.csr
+ca_certificate_file=rootca.crt
+certificate_chain_file=server.crt
 private_key_file=server.key
 dh_file=/home/path/to/dh2048.pem
 ```
+
+client.csr and client.key is using by client side
 
 ## Clients API
 

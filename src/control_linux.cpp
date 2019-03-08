@@ -27,8 +27,7 @@
 
 namespace fs = boost::filesystem;
 
-#define PID_FILE "/var/run/gdaemon.pid"
-// #define PID_FILE "gdaemon.pid"
+#define PID_FILE "/var/run/gameap-daemon.pid"
 #define LOG_DIRECTORY "/var/log/gameap-daemon/"
 #define LOG_MAIN_FILE "main.log"
 #define LOG_ERROR_FILE "error.log"
@@ -87,6 +86,8 @@ void set_pid_file(const char* filename)
         fprintf(f, "%u", getpid());
         fclose(f);
     }
+
+    fs::permissions(filename, fs::owner_write|fs::owner_read);
 }
 
 // ---------------------------------------------------------------------
@@ -205,17 +206,17 @@ int main(int argc, char** argv)
     char buffer_time[256];
     strftime(buffer_time, sizeof(buffer_time), "%Y%m%d_%H%M", ltm);
 
-    if (!fs::exists(config.output_log)) {
+    if (fs::exists(config.output_log)) {
         fs::rename(
                 config.output_log,
-                boost::str(boost::format("%1%/main_%2%%3%.log") % LOG_DIRECTORY % buffer_time)
+                boost::str(boost::format("%1%main_%2%.log") % LOG_DIRECTORY % buffer_time)
                 );
     }
 
-    if (!fs::exists(config.error_log)) {
+    if (fs::exists(config.error_log)) {
         fs::rename(
-                config.output_log,
-                boost::str(boost::format("%1%/error_%2%%3%.log") % LOG_DIRECTORY % buffer_time)
+                config.error_log,
+                boost::str(boost::format("%1%error_%2%.log") % LOG_DIRECTORY % buffer_time)
         );
     }
 

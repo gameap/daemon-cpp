@@ -91,7 +91,7 @@ DaemonServer(boost::asio::io_service& io_service, boost::asio::ip::tcp::endpoint
          * verify client auth
          */
         context_.set_verify_mode(boost::asio::ssl::context::verify_fail_if_no_peer_cert | boost::asio::ssl::context::verify_peer);
-        context_.load_verify_file(config.client_certificate_file);
+        context_.load_verify_file(config.ca_certificate_file);
 
         start_accept();
 };

@@ -31,7 +31,7 @@ int Config::parse()
 
         password_authentication  = pt.get_optional<bool>("password_authentication").get_value_or(true);
 
-        client_certificate_file = pt.get<std::string>("client_certificate_file");
+        ca_certificate_file = pt.get<std::string>("ca_certificate_file");
         certificate_chain_file = pt.get<std::string>("certificate_chain_file");
         private_key_file = pt.get<std::string>("private_key_file");
         private_key_password = pt.get_optional<std::string>("private_key_password").get_value_or("");
