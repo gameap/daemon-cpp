@@ -105,9 +105,6 @@ void FileServerSess::do_read()
                     }
                 }
             }
-            else {
-                std::cerr << "ERROR! " << ec.category().name() << ": " << ec.message() << std::endl;
-            }
         });
 }
 

@@ -302,8 +302,6 @@ int TaskList::delete_task(std::vector<Task *>::iterator it)
 
 int TaskList::update_list()
 {
-    std::cout << "Updating waiting tasks list" << std::endl;
-
     Json::Value jvalue;
 
     try {

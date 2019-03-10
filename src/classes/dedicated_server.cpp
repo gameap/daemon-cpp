@@ -127,9 +127,9 @@ DedicatedServer::DedicatedServer()
             script_stop = "gameap-starter -t stop -d {dir} -u {user}";
         }
 
-        if (script_status.empty()) {
-            script_status = "gameap-starter -t status -d {dir} -u {user}";
-        }
+        //if (script_status.empty()) {
+        //    script_status = "gameap-starter -t status -d {dir} -u {user}";
+        //}
 
 
     } catch (Gameap::Rest::RestapiException &exception) {
@@ -142,7 +142,7 @@ DedicatedServer::DedicatedServer()
 
 int DedicatedServer::stats_process()
 {
-    if (time(0) - last_stats_update < stats_update_period) {
+    if (time(nullptr) - last_stats_update < stats_update_period) {
         return -1;
     }
 

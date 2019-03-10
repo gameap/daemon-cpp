@@ -783,7 +783,6 @@ bool GameServer::status_server()
 #endif
             }
         } else {
-            std::cerr << "Pidfile " << p <<  " not found" << std::endl;
             active = false;
         }
     }
