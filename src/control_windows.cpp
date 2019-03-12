@@ -159,16 +159,16 @@ VOID WINAPI ServiceCtrlHandler(DWORD CtrlCode)
 
 int _tmain (int argc, TCHAR *argv[])
 {
-	fs::path exe_path( fs::initial_path<fs::path>() );
+    fs::path exe_path( fs::initial_path<fs::path>() );
     exe_path = fs::system_complete( fs::path(argv[0]) );
     fs::current_path(exe_path.parent_path());
-	
-	SERVICE_TABLE_ENTRY ServiceTable[] = 
+
+    SERVICE_TABLE_ENTRY ServiceTable[] =
     {
         {SERVICE_NAME, (LPSERVICE_MAIN_FUNCTION) ServiceMain},
         {NULL, NULL}
     };
- 
+
     if (StartServiceCtrlDispatcher (ServiceTable) == FALSE)
     {
         return GetLastError ();
@@ -178,11 +178,12 @@ int _tmain (int argc, TCHAR *argv[])
 /*
 int main(int argc, char** argv)
 {
-    fs::path exe_path( fs::initial_path<fs::path>() );
+	fs::path exe_path( fs::initial_path<fs::path>() );
     exe_path = fs::system_complete( fs::path( argv[0] ) );
     fs::current_path(exe_path.parent_path());
 
     ServiceWorkerThread();
+	
 }
 */
 

@@ -4,6 +4,8 @@
 #include <stdarg.h>  // For va_start, etc.
 #include <memory>    // For std::unique_ptr
 
+#include <time.h>
+
 #include <algorithm>
 
 // ---------------------------------------------------------------------
@@ -56,7 +58,7 @@ std::string getFileExt(const std::string& s)
 
 std::string random(size_t size)
 {
-    srand(time(0));
+    srand(time(nullptr));
     auto randchar = []() -> char
     {
         const char charset[] =

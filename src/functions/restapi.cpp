@@ -3,7 +3,7 @@
 
 #include <restclient-cpp/restclient.h>
 
-#include <jsoncpp/json/json.h>
+#include <json/json.h>
 
 #include "restapi.h"
 #include "config.h"

@@ -14,7 +14,3 @@
 
 	typedef unsigned int uint;
 #endif
-
-#ifdef _WIN32
-    #define WINVER 0x0500
-#endif // _WIN32
