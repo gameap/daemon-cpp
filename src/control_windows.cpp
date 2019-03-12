@@ -192,7 +192,7 @@ int _tmain (int argc, TCHAR *argv[])
         );
     }
 
-    if (fs::exists(config.error_log) && fs::file_size(config.output_log) > 0) {
+    if (fs::exists(config.error_log) && fs::file_size(config.error_log) > 0) {
         fs::rename(
             config.error_log,
             boost::str(boost::format("%1%error_%2%.log") % LOG_DIRECTORY % buffer_time)
