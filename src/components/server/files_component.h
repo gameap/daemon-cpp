@@ -100,15 +100,14 @@ private:
     std::shared_ptr<Connection> m_connection;
     enum { max_length = 1024 };
     
-    size_t read_length;
-    char read_buf[max_length];
-    char write_buf[max_length];
+    size_t m_read_length;
+    char m_read_buf[max_length];
+    char m_write_buf[max_length];
 
     std::string m_read_msg;
     std::string m_write_msg;
     
-    binn *write_binn;
-    char *aes_key;
+    binn *m_write_binn;
 
     /*
      * 0 - NoAuth
@@ -116,16 +115,16 @@ private:
      * 2 - Cmd
      * 3 - File send
      * */
-    int mode;
+    int m_mode;
 
     boost::asio::streambuf request_buf;
-    std::string filename;
-    size_t filesize;
+    std::string m_filename;
+    size_t m_filesize;
 
-    unsigned char sendfile_mode;
+    unsigned char m_sendfile_mode;
     
-    std::ifstream input_file;
-    std::ofstream output_file;
+    std::ifstream m_input_file;
+    std::ofstream m_output_file;
 };
 
 #endif
