@@ -44,20 +44,30 @@ find_library(JSONCPP_LIBRARY
     HINTS "${CMAKE_PREFIX_PATH}"
     )
 
-if( "${JSONCPP_LIBRARY}" STREQUAL "NOTFOUND" )
+if( "${JSONCPP_LIBRARY}" STREQUAL "JSONCPP_LIBRARY-NOTFOUND" )
     message( FATAL_ERROR "Failed to find jsoncpp" )
 endif()
 message( STATUS "Found jsoncpp: ${JSONCPP_LIBRARY}" )
+
+find_path(JSONCPP_INCLUDE_PATH NAMES ${CMAKE_INCLUDE_PATH}/jsoncpp)
+if (NOT ${JSONCPP_INCLUDE_PATH} STREQUAL "JSONCPP_INCLUDE_PATH-NOTFOUND")
+    include_directories(${JSONCPP_INCLUDE_PATH}/jsoncpp)
+endif()
 
 find_library(BINN_LIBRARY
     NAMES libbinn binn
     HINTS "${CMAKE_PREFIX_PATH}"
     )
 
-if( "${BINN_LIBRARY}" STREQUAL "NOTFOUND" )
+if( "${BINN_LIBRARY}" STREQUAL "BINN_LIBRARY-NOTFOUND" )
     message( FATAL_ERROR "Failed to find binn" )
 endif()
 message( STATUS "Found binn: ${BINN_LIBRARY}" )
+
+find_path(BINN_INCLUDE_PATH NAMES ${CMAKE_INCLUDE_PATH}/binn)
+if (NOT ${BINN_INCLUDE_PATH} STREQUAL "BINN_INCLUDE_PATH-NOTFOUND")
+    include_directories(${BINN_INCLUDE_PATH}/binn)
+endif()
 
 find_library(RESTCLIENT_LIBRARY
     NAMES librestclient-cpp restclient-cpp
@@ -69,15 +79,17 @@ if( "${RESTCLIENT_LIBRARY}" STREQUAL "RESTCLIENT_LIBRARY-NOTFOUND" )
 endif()
 message( STATUS "Found restclient-cpp: ${RESTCLIENT_LIBRARY}" )
 
-find_library(CRYPT_LIBRARY
-    NAMES libcrypt crypt
-    HINTS "${CMAKE_PREFIX_PATH}"
-    )
+if(UNIX)
+    find_library(CRYPT_LIBRARY
+        NAMES libcrypt crypt
+        HINTS "${CMAKE_PREFIX_PATH}"
+        )
 
-if( "${CRYPT_LIBRARY}" STREQUAL "CRYPT_LIBRARY-NOTFOUND" )
-    message( FATAL_ERROR "Failed to find crypt" )
+    if( "${CRYPT_LIBRARY}" STREQUAL "CRYPT_LIBRARY-NOTFOUND" )
+        message( FATAL_ERROR "Failed to find crypt" )
+    endif()
+    message( STATUS "Found crypt: ${CRYPT_LIBRARY}" )
 endif()
-message( STATUS "Found crypt: ${CRYPT_LIBRARY}" )
 
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
@@ -101,7 +113,6 @@ set(SOURCES_CPP
     classes/tasks.cpp
     functions/restapi.cpp
     functions/auth.cpp
-    status.cpp
     components/server/commands_component.cpp
     components/server/files_component.cpp
     )
@@ -111,15 +122,23 @@ if (WIN32)
 elseif(UNIX)
     link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs)
     set(GDAEMON_SOURCES_CPP control_linux.cpp)
+    set(SOURCES_CPP ${SOURCES_CPP} status.cpp)
 endif()
 
 add_executable(gameap-daemon ${SOURCES_CPP} ${GDAEMON_SOURCES_CPP})
 
 if (WIN32)
-    target_link_libraries (gameap-daemon gcc stdc++ ws2_32 wsock32 binn boost_system boost_filesystem boost_iostreams boost_thread crypto ssl jsoncpp restclient-cpp curl)
-
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -march=i686 -static" )
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -march=i686 -static" )
+    target_link_libraries (gameap-daemon
+        ${BINN_LIBRARY}
+        ${Boost_LIBRARIES}
+        ${RESTCLIENT_LIBRARY}
+        ${CURL_LIBRARIES}
+        ${JSONCPP_LIBRARY}
+        ${OPENSSL_LIBRARIES}
+        ${CMAKE_DL_LIBS}
+        ${ZLIB_LIBRARIES}
+        ${CMAKE_THREAD_LIBS_INIT}
+        )
 elseif(UNIX)
 
     if(SYSCTL_DAEMON)

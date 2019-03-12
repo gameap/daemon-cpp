@@ -296,12 +296,12 @@ int DedicatedServer::get_net_load(std::map<std::string, netstats> &ifstats)
 
         std::string netstat_result;
         FILE *netstat;
-        netstat = popen("netstat -e", "r");
+        netstat = _popen("netstat -e", "r");
 
         while(fgets(bufread, sizeof(bufread), netstat)!=NULL){
             netstat_result += bufread;
         }
-        pclose(netstat);
+        _pclose(netstat);
 
         std::vector<std::string> split_lines;
         boost::split(split_lines, netstat_result, boost::is_any_of("\n\r"));
@@ -414,6 +414,7 @@ int DedicatedServer::get_net_load(std::map<std::string, netstats> &ifstats)
 int DedicatedServer::get_ping(ushort &ping)
 {
     ping = 0;
+    return ping;
 }
 
 // ---------------------------------------------------------------------
@@ -438,12 +439,12 @@ int DedicatedServer::get_cpu_load(std::vector<float> &cpu_percent)
     #ifdef _WIN32
         std::string wmic_result;
         FILE *wmic;
-        wmic = popen("wmic cpu get LoadPercentage", "r");
+        wmic = _popen("wmic cpu get LoadPercentage", "r");
 
          while(fgets(buf, sizeof(buf), wmic)!=NULL){
             wmic_result += buf;
         }
-        pclose(wmic);
+        _pclose(wmic);
 
         std::vector<std::string> split_lines;
         boost::split(split_lines, wmic_result, boost::is_any_of("\n\r"));

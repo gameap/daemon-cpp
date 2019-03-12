@@ -18,8 +18,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <dirent.h>
-
 #include <fstream>
 
 #include <binn.h>
@@ -31,7 +29,9 @@
 
 class FileServerSess : public std::enable_shared_from_this<FileServerSess> {
 public:
-    FileServerSess(std::shared_ptr<Connection> connection) : connection_(std::move(connection)) {};
+    static constexpr auto END_SYMBOLS = "\xFF\xFF\xFF\xFF";
+
+    FileServerSess(std::shared_ptr<Connection> connection) : m_connection(std::move(connection)) {};
     void start();
 
 private:
@@ -97,12 +97,15 @@ private:
      */
     int append_end_symbols(char * buf, size_t length);
 
-    std::shared_ptr<Connection> connection_;
+    std::shared_ptr<Connection> m_connection;
     enum { max_length = 1024 };
     
     size_t read_length;
     char read_buf[max_length];
     char write_buf[max_length];
+
+    std::string m_read_msg;
+    std::string m_write_msg;
     
     binn *write_binn;
     char *aes_key;

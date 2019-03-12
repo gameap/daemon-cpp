@@ -7,6 +7,7 @@
     typedef unsigned int uint;
     typedef unsigned short ushort;
 	typedef unsigned long ulong;
+    typedef int pid_t;
 #endif
 
 struct netstats {

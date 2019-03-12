@@ -63,7 +63,7 @@ void FileServerSess::start ()
 void FileServerSess::do_read()
 {
     auto self(shared_from_this());
-    (*connection_->socket).async_read_some(boost::asio::buffer(read_buf, max_length),
+    (*m_connection->socket).async_read_some(boost::asio::buffer(read_buf, max_length),
         [this, self](boost::system::error_code ec, std::size_t length) {
             if (!ec) {
 
@@ -130,8 +130,11 @@ void FileServerSess::write_ok(std::string message)
  */
 void FileServerSess::response_msg(unsigned int snum, const char * sdesc, bool write)
 {
+    binn *write_binn = binn_list();
     binn_list_add_uint32(write_binn, snum);
     binn_list_add_str(write_binn, (char *)sdesc);
+
+    m_write_msg = std::string(static_cast<char*>(binn_ptr(write_binn)), static_cast<uint>(binn_size(write_binn)));
 
     if (write) {
         do_write();
@@ -143,26 +146,19 @@ void FileServerSess::response_msg(unsigned int snum, const char * sdesc, bool wr
  */
 void FileServerSess::do_write()
 {
-    auto self(shared_from_this());
-    char sendbin[binn_size(write_binn)+5];
-
-    size_t len = 0;
-
-    memcpy(sendbin, (char*)binn_ptr(write_binn), binn_size(write_binn));
-    len = append_end_symbols(&sendbin[0], binn_size(write_binn));
+    m_write_msg.append(END_SYMBOLS);
 
     clear_write_vars();
     clear_read_vars();
 
-    boost::asio::async_write(*connection_->socket, boost::asio::buffer(sendbin, len),
-         [this, self](boost::system::error_code ec, std::size_t) {
-             if (!ec) {
-                 do_read();
-             }
-             else {
-                 std::cout << "SRAN ERROR!" << std::endl;
-             }
-         });
+    auto self(shared_from_this());
+    boost::asio::async_write(*m_connection->socket, boost::asio::buffer(m_write_msg.c_str(), m_write_msg.length()),
+        [this, self](boost::system::error_code ec, std::size_t length) {
+        if (!ec) {
+            m_write_msg.erase();
+            do_read();
+        }
+    });
 }
 
 /**
@@ -277,63 +273,68 @@ void FileServerSess::cmd_process()
                 break;
             }
 
-            DIR *dp;
-            struct dirent *dirp;
-            if ((dp = opendir(dir)) == nullptr) {
-                response_msg(FSERV_STATUS_ERROR, "Directory open error", true);
-                std::cerr << "Error(" << errno << ") opening " << dir << std::endl;
-                break;
-            }
-
             binn *files_binn = binn_list();
             binn *file_info = binn_list();
 
-            while ((dirp = readdir(dp)) != nullptr) {
-                binn_free(file_info);
-                file_info = binn_list();
+            fs::path dirp(dir);
 
-                binn_list_add_str(file_info, dirp->d_name);
-
-                if (type == FSERV_DETAILS) {
-                    fs::path file_path(std::string(std::string(dir) + fs::path::preferred_separator + std::string(dirp->d_name)));
-
-                    if (fs::is_symlink(file_path)) {
-                        file_path = fs::read_symlink(file_path);
-                    }
-
-                    if (!fs::exists(file_path)) {
-                        continue;
-                    }
-
-                    fs::file_status file_status = fs::is_symlink(file_path)
-                                                  ? fs::symlink_status(file_path)
-                                                  : fs::status(file_path);
-
-                    if (file_status.type() == fs::file_type::type_unknown) {
-                        continue;
-                    }
-
-                    binn_list_add_uint64(file_info, (file_status.type() == fs::file_type::regular_file)
-                                                    ? fs::file_size(file_path)
-                                                    : 0
-                    );
-
-
-                    binn_list_add_uint64(file_info, (uint64)(fs::last_write_time(file_path)));
-
-                    if (file_status.type() == fs::file_type::directory_file) {
-                        binn_list_add_uint8(file_info, FSERV_TYPE_DIR);
-                    } else {
-                        binn_list_add_uint8(file_info, FSERV_TYPE_FILE);
-                    }
-
-                    binn_list_add_uint16(file_info, (unsigned short)file_status.permissions());
-                }
-
-                binn_list_add_list(files_binn, file_info);
+            if (!fs::exists(dirp)) {
+                response_msg(FSERV_STATUS_ERROR, "Directory open error", true);
+                std::cerr << "Directory open error: " << dir << std::endl;
+                break;
             }
 
-            closedir(dp);
+            for (auto &file : fs::directory_iterator{ dirp }) {
+                try {
+                    fs::path file_path = file.path();
+                    std::string file_name = file.path().filename().string();
+
+                    binn_free(file_info);
+                    file_info = binn_list();
+
+                    binn_list_add_str(file_info, &file_name[0]);
+
+                    if (type == FSERV_DETAILS) {
+                        if (fs::is_symlink(file_path)) {
+                            file_path = fs::read_symlink(file_path);
+                        }
+
+                        if (!fs::exists(file_path)) {
+                            continue;
+                        }
+
+                        fs::file_status file_status = fs::is_symlink(file_path)
+                            ? fs::symlink_status(file_path)
+                            : fs::status(file_path);
+
+                        if (file_status.type() == fs::file_type::type_unknown) {
+                            continue;
+                        }
+
+                        binn_list_add_uint64(file_info, (file_status.type() == fs::file_type::regular_file)
+                            ? fs::file_size(file_path)
+                            : 0
+                        );
+
+
+                        binn_list_add_uint64(file_info, (uint64)(fs::last_write_time(file_path)));
+
+                        if (file_status.type() == fs::file_type::directory_file) {
+                            binn_list_add_uint8(file_info, FSERV_TYPE_DIR);
+                        }
+                        else {
+                            binn_list_add_uint8(file_info, FSERV_TYPE_FILE);
+                        }
+
+                        binn_list_add_uint16(file_info, (unsigned short)file_status.permissions());
+                    }
+
+                    binn_list_add_list(files_binn, file_info);
+                }
+                catch (const std::exception & ex) {
+                    std::cerr << file.path().filename() << ": " << ex.what() << std::endl;
+                }
+            }
 
             response_msg(FSERV_STATUS_OK, "OK", false);
             binn_list_add_list(write_binn, files_binn);
@@ -466,7 +467,7 @@ void FileServerSess::cmd_process()
 
             struct stat stat_buf;
 
-            if (lstat(std::string(file).c_str(), &stat_buf) == 0) {
+            if (stat(std::string(file).c_str(), &stat_buf) == 0) {
                 binn_list_add_uint64(file_info, (uint64_t)stat_buf.st_size); // File size
 
                 if (stat_buf.st_mode & S_IFDIR) {
@@ -478,6 +479,7 @@ void FileServerSess::cmd_process()
                 else if (stat_buf.st_mode & S_IFCHR) {
                     binn_list_add_uint8(file_info, FSERV_TYPE_CHR_DEVICE); // Character device
                 }
+#ifdef __linux__
                 else if (stat_buf.st_mode & S_IFBLK) {
                     binn_list_add_uint8(file_info, FSERV_TYPE_BLOCK_DEVICE); // Block device
                 }
@@ -490,6 +492,7 @@ void FileServerSess::cmd_process()
                 else if (stat_buf.st_mode & S_IFSOCK) {
                     binn_list_add_uint8(file_info, FSERV_TYPE_SOCKET); // Socket
                 }
+#endif
                 else {
                     binn_list_add_uint8(file_info, FSERV_TYPE_UNKNOWN); // Unknown
                 }
@@ -589,7 +592,7 @@ void FileServerSess::send_file()
         input_file.read(write_buf, (std::streamsize)max_length);
 
         boost::system::error_code ec;
-        (*connection_->socket).write_some(boost::asio::buffer(write_buf, input_file.gcount()), ec);
+        (*m_connection->socket).write_some(boost::asio::buffer(write_buf, input_file.gcount()), ec);
 
         if (ec) {
             std::cout << "Sending file error (" << ec << "): " << ec.message() << std::endl;

@@ -4,7 +4,7 @@
 #include <boost/process.hpp>
 #include <boost/iostreams/stream.hpp>
 
-#include <jsoncpp/json/json.h>
+#include <json/json.h>
 
 #include "config.h"
 #include "game_server.h"
@@ -218,17 +218,10 @@ void GameServer::replace_shortcodes(std::string &cmd)
     cmd = str_replace("{ip}", ip, cmd);
     cmd = str_replace("{game}", game_scode, cmd);
 
-	#ifdef __GNUC__
-		cmd = str_replace("{id}", std::to_string(server_id), cmd);
-		cmd = str_replace("{port}", std::to_string(server_port), cmd);
-		cmd = str_replace("{query_port}", std::to_string(query_port), cmd);
-		cmd = str_replace("{rcon_port}", std::to_string(rcon_port), cmd);
-	#elif _WIN32
-		cmd = str_replace("{id}", std::to_string((_ULonglong)server_id), cmd);
-		cmd = str_replace("{port}", std::to_string((_ULonglong)server_port), cmd);
-		cmd = str_replace("{query_port}", std::to_string((_ULonglong)query_port), cmd);
-		cmd = str_replace("{rcon_port}", std::to_string((_ULonglong)rcon_port), cmd);
-	#endif
+    cmd = str_replace("{id}", std::to_string(server_id), cmd);
+    cmd = str_replace("{port}", std::to_string(server_port), cmd);
+    cmd = str_replace("{query_port}", std::to_string(query_port), cmd);
+    cmd = str_replace("{rcon_port}", std::to_string(rcon_port), cmd);
     
     cmd = str_replace("{user}", user, cmd);
 

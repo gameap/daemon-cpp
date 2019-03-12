@@ -3,6 +3,14 @@
 #include <Windows.h>
 #include <tchar.h>
 
+#include <boost/format.hpp>
+
+#include "config.h"
+
+#define LOG_DIRECTORY "log/"
+#define LOG_MAIN_FILE "main.log"
+#define LOG_ERROR_FILE "error.log"
+
 namespace fs = boost::filesystem;
 
 SERVICE_STATUS        g_ServiceStatus = { 0 };
@@ -159,16 +167,47 @@ VOID WINAPI ServiceCtrlHandler(DWORD CtrlCode)
 
 int _tmain (int argc, TCHAR *argv[])
 {
-	fs::path exe_path( fs::initial_path<fs::path>() );
+    fs::path exe_path( fs::initial_path<fs::path>() );
     exe_path = fs::system_complete( fs::path(argv[0]) );
     fs::current_path(exe_path.parent_path());
-	
-	SERVICE_TABLE_ENTRY ServiceTable[] = 
+
+    Config& config = Config::getInstance();
+    config.cfg_file = "daemon.cfg";
+    config.output_log = std::string(LOG_DIRECTORY) + std::string(LOG_MAIN_FILE);
+    config.error_log = std::string(LOG_DIRECTORY) + std::string(LOG_ERROR_FILE);
+
+    if (!fs::exists(LOG_DIRECTORY)) {
+        fs::create_directory(LOG_DIRECTORY);
+    }
+
+    time_t now = time(nullptr);
+    tm *ltm = localtime(&now);
+    char buffer_time[256];
+    strftime(buffer_time, sizeof(buffer_time), "%Y%m%d_%H%M", ltm);
+
+    if (fs::exists(config.output_log) && fs::file_size(config.output_log) > 0) {
+        fs::rename(
+            config.output_log,
+            boost::str(boost::format("%1%main_%2%.log") % LOG_DIRECTORY % buffer_time)
+        );
+    }
+
+    if (fs::exists(config.error_log) && fs::file_size(config.output_log) > 0) {
+        fs::rename(
+            config.error_log,
+            boost::str(boost::format("%1%error_%2%.log") % LOG_DIRECTORY % buffer_time)
+        );
+    }
+
+    freopen(config.output_log.c_str(), "w", stdout);
+    freopen(config.error_log.c_str(), "w", stderr);
+
+    SERVICE_TABLE_ENTRY ServiceTable[] =
     {
         {SERVICE_NAME, (LPSERVICE_MAIN_FUNCTION) ServiceMain},
         {NULL, NULL}
     };
- 
+
     if (StartServiceCtrlDispatcher (ServiceTable) == FALSE)
     {
         return GetLastError ();
@@ -178,11 +217,12 @@ int _tmain (int argc, TCHAR *argv[])
 /*
 int main(int argc, char** argv)
 {
-    fs::path exe_path( fs::initial_path<fs::path>() );
+	fs::path exe_path( fs::initial_path<fs::path>() );
     exe_path = fs::system_complete( fs::path( argv[0] ) );
     fs::current_path(exe_path.parent_path());
 
     ServiceWorkerThread();
+	
 }
 */
 
