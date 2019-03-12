@@ -7,7 +7,7 @@
 #include "restclient-cpp/connection.h"
 #include <restclient-cpp/restclient.h>
 
-#include <jsoncpp/json/json.h>
+#include <json/json.h>
 
 
 namespace Gameap {

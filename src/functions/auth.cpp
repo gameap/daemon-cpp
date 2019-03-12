@@ -1,7 +1,10 @@
 #include <cstring>
-#include <pwd.h>
-#include <shadow.h>
-#include <crypt.h>
+
+#ifdef __linux__
+    #include <pwd.h>
+    #include <shadow.h>
+    #include <crypt.h>
+#endif
 
 #include "config.h"
 
@@ -60,7 +63,7 @@ namespace auth {
                 return true;
             }
         }
-
-}/* namespace auth */ } /* namespace gameap */
-
 #endif
+
+}/* namespace auth */
+} /* namespace gameap */

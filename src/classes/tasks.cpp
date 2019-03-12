@@ -56,7 +56,7 @@ void Task::run()
             gserver->clear_cmd_output();
             result_status = gserver->start_server();
 
-            sleep(1);
+            std::this_thread::sleep_for(std::chrono::seconds(1));
             gserver->status_server();
             
             // gserver = nullptr;
@@ -76,7 +76,7 @@ void Task::run()
             gserver->clear_cmd_output();
             result_status = gserver->stop_server();
             
-            sleep(1);
+            std::this_thread::sleep_for(std::chrono::seconds(1));
             gserver->status_server();
             
             // gserver = nullptr;
@@ -97,7 +97,7 @@ void Task::run()
             result_status = gserver->stop_server();
             result_status = gserver->start_server();
 
-            sleep(1);
+            std::this_thread::sleep_for(std::chrono::seconds(1));
             gserver->status_server();
             
             // gserver = nullptr;
@@ -302,8 +302,6 @@ int TaskList::delete_task(std::vector<Task *>::iterator it)
 
 int TaskList::update_list()
 {
-    std::cout << "Updating waiting tasks list" << std::endl;
-
     Json::Value jvalue;
 
     try {

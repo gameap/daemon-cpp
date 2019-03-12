@@ -34,7 +34,19 @@ make gameap-daemon
 ```
 
 ### Compiling on Windows
-Coming soon
+
+Install or compile [Dependencies](#dependencies). I recommend using [Vcpkg](https://github.com/et-nik/vcpkg):
+
+```
+vcpkg install binn restclient-cpp curl jsoncpp boost-system boost-filesystem boost-iostreams boost-thread boost-process boost-property-tree
+```
+
+Add -DCMAKE_TOOLCHAIN_FILE to cmake arguments:
+```
+-DCMAKE_TOOLCHAIN_FILE=C:/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake
+```
+
+Open GDaemon folder in your Visual Studio, run cmake and run build.
 
 ## Configuration
 

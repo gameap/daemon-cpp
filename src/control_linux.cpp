@@ -206,17 +206,17 @@ int main(int argc, char** argv)
     char buffer_time[256];
     strftime(buffer_time, sizeof(buffer_time), "%Y%m%d_%H%M", ltm);
 
-    if (fs::exists(config.output_log)) {
+    if (fs::exists(config.output_log) && fs::file_size(config.output_log) > 0) {
         fs::rename(
-                config.output_log,
-                boost::str(boost::format("%1%main_%2%.log") % LOG_DIRECTORY % buffer_time)
-                );
+            config.output_log,
+            boost::str(boost::format("%1%main_%2%.log") % LOG_DIRECTORY % buffer_time)
+        );
     }
 
-    if (fs::exists(config.error_log)) {
+    if (fs::exists(config.error_log) && fs::file_size(config.error_log) > 0) {
         fs::rename(
-                config.error_log,
-                boost::str(boost::format("%1%error_%2%.log") % LOG_DIRECTORY % buffer_time)
+            config.error_log,
+            boost::str(boost::format("%1%error_%2%.log") % LOG_DIRECTORY % buffer_time)
         );
     }
 
