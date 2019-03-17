@@ -121,7 +121,7 @@ public:
 
 class GameServersList {
 private:
-    std::map<ulong, GameServer *> servers_list;
+    std::map<ulong, std::shared_ptr<GameServer>> servers_list;
     
     GameServersList() {}
     GameServersList( const GameServersList&);  

@@ -816,12 +816,12 @@ int GameServersList::update_list()
 
         if (servers_list.find(server_id) == servers_list.end()) {
 
-            GameServer * gserver = new GameServer(server_id);
+            std::shared_ptr<GameServer> gserver = std::make_shared<GameServer>(server_id);
 
             try {
                 servers_list.insert(
                     servers_list.end(),
-                    std::pair<ulong, GameServer *>(server_id, gserver)
+                    std::pair<ulong, std::shared_ptr<GameServer>>(server_id, gserver)
                 );
             } catch (std::exception &e) {
                 std::cerr << "GameServer #" << server_id << " insert error: " << e.what() << std::endl;
@@ -836,7 +836,7 @@ int GameServersList::update_list()
 
 void GameServersList::stats_process()
 {
-    for (std::map<ulong, GameServer *>::iterator it = servers_list.begin(); it != servers_list.end(); ++it) {
+    for (std::map<ulong, std::shared_ptr<GameServer>>::iterator it = servers_list.begin(); it != servers_list.end(); ++it) {
         // Check status and start if server not active
         it->second->start_if_need();
     }
@@ -859,8 +859,6 @@ GameServer * GameServersList::get_server(ulong server_id)
     if (servers_list[server_id] == nullptr) {
         return nullptr;
     }
-
-    std::cout << "server ptr: " << servers_list[server_id] << std::endl;
     
-    return servers_list[server_id];
+    return servers_list[server_id].get();
 }
