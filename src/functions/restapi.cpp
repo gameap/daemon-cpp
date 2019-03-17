@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <iostream>
+#include <memory>
 
 #include <restclient-cpp/restclient.h>
 
@@ -28,7 +29,7 @@ namespace Gameap { namespace Rest {
     {
         Config& config = Config::getInstance();
 
-        RestClient::Connection* conn = new RestClient::Connection(config.api_host);
+        auto conn = std::make_shared<RestClient::Connection>(config.api_host);
 
         std::string uri = "/gdaemon_api/get_token";
         conn->AppendHeader("Authorization", "Bearer " + config.api_key);
@@ -74,7 +75,7 @@ namespace Gameap { namespace Rest {
     {
         Config& config = Config::getInstance();
 
-        RestClient::Connection* conn = new RestClient::Connection(config.api_host);
+        auto conn = std::make_shared<RestClient::Connection>(config.api_host);
 
         conn->AppendHeader("X-Auth-Token", api_token);
         conn->AppendHeader("Content-Type", "application/json");
@@ -108,7 +109,7 @@ namespace Gameap { namespace Rest {
 
         Json::FastWriter jwriter;
 
-        RestClient::Connection* conn = new RestClient::Connection(config.api_host);
+        auto conn = std::make_shared<RestClient::Connection>(config.api_host);
 
         conn->AppendHeader("X-Auth-Token", api_token);
         conn->AppendHeader("Content-Type", "application/json");
@@ -151,7 +152,7 @@ namespace Gameap { namespace Rest {
 
         Json::FastWriter jwriter;
 
-        RestClient::Connection* conn = new RestClient::Connection(config.api_host);
+        auto conn = std::make_shared<RestClient::Connection>(config.api_host);
 
         conn->AppendHeader("X-Auth-Token", api_token);
         conn->AppendHeader("Content-Type", "application/json");
