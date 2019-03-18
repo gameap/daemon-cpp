@@ -79,6 +79,10 @@ std::string random(size_t size)
 
 uint getJsonUInt(const Json::Value json)
 {
+    if (json.isNull()) {
+        return 0;
+    }
+
     if (json.isUInt()) {
         return json.asUInt();
     }
