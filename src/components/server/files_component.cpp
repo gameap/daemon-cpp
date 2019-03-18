@@ -194,7 +194,6 @@ void FileServerSess::cmd_process()
         return;
     }
 
-    std::cout << "command: " << binn_list_int16(read_binn, 1) << std::endl;
     clear_write_vars();
 
     switch (command) {
