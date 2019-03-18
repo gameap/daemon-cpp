@@ -85,15 +85,17 @@ void GameServer::_update_vars()
 
     ip              = jvalue["server_ip"].asString();
 
-    server_port     = jvalue["server_port"].asUInt();
+    server_port     = getJsonUInt(jvalue["server_port"]);
+    query_port      = getJsonUInt(jvalue["query_port"]);
+    rcon_port       = getJsonUInt(jvalue["rcon_port"]);
 
-    query_port      = jvalue["query_port"].isUInt()
-                        ? jvalue["query_port"].asUInt()
-                        : server_port;
+    if (query_port == 0) {
+        query_port = server_port;
+    }
 
-    rcon_port       = jvalue["rcon_port"].isUInt()
-                        ? jvalue["rcon_port"].asUInt()
-                        : server_port;
+    if (rcon_port == 0) {
+        rcon_port = server_port;
+    }
 
     start_command   = jvalue["start_command"].asString();
     game_scode      = jvalue["code_name"].asString();
@@ -812,7 +814,7 @@ int GameServersList::update_list()
     }
 
     for (Json::ValueIterator itr = jvalue.begin(); itr != jvalue.end(); ++itr) {
-        ulong server_id = (*itr)["id"].asUInt();
+        ulong server_id = getJsonUInt((*itr)["id"]);
 
         if (servers_list.find(server_id) == servers_list.end()) {
 

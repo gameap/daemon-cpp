@@ -8,6 +8,8 @@
 
 #include <algorithm>
 
+#include <json/json.h>
+
 // ---------------------------------------------------------------------
 
 std::string str_replace(const std::string& search, const std::string& replace, const std::string& subject)
@@ -73,4 +75,15 @@ std::string random(size_t size)
     std::generate_n(rstr.begin(), size, randchar);
 
     return rstr;
+}
+
+uint getJsonUInt(const Json::Value json)
+{
+    if (json.isUInt()) {
+        return json.asUInt();
+    }
+
+    if (json.isString()) {
+        return (uint)strtoul(json.asString().c_str(), nullptr, 10);
+    }
 }
