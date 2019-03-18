@@ -27,7 +27,6 @@ void DaemonServerSess::handle_handshake(const boost::system::error_code& error) 
 
 void DaemonServerSess::start ()
 {
-    write_binn = binn_list();
     mode = DAEMON_SERVER_MODE_NOAUTH;
 
     read_length = 0;
@@ -62,26 +61,29 @@ void DaemonServerSess::do_read()
                                 || !binn_list_get_str(read_binn, 3, &password)
                             ) {
                                 std::cerr << "Incorrect binn data" << std::endl;
+                                binn_free(read_binn);
                                 return; 
                             }
 
                             if (gameap::auth::check(login, password)) {
-                                binn_list_add_uint32(write_binn, 100);
-                                binn_list_add_str(write_binn, (char *)"Auth success");
+                                binn_list_add_uint32(m_write_binn, 100);
+                                binn_list_add_str(m_write_binn, (char *)"Auth success");
 
                                 if (!binn_list_get_uint16(read_binn, 4, &mode)) {
                                     mode = DAEMON_SERVER_MODE_NOAUTH;
                                     std::cerr << "Incorrect binn data" << std::endl;
+                                    binn_free(read_binn);
                                     return; 
                                 }
 
                                 std::cout << "Auth success" << std::endl;
                             }
                             else {
-                                binn_list_add_uint32(write_binn, 2);
-                                binn_list_add_str(write_binn, (char *)"Auth failed");
+                                binn_list_add_uint32(m_write_binn, 2);
+                                binn_list_add_str(m_write_binn, (char *)"Auth failed");
                             }
 
+                            binn_free(read_binn);
                             do_write();
                         }
                     }
@@ -148,8 +150,8 @@ void DaemonServerSess::do_write()
 
     size_t write_len = 0;
 
-    memcpy(sendbin, (char*)binn_ptr(write_binn), binn_size(write_binn));
-    write_len = binn_size(write_binn);
+    memcpy(sendbin, (char*)binn_ptr(m_write_binn), binn_size(m_write_binn));
+    write_len = binn_size(m_write_binn);
 
     size_t len = 0;
     len = append_end_symbols(&sendbin[0], write_len);

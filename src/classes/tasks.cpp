@@ -76,7 +76,7 @@ void Task::run()
             gserver->clear_cmd_output();
             result_status = gserver->stop_server();
             
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            std::this_thread::sleep_for(std::chrono::seconds(5));
             gserver->status_server();
             
             // gserver = nullptr;

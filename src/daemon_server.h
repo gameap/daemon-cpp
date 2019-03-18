@@ -39,7 +39,13 @@ public:
 
     DaemonServerSess(std::shared_ptr<Connection> connection)
             : connection_(std::move(connection))
-    {};
+    {
+        m_write_binn = binn_list();
+    };
+
+    ~DaemonServerSess() {
+        binn_free(m_write_binn);
+    };
 
     void start();
     ssl_socket::lowest_layer_type& socket();
@@ -55,7 +61,7 @@ private:
     size_t read_length {0};
     char read_buf[max_length];
 
-    binn *write_binn;
+    binn *m_write_binn;
     std::shared_ptr<Connection> connection_;
 
     ushort mode {DAEMON_SERVER_MODE_NOAUTH};
