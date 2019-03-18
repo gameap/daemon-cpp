@@ -639,8 +639,6 @@ void FileServerSess::write_file(size_t length)
 {
     auto self(shared_from_this());
 
-    std::cout << "Filesize: " << (std::streamsize)m_filesize << std::endl;
-
     if (m_filesize == 0) {
         close_output_file();
         clear_read_vars();
@@ -650,7 +648,17 @@ void FileServerSess::write_file(size_t length)
     }
 
     if ( ! m_output_file.eof() && m_output_file.tellp() < (std::streamsize)m_filesize) {
-        m_output_file.write(m_read_buf, length);
+        m_output_file << m_read_buf;
+
+        if (m_output_file.bad()) {
+            std::cerr << "File write error" << std::endl;
+
+            close_output_file();
+            clear_read_vars();
+
+            response_msg(1, "File receiving error", true);
+            return;
+        }
 
         if (m_output_file.tellp() >= (std::streamsize)m_filesize) {
             std::cout << "File received: " << m_filename << std::endl;
@@ -669,7 +677,7 @@ void FileServerSess::write_file(size_t length)
         close_output_file();
         clear_read_vars();
 
-        response_msg(1, "File receiving error");
+        response_msg(1, "File receiving error", true);
     }
 }
 
