@@ -72,7 +72,7 @@ private:
     std::mutex cmd_output_mutex;
     std::shared_ptr<std::string> cmd_output;
 
-    int _unpack_archive(std::string archive);
+    int _unpack_archive(fs::path const & archive);
     
     bool _copy_dir(
         fs::path const & source,
