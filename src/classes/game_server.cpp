@@ -458,10 +458,16 @@ int GameServer::update_server()
 
     // Wget/Copy and unpack
     if (game_install_from == INST_FROM_LOCREP && game_source == INST_FILE) {
-        _unpack_archive(game_localrep);
+        if (_unpack_archive(source_path) == -1) {
+            std::cerr << "Unable to unpack: " << source_path << std::endl;
+            return -1;
+        }
     }
     else if (game_install_from == INST_FROM_LOCREP && game_source == INST_DIR) {
-        _copy_dir(source_path, work_path);
+        if (_copy_dir(source_path, work_path) == false) {
+            std::cerr << "Unable to copy from " << source_path << " to " << work_path << std::endl;
+            return -1;
+        }
     }
     else if (game_install_from == INST_FROM_REMREP) {
         std::string cmd = boost::str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % work_path.string());
@@ -473,7 +479,12 @@ int GameServer::update_server()
         
         std::string archive = boost::str(boost::format("%1%/%2%") % work_path.string() % source_path.filename().string());
         
-        _unpack_archive(archive);
+        if (_unpack_archive(archive) == -1) {
+            std::cerr << "Unable to unpack: " << source_path << std::endl;
+            fs::remove(archive);
+            return -1;
+        }
+
         fs::remove(archive);
     }
 
@@ -508,10 +519,16 @@ int GameServer::update_server()
 
     // Wget/Copy and unpack
     if (game_mod_install_from == INST_FROM_LOCREP && gt_source == INST_FILE) {
-        _unpack_archive(game_localrep);
+        if (_unpack_archive(source_path) == -1) {
+            std::cerr << "Unable to unpack: " << source_path << std::endl;
+            return -1;
+        }
     }
     else if (game_mod_install_from == INST_FROM_LOCREP && gt_source == INST_DIR) {
-        _copy_dir(source_path, work_path);
+        if (_copy_dir(source_path, work_path) == false) {
+            std::cerr << "Unable to copy from " << source_path << " to " << work_path << std::endl;
+            return -1;
+        }
     }
     else if (game_mod_install_from == INST_FROM_REMREP) {
         std::string cmd = boost::str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % work_path.string());
@@ -522,8 +539,13 @@ int GameServer::update_server()
         }
         
         std::string archive = boost::str(boost::format("%1%/%2%") % work_path.string() % source_path.filename().string());
-        
-        _unpack_archive(archive);
+
+        if (_unpack_archive(archive) == -1) {
+            std::cerr << "Unable to unpack: " << source_path << std::endl;
+            fs::remove(archive);
+            return -1;
+        }
+
         fs::remove(archive);
     }
 
@@ -649,6 +671,7 @@ bool GameServer::_copy_dir(
             }
         } catch(fs::filesystem_error const & e) {
             std:: cerr << e.what() << std::endl;
+            return false;
         }
     }
     
