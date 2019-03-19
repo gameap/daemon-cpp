@@ -35,11 +35,11 @@ namespace bp = ::boost::process;
 
 GameServer::GameServer(ulong mserver_id)
 {
-    server_id = mserver_id;
-    last_update_vars = 0;
+    m_server_id = mserver_id;
+    m_last_update_vars = 0;
 
-    staft_crash_disabled = false;
-    cmd_output = std::make_shared<std::string> ("");
+    m_staft_crash_disabled = false;
+    m_cmd_output = std::make_shared<std::string> ("");
 
     try {
         _update_vars();
@@ -52,7 +52,7 @@ GameServer::GameServer(ulong mserver_id)
 
 void GameServer::_update_vars()
 {
-    if (time(nullptr) - last_update_vars < TIME_UPDDIFF) {
+    if (time(nullptr) - m_last_update_vars < TIME_UPDDIFF) {
         return;
     }
 
@@ -61,7 +61,7 @@ void GameServer::_update_vars()
     Json::Value jvalue;
 
     try {
-        jvalue = Gameap::Rest::get("/gdaemon_api/servers/" + std::to_string(server_id));
+        jvalue = Gameap::Rest::get("/gdaemon_api/servers/" + std::to_string(m_server_id));
     } catch (Gameap::Rest::RestapiException &exception) {
         // Try later
         std::cerr << exception.what() << std::endl;
@@ -72,52 +72,52 @@ void GameServer::_update_vars()
         throw("Empty API response");
     }
 
-    work_path = dedicatedServer.get_work_path();
+    m_work_path = dedicatedServer.get_work_path();
 
-    work_path /= jvalue["dir"].isString()
+    m_work_path /= jvalue["dir"].isString()
                  ? jvalue["dir"].asString()
                  : throw("Empty game server directory");
 
-    uuid            = jvalue["uuid"].asString();
-    uuid_short      = jvalue["uuid_short"].asString();
+    m_uuid            = jvalue["uuid"].asString();
+    m_uuid_short      = jvalue["uuid_short"].asString();
 
-    user            = jvalue["su_user"].asString();
+    m_user            = jvalue["su_user"].asString();
 
-    ip              = jvalue["server_ip"].asString();
+    m_ip              = jvalue["server_ip"].asString();
 
-    server_port     = getJsonUInt(jvalue["server_port"]);
-    query_port      = getJsonUInt(jvalue["query_port"]);
-    rcon_port       = getJsonUInt(jvalue["rcon_port"]);
+    m_server_port     = getJsonUInt(jvalue["server_port"]);
+    m_query_port      = getJsonUInt(jvalue["query_port"]);
+    m_rcon_port       = getJsonUInt(jvalue["rcon_port"]);
 
-    if (query_port == 0) {
-        query_port = server_port;
+    if (m_query_port == 0) {
+        m_query_port = m_server_port;
     }
 
-    if (rcon_port == 0) {
-        rcon_port = server_port;
+    if (m_rcon_port == 0) {
+        m_rcon_port = m_server_port;
     }
 
-    start_command   = jvalue["start_command"].asString();
-    game_scode      = jvalue["code_name"].asString();
+    m_start_command   = jvalue["start_command"].asString();
+    m_game_scode      = jvalue["code_name"].asString();
 
-    game_localrep  = jvalue["game"]["local_repository"].asString();
-    game_remrep    = jvalue["game"]["remote_repository"].asString();
+    m_game_localrep  = jvalue["game"]["local_repository"].asString();
+    m_game_remrep    = jvalue["game"]["remote_repository"].asString();
 
-    steam_app_id            = jvalue["game"]["steam_app_id"].asString();
-    steam_app_set_config    = jvalue["game"]["steam_app_set_config"].asString();
+    m_steam_app_id            = jvalue["game"]["steam_app_id"].asString();
+    m_steam_app_set_config    = jvalue["game"]["steam_app_set_config"].asString();
 
-    gt_localrep    = jvalue["game_mod"]["local_repository"].asString();
-    gt_remrep      = jvalue["game_mod"]["remote_repository"].asString();
+    m_gt_localrep    = jvalue["game_mod"]["local_repository"].asString();
+    m_gt_remrep      = jvalue["game_mod"]["remote_repository"].asString();
 
     // Replace os shortcode
-    game_localrep   = str_replace("{os}", OS, game_localrep);
-    game_remrep     = str_replace("{os}", OS, game_remrep);
-    gt_localrep     = str_replace("{os}", OS, gt_localrep);
-    gt_remrep       = str_replace("{os}", OS, gt_remrep);
+    m_game_localrep   = str_replace("{os}", OS, m_game_localrep);
+    m_game_remrep     = str_replace("{os}", OS, m_game_remrep);
+    m_gt_localrep     = str_replace("{os}", OS, m_gt_localrep);
+    m_gt_remrep       = str_replace("{os}", OS, m_gt_remrep);
 
-    staft_crash = jvalue["start_after_crash"].asBool();
+    m_staft_crash = jvalue["start_after_crash"].asBool();
 
-    aliases.clear();
+    m_aliases.clear();
 
     try {
         Json::Value jaliases;
@@ -129,13 +129,13 @@ void GameServer::_update_vars()
         for( Json::ValueIterator itr = jaliases.begin() ; itr != jaliases.end() ; itr++ ) {
 
             if ((*itr)["default"].isNull()) {
-                aliases.insert(std::pair<std::string, std::string>((*itr)["var"].asString(), ""));
+                m_aliases.insert(std::pair<std::string, std::string>((*itr)["var"].asString(), ""));
             }
             else if ((*itr)["default"].isString()) {
-                aliases.insert(std::pair<std::string, std::string>((*itr)["var"].asString(), (*itr)["default"].asString()));
+                m_aliases.insert(std::pair<std::string, std::string>((*itr)["var"].asString(), (*itr)["default"].asString()));
             }
             else if ((*itr)["default"].isInt()) {
-                aliases.insert(std::pair<std::string, std::string>((*itr)["var"].asString(), std::to_string((*itr)["default"].asInt())));
+                m_aliases.insert(std::pair<std::string, std::string>((*itr)["var"].asString(), std::to_string((*itr)["default"].asInt())));
             }
             else {
                 std::cerr << "Unknown alias type: " << (*itr)["default"] << std::endl;
@@ -146,17 +146,17 @@ void GameServer::_update_vars()
 
         for( Json::ValueIterator itr = server_vars.begin() ; itr != server_vars.end() ; itr++ ) {
             if ((*itr).isString()) {
-                if (aliases.find(itr.key().asString()) == aliases.end()) {
-                    aliases.insert(std::pair<std::string, std::string>(itr.key().asString(), (*itr).asString()));
+                if (m_aliases.find(itr.key().asString()) == m_aliases.end()) {
+                    m_aliases.insert(std::pair<std::string, std::string>(itr.key().asString(), (*itr).asString()));
                 } else {
-                    aliases[itr.key().asString()] = (*itr).asString();
+                    m_aliases[itr.key().asString()] = (*itr).asString();
                 }
             }
             else if ((*itr).isInt()) {
-                if (aliases.find(itr.key().asString()) == aliases.end()) {
-                    aliases.insert(std::pair<std::string, std::string>(itr.key().asString(), std::to_string((*itr).asInt())));
+                if (m_aliases.find(itr.key().asString()) == m_aliases.end()) {
+                    m_aliases.insert(std::pair<std::string, std::string>(itr.key().asString(), std::to_string((*itr).asInt())));
                 } else {
-                    aliases[itr.key().asString()] = std::to_string((*itr).asInt());
+                    m_aliases[itr.key().asString()] = std::to_string((*itr).asInt());
                 }
             } else {
                 std::cerr << "Unknown alias type: " << (*itr) << std::endl;
@@ -167,19 +167,19 @@ void GameServer::_update_vars()
         std::cerr << "Aliases error: " << e.what() << std::endl;
     }
 
-    last_update_vars = time(nullptr);
+    m_last_update_vars = time(nullptr);
 }
 
 // ---------------------------------------------------------------------
 
 void GameServer::_append_cmd_output(std::string line)
 {
-    cmd_output_mutex.lock();
+    m_cmd_output_mutex.lock();
 
     line.append("\n");
-    (*cmd_output).append(line);
+    (*m_cmd_output).append(line);
 
-    cmd_output_mutex.unlock();
+    m_cmd_output_mutex.unlock();
 }
 
 // ---------------------------------------------------------------------
@@ -187,7 +187,7 @@ void GameServer::_append_cmd_output(std::string line)
 // size_t GameServer::get_cmd_output(std::string * output, size_t position)
 int GameServer::get_cmd_output(std::string * str_out)
 {
-    *str_out = *cmd_output;
+    *str_out = *m_cmd_output;
     return 0;
 }
 
@@ -195,40 +195,40 @@ int GameServer::get_cmd_output(std::string * str_out)
 
 std::string GameServer::get_cmd_output()
 {
-    return *cmd_output;
+    return *m_cmd_output;
 }
 
 // ---------------------------------------------------------------------
 
 void GameServer::clear_cmd_output()
 {
-    cmd_output_mutex.lock();
-    (*cmd_output).clear();
-    cmd_output_mutex.unlock();
+    m_cmd_output_mutex.lock();
+    (*m_cmd_output).clear();
+    m_cmd_output_mutex.unlock();
 }
 
 // ---------------------------------------------------------------------
 
 void GameServer::replace_shortcodes(std::string &cmd)
 {
-    cmd = str_replace("{dir}", work_path.string(), cmd);
+    cmd = str_replace("{dir}", m_work_path.string(), cmd);
 
-    cmd = str_replace("{uuid}", uuid, cmd);
-    cmd = str_replace("{uuid_short}", uuid_short, cmd);
+    cmd = str_replace("{uuid}", m_uuid, cmd);
+    cmd = str_replace("{uuid_short}", m_uuid_short, cmd);
 
-    cmd = str_replace("{host}", ip, cmd);
-    cmd = str_replace("{ip}", ip, cmd);
-    cmd = str_replace("{game}", game_scode, cmd);
+    cmd = str_replace("{host}", m_ip, cmd);
+    cmd = str_replace("{ip}", m_ip, cmd);
+    cmd = str_replace("{game}", m_game_scode, cmd);
 
-    cmd = str_replace("{id}", std::to_string(server_id), cmd);
-    cmd = str_replace("{port}", std::to_string(server_port), cmd);
-    cmd = str_replace("{query_port}", std::to_string(query_port), cmd);
-    cmd = str_replace("{rcon_port}", std::to_string(rcon_port), cmd);
+    cmd = str_replace("{id}", std::to_string(m_server_id), cmd);
+    cmd = str_replace("{port}", std::to_string(m_server_port), cmd);
+    cmd = str_replace("{query_port}", std::to_string(m_query_port), cmd);
+    cmd = str_replace("{rcon_port}", std::to_string(m_rcon_port), cmd);
     
-    cmd = str_replace("{user}", user, cmd);
+    cmd = str_replace("{user}", m_user, cmd);
 
     // Aliases
-    for (std::map<std::string, std::string>::iterator itr = aliases.begin(); itr != aliases.end(); ++itr) {
+    for (std::map<std::string, std::string>::iterator itr = m_aliases.begin(); itr != m_aliases.end(); ++itr) {
         cmd = str_replace("{" + itr->first + "}", itr->second, cmd);
     }
 }
@@ -243,10 +243,10 @@ int GameServer::start_server()
     }
 
     DedicatedServer& deds = DedicatedServer::getInstance();
-    std::string cmd  = str_replace("{command}", start_command, deds.get_script_cmd(DS_SCRIPT_START));
+    std::string cmd  = str_replace("{command}", m_start_command, deds.get_script_cmd(DS_SCRIPT_START));
     replace_shortcodes(cmd);
 
-    staft_crash_disabled = false;
+    m_staft_crash_disabled = false;
 
     int result = _exec(cmd);
     
@@ -263,11 +263,11 @@ void GameServer::start_if_need()
 {
     bool cur_status = status_server();
     
-    if (!staft_crash) {
+    if (!m_staft_crash) {
         return;
     }
 
-    if (staft_crash_disabled) {
+    if (m_staft_crash_disabled) {
         return;
     }
 
@@ -290,7 +290,7 @@ int GameServer::stop_server()
     std::string cmd  = deds.get_script_cmd(DS_SCRIPT_STOP);
     replace_shortcodes(cmd);
 
-    staft_crash_disabled = true;
+    m_staft_crash_disabled = true;
     
     int result = _exec(cmd);
 
@@ -337,13 +337,13 @@ int GameServer::update_server()
     ushort game_mod_install_from =    INST_NO_SOURCE;
 
     // Install game
-    if (!game_localrep.empty()) {
+    if (!m_game_localrep.empty()) {
         game_install_from = INST_FROM_LOCREP;
     }
-    else if (!game_remrep.empty()) {
+    else if (!m_game_remrep.empty()) {
         game_install_from = INST_FROM_REMREP;
     }
-    else if (!steam_app_id.empty() && !steamcmd_path.empty()) {
+    else if (!m_steam_app_id.empty() && !steamcmd_path.empty()) {
         game_install_from = INST_FROM_STEAM;
     }
     else {
@@ -354,10 +354,10 @@ int GameServer::update_server()
         return -1;
     }
 
-    if (!gt_localrep.empty()) {
+    if (!m_gt_localrep.empty()) {
         game_mod_install_from = INST_FROM_LOCREP;
     }
-    else if (!gt_remrep.empty()) {
+    else if (!m_gt_remrep.empty()) {
         game_mod_install_from = INST_FROM_REMREP;
     }
     // else if (false)                  game_mod_install_from = INST_FROM_STEAM;
@@ -372,13 +372,13 @@ int GameServer::update_server()
     
     if (game_install_from == INST_FROM_LOCREP) {
 
-        if (fs::is_regular_file(game_localrep)) {
+        if (fs::is_regular_file(m_game_localrep)) {
             game_source = INST_FILE;
-            source_path = game_localrep;
+            source_path = m_game_localrep;
         }
-        else if (fs::is_directory(game_localrep)) {
+        else if (fs::is_directory(m_game_localrep)) {
             game_source = INST_DIR;
-            source_path = game_localrep;
+            source_path = m_game_localrep;
         } else {
             game_install_from = INST_FROM_REMREP;
         }
@@ -386,7 +386,7 @@ int GameServer::update_server()
         if (!fs::exists(source_path)) {
             std::cerr << "Local rep not found: " << source_path << std::endl;
             game_install_from = INST_FROM_REMREP;
-            source_path = game_remrep;
+            source_path = m_game_remrep;
         }
     }
 
@@ -394,7 +394,7 @@ int GameServer::update_server()
         // Check rep available
         // TODO ...
         game_source = INST_FILE;
-        source_path = game_remrep;
+        source_path = m_game_remrep;
     }
 
     if (game_install_from == INST_FROM_STEAM) {
@@ -410,14 +410,14 @@ int GameServer::update_server()
 
         std::string additional_parameters = "";
 
-        if (!steam_app_set_config.empty()) {
-            additional_parameters += "+app_set_config \"" + steam_app_set_config + "\"";
+        if (!m_steam_app_set_config.empty()) {
+            additional_parameters += "+app_set_config \"" + m_steam_app_set_config + "\"";
         }
 
         std::string steam_cmd_install = boost::str(boost::format("%1% +login anonymous +force_install_dir %2% +app_update \"%3%\" %4% validate +quit")
                                              % steamcmd_fullpath // 1
-                                             % work_path // 2
-                                             % steam_app_id // 3
+                                             % m_work_path // 2
+                                             % m_steam_app_id // 3
                                              % additional_parameters // 4
         );
 
@@ -452,8 +452,8 @@ int GameServer::update_server()
     }
 
     // Mkdir
-    if (!fs::exists(work_path)) {
-        fs::create_directories(work_path);
+    if (!fs::exists(m_work_path)) {
+        fs::create_directories(m_work_path);
     }
 
     // Wget/Copy and unpack
@@ -464,20 +464,20 @@ int GameServer::update_server()
         }
     }
     else if (game_install_from == INST_FROM_LOCREP && game_source == INST_DIR) {
-        if (_copy_dir(source_path, work_path) == false) {
-            std::cerr << "Unable to copy from " << source_path << " to " << work_path << std::endl;
+        if (_copy_dir(source_path, m_work_path) == false) {
+            std::cerr << "Unable to copy from " << source_path << " to " << m_work_path << std::endl;
             return -1;
         }
     }
     else if (game_install_from == INST_FROM_REMREP) {
-        std::string cmd = boost::str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % work_path.string());
+        std::string cmd = boost::str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % m_work_path.string());
 
         if (_exec(cmd) == -1) {
             _set_installed(0);
             return -1;
         }
         
-        std::string archive = boost::str(boost::format("%1%/%2%") % work_path.string() % source_path.filename().string());
+        std::string archive = boost::str(boost::format("%1%/%2%") % m_work_path.string() % source_path.filename().string());
         
         if (_unpack_archive(archive) == -1) {
             std::cerr << "Unable to unpack: " << source_path << std::endl;
@@ -492,13 +492,13 @@ int GameServer::update_server()
 
     if (game_mod_install_from == INST_FROM_LOCREP) {
 
-        if (fs::is_regular_file(gt_localrep)) {
+        if (fs::is_regular_file(m_gt_localrep)) {
             gt_source = INST_FILE;
-            source_path = gt_localrep;
+            source_path = m_gt_localrep;
         }
-        else if (fs::is_directory(gt_localrep)) {
+        else if (fs::is_directory(m_gt_localrep)) {
             gt_source = INST_DIR;
-            source_path = gt_localrep;
+            source_path = m_gt_localrep;
         } else {
             game_mod_install_from = INST_FROM_REMREP;
         }
@@ -506,7 +506,7 @@ int GameServer::update_server()
         if (!fs::exists(source_path)) {
             std::cerr << "Local rep not found: " << source_path << std::endl;
             game_mod_install_from = INST_FROM_REMREP;
-            source_path = gt_remrep;
+            source_path = m_gt_remrep;
         }
     }
 
@@ -514,7 +514,7 @@ int GameServer::update_server()
         // Check rep available
         // TODO ...
         gt_source = INST_FILE;
-        source_path = gt_remrep;
+        source_path = m_gt_remrep;
     }
 
     // Wget/Copy and unpack
@@ -525,20 +525,20 @@ int GameServer::update_server()
         }
     }
     else if (game_mod_install_from == INST_FROM_LOCREP && gt_source == INST_DIR) {
-        if (_copy_dir(source_path, work_path) == false) {
-            std::cerr << "Unable to copy from " << source_path << " to " << work_path << std::endl;
+        if (_copy_dir(source_path, m_work_path) == false) {
+            std::cerr << "Unable to copy from " << source_path << " to " << m_work_path << std::endl;
             return -1;
         }
     }
     else if (game_mod_install_from == INST_FROM_REMREP) {
-        std::string cmd = boost::str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % work_path.string());
+        std::string cmd = boost::str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % m_work_path.string());
 
         if (_exec(cmd) == -1) {
             _set_installed(0);
             return -1;
         }
         
-        std::string archive = boost::str(boost::format("%1%/%2%") % work_path.string() % source_path.filename().string());
+        std::string archive = boost::str(boost::format("%1%/%2%") % m_work_path.string() % source_path.filename().string());
 
         if (_unpack_archive(archive) == -1) {
             std::cerr << "Unable to unpack: " << source_path << std::endl;
@@ -550,8 +550,8 @@ int GameServer::update_server()
     }
 
     #ifdef __linux__
-        if (user != "") {
-            std::string cmd = boost::str(boost::format("chown -R %1% %2%") % user % work_path.string());
+        if (m_user != "") {
+            std::string cmd = boost::str(boost::format("chown -R %1% %2%") % m_user % m_work_path.string());
             _exec(cmd);
         }
     #endif
@@ -567,7 +567,7 @@ void GameServer::_set_installed(unsigned int status)
     Json::Value jdata;
     jdata["installed"] = status;
 
-    Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(server_id), jdata);
+    Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(m_server_id), jdata);
 }
 
 // ---------------------------------------------------------------------
@@ -577,11 +577,11 @@ int GameServer::_unpack_archive(fs::path const & archive)
     std::string cmd;
 
     #ifdef __linux__
-        if (archive.extension().string() == ".xz")           cmd = boost::str(boost::format("tar -xpvJf %1% -C %2%") % archive.string() % work_path.string());
-        else if (archive.extension().string() == ".gz")      cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
-        else if (archive.extension().string() == ".bz2")     cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
-        else if (archive.extension().string() == ".tar")     cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
-        else cmd = boost::str(boost::format("unzip -o %1% -d %2%") % archive.string() % work_path.string());
+        if (archive.extension().string() == ".xz")           cmd = boost::str(boost::format("tar -xpvJf %1% -C %2%") % archive.string() % m_work_path.string());
+        else if (archive.extension().string() == ".gz")      cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive.string() % m_work_path.string());
+        else if (archive.extension().string() == ".bz2")     cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive.string() % m_work_path.string());
+        else if (archive.extension().string() == ".tar")     cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive.string() % m_work_path.string());
+        else cmd = boost::str(boost::format("unzip -o %1% -d %2%") % archive.string() % m_work_path.string());
     #elif _WIN32
         cmd = str(boost::format("7z x %1% -aoa -o%2%") % archive.string() % work_path.string());
     #endif
@@ -697,7 +697,7 @@ int GameServer::delete_server()
     {
         Json::Value jdata;
         jdata["installed"] = 0;
-        Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(server_id), jdata);
+        Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(m_server_id), jdata);
     }
 
     DedicatedServer& deds = DedicatedServer::getInstance();
@@ -709,8 +709,8 @@ int GameServer::delete_server()
         return result;
     } else {
         try {
-            std::cout << "Remove path: " << work_path << std::endl;
-            fs::remove_all(work_path);
+            std::cout << "Remove path: " << m_work_path << std::endl;
+            fs::remove_all(m_work_path);
         }
         catch (fs::filesystem_error &e) {
             std::cerr << "Error remove: " << e.what() << std::endl;
@@ -777,7 +777,7 @@ bool GameServer::status_server()
     if (status_cmd.length() > 0) {
         active = _server_status_cmd();
     } else {
-        fs::path p(work_path);
+        fs::path p(m_work_path);
         p /= "pid.txt";
 
         char bufread[32];
@@ -815,7 +815,7 @@ bool GameServer::status_server()
 
     jdata["last_process_check"] = buffer;
 
-    Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(server_id), jdata);
+    Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(m_server_id), jdata);
 
     return (bool)active;
 }
