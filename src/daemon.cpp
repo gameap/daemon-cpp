@@ -76,7 +76,6 @@ int check_tasks()
                 }
 
                 tasks_thrs.create_thread([=]() {
-                    std::cout << "Task ptr: " << *it << std::endl;
                     (**it).run();
                 });
 
@@ -88,7 +87,7 @@ int check_tasks()
                 || (**it).get_status() == TASK_ERROR
                 || (**it).get_status() == TASK_SUCCESS
             ) {
-                if (output == "") {
+                if (output.empty()) {
                     try {
                         output = (**it).get_output();
                     } catch (std::exception &e) {
@@ -96,13 +95,13 @@ int check_tasks()
                     }
                 }
 
-                if (output != "") {
+                if (output.empty() == false) {
 
                     try {
                         Json::Value jdata;
                         jdata["output"] = output;
                         Gameap::Rest::put("/gdaemon_api/tasks/" + std::to_string((**it).get_id()) + "/output", jdata);
-                        output = "";
+                        output.erase();
                     } catch (Gameap::Rest::RestapiException &exception) {
                         std::cerr << "Output updating error: "
                                   << exception.what()
@@ -113,7 +112,7 @@ int check_tasks()
 
             // End task. Erase data
             if ((**it).get_status() == TASK_ERROR || (**it).get_status() == TASK_SUCCESS) {
-                if (output == "") {
+                if (output.empty()) {
                     try {
                         output = (**it).get_output();
                     } catch (std::exception &e) {
@@ -121,7 +120,7 @@ int check_tasks()
                     }
                 }
 
-                if (output == "") {
+                if (output.empty()) {
                     tasks_ended.push_back((**it).get_id());
                     tasks_runned.erase(run_it);
                     tasks.delete_task(it);
