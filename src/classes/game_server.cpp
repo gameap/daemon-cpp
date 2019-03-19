@@ -550,18 +550,24 @@ void GameServer::_set_installed(unsigned int status)
 
 // ---------------------------------------------------------------------
 
-int GameServer::_unpack_archive(fs::path const & archive)
+int GameServer::_unpack_archive(std::string archive)
 {
+    if (archive.empty()) {
+        std::cerr << "Empty archive" << std::endl;
+        return -1;
+    }
+
+    fs::path archivePath(archive);
     std::string cmd;
 
     #ifdef __linux__
-        if (archive.extension().string() == ".xz")           cmd = boost::str(boost::format("tar -xpvJf %1% -C %2%") % archive.string() % work_path.string());
-        else if (archive.extension().string() == ".gz")      cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
-        else if (archive.extension().string() == ".bz2")     cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
-        else if (archive.extension().string() == ".tar")     cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive.string() % work_path.string());
-        else cmd = boost::str(boost::format("unzip -o %1% -d %2%") % archive.string() % work_path.string());
+        if (archivePath.extension().string() == ".xz")           cmd = boost::str(boost::format("tar -xpvJf %1% -C %2%") % archive % work_path.string());
+        else if (archivePath.extension().string() == ".gz")      cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive % work_path.string());
+        else if (archivePath.extension().string() == ".bz2")     cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive % work_path.string());
+        else if (archivePath.extension().string() == ".tar")     cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive % work_path.string());
+        else cmd = boost::str(boost::format("unzip -o %1% -d %2%") % archive % work_path.string());
     #elif _WIN32
-        cmd = str(boost::format("7z x %1% -aoa -o%2%") % archive.string() % work_path.string());
+        cmd = str(boost::format("7z x %1% -aoa -o%2%") % archive % work_path.string());
     #endif
 
     if (_exec(cmd) == -1) {
