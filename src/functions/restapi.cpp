@@ -49,12 +49,6 @@ namespace Gameap { namespace Rest {
                     throw RestapiException("Invalid token");
                 }
 
-                /*
-                if (jvalue["token"].size() == 0 ) {
-                    throw RestapiException("Token is null");
-                }
-                */
-
                 api_token = jvalue["token"].asString();
 
             } else {
@@ -82,6 +76,10 @@ namespace Gameap { namespace Rest {
         RestClient::Response response = conn->get(uri);
 
         if (response.code != 200) {
+            if (response.code == 401) {
+                get_token();
+            }
+
             std::cerr << "RestClient HTTP response code: " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
 
@@ -134,6 +132,10 @@ namespace Gameap { namespace Rest {
             }
 
         } else {
+            if (response.code == 401) {
+                get_token();
+            }
+
             std::cerr << "RestClient HTTP response code: " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
 
@@ -164,6 +166,10 @@ namespace Gameap { namespace Rest {
         } else if (response.code == 201) {
             std::cout << "API. Resource Created" << std::endl;
         } else {
+            if (response.code == 401) {
+                get_token();
+            }
+
             std::cerr << "RestClient HTTP response code: " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
 

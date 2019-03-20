@@ -123,7 +123,10 @@ class GameServersList {
 private:
     std::map<ulong, std::shared_ptr<GameServer>> servers_list;
     
-    GameServersList() {}
+    GameServersList() {
+        update_list();
+    }
+
     GameServersList( const GameServersList&);  
     GameServersList& operator=( GameServersList& );
 
