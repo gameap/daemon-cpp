@@ -576,6 +576,13 @@ int GameServer::_unpack_archive(fs::path const & archive)
 {
     std::string cmd;
 
+    if (archive.extension().string() == ".rar") {
+        std::string errorMsg = "RAR archive not supported. Use 7z, zip, tar, xz, gz or bz2 archives";
+        _append_cmd_output(errorMsg);
+        std::cerr << errorMsg << std::endl;
+        return -1;
+    }
+
     #ifdef __linux__
         if (archive.extension().string() == ".xz")           cmd = boost::str(boost::format("tar -xpvJf %1% -C %2%") % archive.string() % m_work_path.string());
         else if (archive.extension().string() == ".gz")      cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive.string() % m_work_path.string());
@@ -583,7 +590,7 @@ int GameServer::_unpack_archive(fs::path const & archive)
         else if (archive.extension().string() == ".tar")     cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive.string() % m_work_path.string());
         else cmd = boost::str(boost::format("unzip -o %1% -d %2%") % archive.string() % m_work_path.string());
     #elif _WIN32
-        cmd = str(boost::format("7z x %1% -aoa -o%2%") % archive.string() % work_path.string());
+        cmd = boost::str(boost::format("7z x %1% -aoa -o%2%") % archive.string() % m_work_path.string());
     #endif
 
     if (_exec(cmd) == -1) {
