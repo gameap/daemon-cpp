@@ -88,6 +88,8 @@ private:
     void _append_cmd_output(std::string line);
 
     void _set_installed(unsigned int status);
+
+    void _error(std::string msg);
     
 public:
     GameServer(ulong mserver_id);

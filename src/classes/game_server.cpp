@@ -348,8 +348,8 @@ int GameServer::update_server()
     }
     else {
         // No Source to install =(
-        _append_cmd_output("No source to install game");
-        std::cerr << "No source to install" << std::endl;
+        _error("No source to install game");
+
         _set_installed(0);
         return -1;
     }
@@ -371,26 +371,26 @@ int GameServer::update_server()
     fs::path source_path;
     
     if (game_install_from == INST_FROM_LOCREP) {
+        if (!fs::exists(m_game_localrep)) {
+            _error("Local repository not found: " + m_game_localrep);
 
-        if (fs::is_regular_file(m_game_localrep)) {
-            game_source = INST_FILE;
-            source_path = m_game_localrep;
-        }
-        else if (fs::is_directory(m_game_localrep)) {
-            game_source = INST_DIR;
-            source_path = m_game_localrep;
-        } else {
-            game_install_from = INST_FROM_REMREP;
-        }
-
-        if (!fs::exists(source_path)) {
-            std::cerr << "Local rep not found: " << source_path << std::endl;
             game_install_from = INST_FROM_REMREP;
             source_path = m_game_remrep;
+        } else {
+            if (fs::is_regular_file(m_game_localrep)) {
+                game_source = INST_FILE;
+                source_path = m_game_localrep;
+            }
+            else if (fs::is_directory(m_game_localrep)) {
+                game_source = INST_DIR;
+                source_path = m_game_localrep;
+            } else {
+                game_install_from = INST_FROM_REMREP;
+            }
         }
     }
 
-    if (game_install_from == INST_FROM_REMREP) {
+    if (game_install_from == INST_FROM_REMREP && !m_game_remrep.empty()) {
         // Check rep available
         // TODO ...
         game_source = INST_FILE;
@@ -401,9 +401,8 @@ int GameServer::update_server()
         std::string steamcmd_fullpath = steamcmd_path + "/" + STEAMCMD;
 
         if (!fs::exists(steamcmd_fullpath)) {
-            std::string error = "SteamCMD not found: " + steamcmd_fullpath;
-            _append_cmd_output(error);
-            std::cerr << error << std::endl;
+            _error("SteamCMD not found: " + steamcmd_fullpath);
+
             _set_installed(0);
             return -1;
         }
@@ -442,9 +441,7 @@ int GameServer::update_server()
         }
 
         if (!steamcmd_install_success) {
-            std::string error = "Game installation via SteamCMD failed";
-            _append_cmd_output(error);
-            std::cerr << error << std::endl;
+            _error("Game installation via SteamCMD failed");
 
             _set_installed(0);
             return -1;
@@ -459,13 +456,14 @@ int GameServer::update_server()
     // Wget/Copy and unpack
     if (game_install_from == INST_FROM_LOCREP && game_source == INST_FILE) {
         if (_unpack_archive(source_path) == -1) {
-            std::cerr << "Unable to unpack: " << source_path << std::endl;
+            _error("Unable to unpack: " + source_path.string());
+
             return -1;
         }
     }
     else if (game_install_from == INST_FROM_LOCREP && game_source == INST_DIR) {
         if (_copy_dir(source_path, m_work_path) == false) {
-            std::cerr << "Unable to copy from " << source_path << " to " << m_work_path << std::endl;
+            _error("Unable to copy from " + source_path.string() + " to " + m_work_path.string());
             return -1;
         }
     }
@@ -480,7 +478,8 @@ int GameServer::update_server()
         std::string archive = boost::str(boost::format("%1%/%2%") % m_work_path.string() % source_path.filename().string());
         
         if (_unpack_archive(archive) == -1) {
-            std::cerr << "Unable to unpack: " << source_path << std::endl;
+            _error("Unable to unpack: " + source_path.string());
+
             fs::remove(archive);
             return -1;
         }
@@ -488,6 +487,7 @@ int GameServer::update_server()
         fs::remove(archive);
     }
 
+    // -----------------------------
     // Game Type Install
 
     if (game_mod_install_from == INST_FROM_LOCREP) {
@@ -504,7 +504,7 @@ int GameServer::update_server()
         }
 
         if (!fs::exists(source_path)) {
-            std::cerr << "Local rep not found: " << source_path << std::endl;
+            _error("Local rep not found:  " + source_path.string());
             game_mod_install_from = INST_FROM_REMREP;
             source_path = m_gt_remrep;
         }
@@ -520,12 +520,13 @@ int GameServer::update_server()
     // Wget/Copy and unpack
     if (game_mod_install_from == INST_FROM_LOCREP && gt_source == INST_FILE) {
         if (_unpack_archive(source_path) == -1) {
-            std::cerr << "Unable to unpack: " << source_path << std::endl;
+            _error( "Unable to unpack: " + source_path.string());
             return -1;
         }
     }
     else if (game_mod_install_from == INST_FROM_LOCREP && gt_source == INST_DIR) {
         if (_copy_dir(source_path, m_work_path) == false) {
+            _error("Unable to copy from " + source_path.string() + m_work_path.string());
             std::cerr << "Unable to copy from " << source_path << " to " << m_work_path << std::endl;
             return -1;
         }
@@ -541,7 +542,7 @@ int GameServer::update_server()
         std::string archive = boost::str(boost::format("%1%/%2%") % m_work_path.string() % source_path.filename().string());
 
         if (_unpack_archive(archive) == -1) {
-            std::cerr << "Unable to unpack: " << source_path << std::endl;
+            _error("Unable to unpack: " + source_path.string());
             fs::remove(archive);
             return -1;
         }
@@ -561,6 +562,16 @@ int GameServer::update_server()
 
     return 0;
 }
+
+// ---------------------------------------------------------------------
+
+void GameServer::_error(std::string msg)
+{
+    _append_cmd_output(msg);
+    std::cerr << msg << std::endl;
+}
+
+// ---------------------------------------------------------------------
 
 void GameServer::_set_installed(unsigned int status)
 {
