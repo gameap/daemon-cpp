@@ -4,10 +4,11 @@
 #include <tchar.h>
 
 #include <boost/format.hpp>
+#include <iostream>
 
 #include "config.h"
 
-#define LOG_DIRECTORY "log/"
+#define LOG_DIRECTORY "log\\"
 #define LOG_MAIN_FILE "main.log"
 #define LOG_ERROR_FILE "error.log"
 
@@ -172,9 +173,9 @@ int _tmain (int argc, TCHAR *argv[])
     fs::current_path(exe_path.parent_path());
 
     Config& config = Config::getInstance();
-    config.cfg_file = "daemon.cfg";
-    config.output_log = std::string(LOG_DIRECTORY) + std::string(LOG_MAIN_FILE);
-    config.error_log = std::string(LOG_DIRECTORY) + std::string(LOG_ERROR_FILE);
+    config.cfg_file = fs::current_path().string() + "\\daemon.cfg";
+    config.output_log = fs::current_path().string() + "\\" + std::string(LOG_DIRECTORY) + std::string(LOG_MAIN_FILE);
+    config.error_log = fs::current_path().string() + "\\" + std::string(LOG_DIRECTORY) + std::string(LOG_ERROR_FILE);
 
     if (!fs::exists(LOG_DIRECTORY)) {
         fs::create_directory(LOG_DIRECTORY);
@@ -199,9 +200,20 @@ int _tmain (int argc, TCHAR *argv[])
         );
     }
 
+#ifndef NON_DAEMON
     freopen(config.output_log.c_str(), "w", stdout);
     freopen(config.error_log.c_str(), "w", stderr);
+#endif
 
+    // Info
+    std::cout << "CurrentPath: " << fs::current_path() << std::endl;
+    std::cout << "Config: " << config.cfg_file << std::endl;
+    std::cout << "OutputLog: " << config.output_log << std::endl;
+    std::cout << "ErrorLog: " << config.error_log << std::endl;
+
+#ifdef NON_DAEMON
+    run_daemon();
+#else
     SERVICE_TABLE_ENTRY ServiceTable[] =
     {
         {SERVICE_NAME, (LPSERVICE_MAIN_FUNCTION) ServiceMain},
@@ -212,6 +224,8 @@ int _tmain (int argc, TCHAR *argv[])
     {
         return GetLastError ();
     }
+#endif
+
 }
 
 /*
@@ -221,7 +235,8 @@ int main(int argc, char** argv)
     exe_path = fs::system_complete( fs::path( argv[0] ) );
     fs::current_path(exe_path.parent_path());
 
-    ServiceWorkerThread();
+    // ServiceWorkerThread();
+    run_daemon();
 	
 }
 */

@@ -115,16 +115,23 @@ DedicatedServer::DedicatedServer()
         script_delete = jvalue["script_delete"].asString();
 
         // Default scripts
+
+#ifdef _WIN32
+        std::string starter_path = config.path_starter;
+#else
+        std::string starter_path = "gameap-starter";
+#endif
+
         if (script_start.empty()) {
-            script_start = "gameap-starter -t start -d {dir} -u {user} -c \"{command}\"";
+            script_start = starter_path + " -t start -d {dir} -u {user} -c \"{command}\"";
         }
 
         if (script_restart.empty()) {
-            script_restart = "gameap-starter -t restart -d {dir} -u {user} -c \"{command}\"";
+            script_restart = starter_path + " -t restart -d {dir} -u {user} -c \"{command}\"";
         }
 
         if (script_stop.empty()) {
-            script_stop = "gameap-starter -t stop -d {dir} -u {user}";
+            script_stop = starter_path + " -t stop -d {dir} -u {user}";
         }
 
         //if (script_status.empty()) {

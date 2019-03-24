@@ -46,6 +46,7 @@ public:
 
 #ifdef _WIN32
     std::string path_7zip;
+    std::string path_starter;
 #endif
 
     int parse();

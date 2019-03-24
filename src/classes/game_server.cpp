@@ -403,6 +403,13 @@ int GameServer::update_server()
         }
     }
 
+    // Installation game server
+
+    // Mkdir
+    if (!fs::exists(m_work_path)) {
+        fs::create_directories(m_work_path);
+    }
+
     if (game_install_from == INST_FROM_STEAM) {
         std::string steamcmd_fullpath = steamcmd_path + "/" + STEAMCMD;
 
@@ -419,6 +426,27 @@ int GameServer::update_server()
             additional_parameters += "+app_set_config \"" + m_steam_app_set_config + "\"";
         }
 
+#ifdef _WIN32
+        // Add runas or gameap-starter to steamcmd command
+        // SteamCMD installation fail without this command
+
+        Config& config = Config::getInstance();
+
+        if (fs::exists(fs::current_path() / "daemon" / "runas.exe")) {
+            steamcmd_fullpath = fs::current_path().string() 
+                + "\\daemon\\runas.exe -w:"
+                + m_work_path.string() 
+                + " " 
+                + steamcmd_fullpath;
+        }
+        else {
+            steamcmd_fullpath = config.path_starter
+                + " -t run -d "
+                + m_work_path.string()
+                + " -c "
+                + steamcmd_fullpath;
+        }
+#endif 
         std::string steam_cmd_install = boost::str(boost::format("%1% +login anonymous +force_install_dir %2% +app_update \"%3%\" %4% validate +quit")
                                              % steamcmd_fullpath // 1
                                              % m_work_path // 2
@@ -452,11 +480,6 @@ int GameServer::update_server()
             _set_installed(0);
             return ERROR_STATUS_INT;
         }
-    }
-
-    // Mkdir
-    if (!fs::exists(m_work_path)) {
-        fs::create_directories(m_work_path);
     }
 
     // Wget/Copy and unpack

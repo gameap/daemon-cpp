@@ -14,4 +14,6 @@ std::string string_format(const std::string fmt_str, ...);
 
 std::string random(size_t size);
 
-uint getJsonUInt(Json::Value json);
+// ---------------------------------------------------------------------
+
+unsigned int getJsonUInt(Json::Value json);

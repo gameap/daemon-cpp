@@ -77,7 +77,7 @@ std::string random(size_t size)
     return rstr;
 }
 
-uint getJsonUInt(const Json::Value json)
+unsigned int getJsonUInt(const Json::Value json)
 {
     if (json.isNull()) {
         return 0;
@@ -88,6 +88,6 @@ uint getJsonUInt(const Json::Value json)
     }
 
     if (json.isString()) {
-        return (uint)strtoul(json.asString().c_str(), nullptr, 10);
+        return (unsigned int)strtoul(json.asString().c_str(), nullptr, 10);
     }
 }
