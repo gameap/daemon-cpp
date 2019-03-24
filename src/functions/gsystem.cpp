@@ -7,7 +7,7 @@
 #elif defined(BOOST_WINDOWS_API)
     #define PROC_SHELL "cmd"
     #define SHELL_PREF "/c"
-#endif 
+#endif
 
 namespace GameAP {
 

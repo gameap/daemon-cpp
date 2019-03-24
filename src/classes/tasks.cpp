@@ -1,5 +1,6 @@
 #include "tasks.h"
 #include "config.h"
+#include "consts.h"
 
 #include <boost/process.hpp>
 #include <boost/iostreams/stream.hpp>
@@ -166,10 +167,10 @@ void Task::run()
     }
     else {
         // Unknown task
-        result_status = -1;
+        result_status = ERROR_STATUS_INT;
     }
 
-    if (result_status == 0) {
+    if (result_status == SUCCESS_STATUS_INT) {
         status = success;
     }
     else {
@@ -309,7 +310,7 @@ int TaskList::update_list()
     } catch (Gameap::Rest::RestapiException &exception) {
         // Try later
         std::cerr << exception.what() << std::endl;
-        return -1;
+        return ERROR_STATUS_INT;
     }
 
     for( Json::ValueIterator itr = jvalue.begin() ; itr != jvalue.end() ; itr++ ) {
@@ -345,7 +346,7 @@ int TaskList::update_list()
         insert(task);
     }
 
-    return 0;
+    return SUCCESS_STATUS_INT;
 }
 
 // ---------------------------------------------------------------------
