@@ -37,6 +37,10 @@ int Config::parse()
         private_key_password = pt.get_optional<std::string>("private_key_password").get_value_or("");
         dh_file = pt.get<std::string>("dh_file");
 
+#ifdef _WIN32
+        path_7zip = pt.get_optional<std::string>("7zip_path").get_value_or("C:\\gameap\\tools\\7zip\\7za.exe");
+#endif
+
         buf = pt.get_optional<std::string>("if_list");
         if (*buf != "") {
             boost::split(if_list, *buf, boost::is_any_of(" "));
