@@ -361,13 +361,15 @@ int GameServer::update_server()
     ushort gt_source =      INST_NO_SOURCE;
 
     fs::path source_path;
-    
+
+    // Checking ability to install from local repository
+    // Change source to Remote repository if local repository not found
+
     if (game_install_from == INST_FROM_LOCREP) {
         if (!fs::exists(m_game_localrep)) {
             _error("Local repository not found: " + m_game_localrep);
 
             game_install_from = INST_FROM_REMREP;
-            source_path = m_game_remrep;
         } else {
             if (fs::is_regular_file(m_game_localrep)) {
                 game_source = INST_FILE;
@@ -382,11 +384,23 @@ int GameServer::update_server()
         }
     }
 
-    if (game_install_from == INST_FROM_REMREP && !m_game_remrep.empty()) {
-        // Check rep available
-        // TODO ...
-        game_source = INST_FILE;
-        source_path = m_game_remrep;
+    // Checking ability to install from remote repository
+    // Change source to Steamcmd if remote repository is invalid
+
+    if (game_install_from == INST_FROM_REMREP) {
+        if (!m_game_remrep.empty()) {
+            // Check rep available
+            // TODO ...
+
+            game_source = INST_FILE;
+            source_path = m_game_remrep;
+        } else if (!m_steam_app_id.empty()) {
+            game_install_from = INST_FROM_STEAM;
+        } else {
+            _error("No source to install game");
+            _set_installed(0);
+            return ERROR_STATUS_INT;
+        }
     }
 
     if (game_install_from == INST_FROM_STEAM) {
