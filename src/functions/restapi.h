@@ -11,7 +11,9 @@
 
 
 namespace Gameap {
-    namespace Rest {
+
+    class Rest {
+    public:
         class RestapiException : public std::exception {
         public:
             RestapiException(std::string const &msg);
@@ -24,14 +26,16 @@ namespace Gameap {
             std::string msg_;
         };
 
-        int get_token();
-
-        Json::Value get(const std::string &uri);
-
-        void post(const std::string &uri, Json::Value data);
-
-        void put(const std::string &uri, Json::Value data);
-    }
+        static int get_token();
+        static Json::Value get(const std::string &uri);
+        static void post(const std::string &uri, Json::Value data);
+        static void put(const std::string &uri, Json::Value data);
+        // static void patch(const std::string &uri, Json::Value data);
+    private:
+        static std::string m_api_token;
+        static int m_errors_count;
+    };
 }
+
 
 #endif //GDAEMON_RESTAPI_H
