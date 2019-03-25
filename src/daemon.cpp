@@ -145,22 +145,10 @@ int run_daemon()
     std::cout << "Starting..." << std::endl << std::endl;
 
     #ifdef __linux__
-        /*
-        sigset_t mask;
-        struct sigaction act;
-
-        sigaddset(&mask, SIGUSR1);
-
-        act.sa_handler = sighandler;
-        act.sa_flags = SA_SIGINFO;
-        act.sa_mask = mask;
-
-        sigaction(SIGUSR1, &act, nullptr);
-         */
         std::signal(SIGUSR1, sighandler);
+        std::signal(SIGINT, sighandler);
+        std::signal(SIGTERM, sighandler);
     #endif
-
-
 
     Config& config = Config::getInstance();
 
