@@ -30,7 +30,7 @@ namespace Gameap {
         static Json::Value get(const std::string &uri);
         static void post(const std::string &uri, Json::Value data);
         static void put(const std::string &uri, Json::Value data);
-        // static void patch(const std::string &uri, Json::Value data);
+        static void patch(const std::string &uri, Json::Value data);
     private:
         static std::string m_api_token;
         static int m_errors_count;

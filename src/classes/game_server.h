@@ -92,6 +92,9 @@ private:
     void _error(std::string msg);
     
 public:
+    bool m_active;
+    std::time_t m_last_process_check;
+
     GameServer(ulong mserver_id);
     
     ~GameServer() {

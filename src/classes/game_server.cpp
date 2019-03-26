@@ -824,13 +824,11 @@ bool GameServer::status_server()
         std::cerr << "Server update vars error: " << e.what() << std::endl;
     }
 
-    bool active = false;
-
     DedicatedServer& deds = DedicatedServer::getInstance();
     std::string status_cmd  = deds.get_script_cmd(DS_SCRIPT_STATUS);
 
     if (status_cmd.length() > 0) {
-        active = _server_status_cmd();
+        m_active = _server_status_cmd();
     } else {
         fs::path p(m_work_path);
         p /= "pid.txt";
@@ -847,32 +845,35 @@ bool GameServer::status_server()
             uint pid = static_cast<uint>(atol(bufread));
             if (pid != 0) {
 #ifdef __linux__
-                active = (kill(pid, 0) == 0);
+                m_active = (kill(pid, 0) == 0);
 #elif _WIN32
                 HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, pid);
             DWORD ret = WaitForSingleObject(process, 0);
             CloseHandle(process);
-            active = (ret == WAIT_TIMEOUT);
+            m_active = (ret == WAIT_TIMEOUT);
 #endif
             }
         } else {
-            active = false;
+            m_active = false;
         }
     }
 
+    m_last_process_check = std::time(nullptr);
+
     Json::Value jdata;
-    jdata["process_active"] = (int)active;
+    jdata["process_active"] = (int)m_active;
 
     std::time_t now = std::time(nullptr);
     std::tm * ptm = std::localtime(&now);
     char buffer[32];
     std::strftime(buffer, 32, "%F %T", ptm);
 
+
     jdata["last_process_check"] = buffer;
 
     Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(m_server_id), jdata);
 
-    return (bool)active;
+    return (bool)m_active;
 }
 
 // ---------------------------------------------------------------------
@@ -916,10 +917,12 @@ int GameServersList::update_list()
 
 void GameServersList::stats_process()
 {
-    for (std::map<ulong, std::shared_ptr<GameServer>>::iterator it = servers_list.begin(); it != servers_list.end(); ++it) {
-        // Check status and start if server not active
-        it->second->start_if_need();
+    for (auto& server : servers_list) {
+        server.second->start_if_need();
     }
+
+    // Update bulk
+
 }
 
 // ---------------------------------------------------------------------

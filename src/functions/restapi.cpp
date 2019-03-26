@@ -15,7 +15,7 @@ namespace Gameap {
     char const* Rest::RestapiException::what() const throw() { return msg_.c_str(); }
 
     std::string Rest::m_api_token = "";
-    int m_errors_count = 0;
+    int Rest::m_errors_count = 0;
 
     /**
      * Get Token. Set Token to variable api_token
@@ -195,7 +195,6 @@ namespace Gameap {
      * @param uri
      * @param data
      */
-    /*
     void Rest::patch(const std::string& uri, Json::Value data)
     {
         Config& config = Config::getInstance();
@@ -224,5 +223,4 @@ namespace Gameap {
             throw Rest::RestapiException("RestClient error");
         }
     }
-     */
 }
