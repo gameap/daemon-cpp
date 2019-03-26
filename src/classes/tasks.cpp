@@ -210,26 +210,18 @@ int Task::_single_exec(std::string cmd)
     std::cout << "CMD Exec: " << cmd << std::endl;
     _append_cmd_output(fs::current_path().string() + "# " + cmd);
 
-    bp::pipe out = bp::pipe();
-    bp:child c = exec(cmd, out);
-
-    bp::ipstream is(out);
-    std::string line;
-    while (c.running() && std::getline(is, line)) {
+    int exit_code = exec(cmd, [this](std::string line) {
         cmd_output.append(line + "\n");
-    }
+    });
 
-    c.wait();
-    //int result = c.exit_code();
-
-    return 0;
+    return exit_code;
 }
 
 // ---------------------------------------------------------------------
 
 void Task::_append_cmd_output(std::string line)
 {
-    cmd_output = cmd_output + line + std::to_string('\n');
+    cmd_output.append(line + "\n");
 }
 
 // ---------------------------------------------------------------------
@@ -239,17 +231,7 @@ std::string Task::get_output()
     if (server_id != 0 && gserver != nullptr) {
         std::string output;
 
-        /*
-        if (gserver->get_cmd_output(&output) == -1) {
-            return "";
-        }
-         */
-
         output = gserver->get_cmd_output();
-
-        // std::cout << "output: " << output << std::endl;
-        // std::cout << "cur_outpos: " << cur_outpos << std::endl;
-        // std::cout << "output->size(): " << output.size() << std::endl;
 
         if (output.size()-cur_outpos > 0) {
             std::string output_part = output.substr(cur_outpos, output.size());

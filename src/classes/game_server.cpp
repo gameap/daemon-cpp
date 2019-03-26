@@ -312,6 +312,8 @@ int GameServer::update_server()
     std::string update_cmd = deds.get_script_cmd(DS_SCRIPT_UPDATE);
     std::string steamcmd_path = deds.get_steamcmd_path();
 
+    std::cout << "Server update starting..." << std::endl;
+
     if (update_cmd.length() > 0) {
         replace_shortcodes(update_cmd);
         int result = _exec(update_cmd);
@@ -324,8 +326,6 @@ int GameServer::update_server()
             return ERROR_STATUS_INT;
         }
     }
-
-    std::cout << "Update Start" << std::endl;
 
     ushort game_install_from =  INST_NO_SOURCE;
     ushort game_mod_install_from =    INST_NO_SOURCE;
@@ -583,8 +583,8 @@ int GameServer::update_server()
 
     #ifdef __linux__
         if (m_user != "") {
-            std::string cmd = boost::str(boost::format("chown -R %1% %2%") % m_user % m_work_path.string());
-            _exec(cmd);
+            _exec(boost::str(boost::format("chown -R %1% %2%") % m_user % m_work_path.string()));
+            fs::permissions(m_work_path, fs::owner_all);
         }
     #endif
 
@@ -647,12 +647,14 @@ int GameServer::_exec(std::string cmd, bool not_append)
         _append_cmd_output(fs::current_path().string() + "# " + cmd);
     }
 
-    std::string out;
-    int exit_code = exec(cmd, out);
+    int exit_code = exec(cmd, [this, not_append](std::string line) {
+        if (!not_append) {
+            _append_cmd_output(line);
+        }
+    });
 
     if (!not_append) {
-        _append_cmd_output(out);
-        _append_cmd_output(boost::str(boost::format("Exited with %1%") % exit_code));
+        _append_cmd_output(boost::str(boost::format("\nExited with %1%\n") % exit_code));
     }
 
     return exit_code;

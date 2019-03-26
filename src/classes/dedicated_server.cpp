@@ -4,6 +4,7 @@
 #include "dedicated_server.h"
 
 #include <boost/format.hpp>
+#include <functional>
 
 #include "functions/restapi.h"
 
