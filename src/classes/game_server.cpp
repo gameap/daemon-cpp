@@ -78,6 +78,8 @@ void GameServer::_update_vars()
                  ? jvalue["dir"].asString()
                  : throw("Empty game server directory");
 
+    m_installed = getJsonUInt(jvalue["installed"]);
+
     m_uuid            = jvalue["uuid"].asString();
     m_uuid_short      = jvalue["uuid_short"].asString();
 
@@ -604,10 +606,7 @@ void GameServer::_error(std::string msg)
 
 void GameServer::_set_installed(unsigned int status)
 {
-    Json::Value jdata;
-    jdata["installed"] = status;
-
-    Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(m_server_id), jdata);
+    m_installed = status;
 }
 
 // ---------------------------------------------------------------------
@@ -917,12 +916,26 @@ int GameServersList::update_list()
 
 void GameServersList::stats_process()
 {
+    Json::Value jupdate_data;
+
     for (auto& server : servers_list) {
         server.second->start_if_need();
+
+        Json::Value jserver_data;
+
+        std::tm * ptm = std::localtime(&server.second->m_last_process_check);
+        char buffer[32];
+        std::strftime(buffer, 32, "%F %T", ptm);
+
+        jserver_data["id"] = server.second->get_id();
+        jserver_data["last_process_check"] = buffer;
+        jserver_data["process_active"] = static_cast<int>(server.second->m_active);
+        jserver_data["installed"] = server.second->m_installed;
+
+        jupdate_data.append(jserver_data);
     }
 
-    // Update bulk
-
+    Gameap::Rest::patch("/gdaemon_api/servers", jupdate_data);
 }
 
 // ---------------------------------------------------------------------

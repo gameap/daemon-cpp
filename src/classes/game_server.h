@@ -94,6 +94,7 @@ private:
 public:
     bool m_active;
     std::time_t m_last_process_check;
+    unsigned int m_installed;
 
     GameServer(ulong mserver_id);
     
@@ -120,6 +121,10 @@ public:
     int get_cmd_output(std::string * str_out);
     std::string get_cmd_output();
     void clear_cmd_output();
+
+    unsigned int get_id() {
+        return m_server_id;
+    }
 };
 
 // ---------------------------------------------------------------------

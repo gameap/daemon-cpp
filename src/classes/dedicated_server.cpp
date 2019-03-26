@@ -572,36 +572,36 @@ int DedicatedServer::get_cpu_load(std::vector<float> &cpu_percent)
 
 int DedicatedServer::update_db()
 {
-    if (time(0) - last_db_update < db_update_period) {
+    if (time(nullptr) - last_db_update < db_update_period) {
         return -1;
     }
 
-    std::vector<std::vector<ds_stats>::iterator>insert_complete;
+    if (stats.empty()) {
+        return -1;
+    }
 
+    Json::Value jupdate_data;
 
-    for (std::vector<ds_stats>::iterator it = stats.begin();
-        it != stats.end();
-        ++it
-    ) {
+    for (auto& item : stats) {
         ushort ping = 0;
 
         // Load average
-        std::string loa = boost::str(boost::format("%.2f %.2f %.2f") % (*it).loa[0] % (*it).loa[1] % (*it).loa[2]);
+        std::string loa = boost::str(boost::format("%.2f %.2f %.2f") % item.loa[0] % item.loa[1] % item.loa[2]);
 
         // Ram
-        std::string ram = boost::str(boost::format("%1% %2% %3%") % (*it).ram_us % (*it).ram_cache % ram_total);
+        std::string ram = boost::str(boost::format("%1% %2% %3%") % item.ram_us % item.ram_cache % ram_total);
 
         // Cpu
         std::string cpu = "";
-        for (int i = 0; i < (*it).cpu_load.size(); ++i) {
-            // std::cout << "CPU #" << i << " " << (*it).cpu_load[i] << std::endl;
-            cpu +=  boost::str(boost::format("%.2f") % (*it).cpu_load[i]) + " ";
+        for (int i = 0; i < item.cpu_load.size(); ++i) {
+            // std::cout << "CPU #" << i << " " << item.cpu_load[i] << std::endl;
+            cpu +=  boost::str(boost::format("%.2f") % item.cpu_load[i]) + " ";
         }
 
         // If stat
         std::string ifstat = "";
-        for (std::map<std::string, netstats>::iterator itd = (*it).ifstats.begin();
-            itd != (*it).ifstats.end();
+        for (std::map<std::string, netstats>::iterator itd = item.ifstats.begin();
+            itd != item.ifstats.end();
             ++itd
         ) {
             ifstat +=  boost::str(boost::format("%1% %2% %3% %4% %5%")
@@ -617,50 +617,40 @@ int DedicatedServer::update_db()
 
         // Drive space
         std::string drvspace = "";
-        for (std::map<std::string, uintmax_t>::iterator itd = (*it).drv_us_space.begin();
-            itd != (*it).drv_us_space.end();
+        for (std::map<std::string, uintmax_t>::iterator itd = item.drv_us_space.begin();
+            itd != item.drv_us_space.end();
             ++itd
         ) {
             drvspace +=  boost::str(boost::format("%1% %2% %3%") % (*itd).first % (*itd).second % drv_space[(*itd).first]) + "\n";
         }
 
-        try {
-            Json::Value jdata;
-            jdata["dedicated_server_id"] = std::to_string(ds_id);
-            jdata["loa"] = loa;
-            jdata["ram"] = ram;
-            jdata["cpu"] = cpu;
-            jdata["ifstat"] = ifstat;
-            jdata["ping"] = ping;
-            jdata["drvspace"] = drvspace;
+        Json::Value jstats;
+        jstats["dedicated_server_id"] = std::to_string(ds_id);
+        jstats["loa"] = loa;
+        jstats["ram"] = ram;
+        jstats["cpu"] = cpu;
+        jstats["ifstat"] = ifstat;
+        jstats["ping"] = ping;
+        jstats["drvspace"] = drvspace;
 
-            std::time_t time = (*it).time;
-            std::tm * ptm = std::localtime(&time);
-            char buffer[32];
-            std::strftime(buffer, 32, "%F %T", ptm);
+        std::time_t time = item.time;
+        std::tm * ptm = std::localtime(&time);
+        char buffer[32];
+        std::strftime(buffer, 32, "%F %T", ptm);
 
-            jdata["time"] = buffer;
+        jstats["time"] = buffer;
 
-            Gameap::Rest::post("/gdaemon_api/ds_stats", jdata);
-            insert_complete.push_back(it);
-
-        } catch (Gameap::Rest::RestapiException &exception) {
-            std::cerr << "Output updating error: "
-                      << exception.what()
-                      << std::endl;
-
-            insert_complete.push_back(it);
-        }
+        jupdate_data.append(jstats);
     }
 
-    // Clear completed
-    for (int i = 0; i < insert_complete.size(); ++i) {
-        stats.erase(insert_complete[i]);
-    }
-
-    if (insert_complete.size() > 0) {
-        insert_complete.clear();
-        last_db_update = time(0);
+    try {
+        Gameap::Rest::post("/gdaemon_api/ds_stats", jupdate_data);
+        stats.clear();
+        last_db_update = time(nullptr);
+    } catch (Gameap::Rest::RestapiException &exception) {
+        std::cerr << "Output updating error: "
+                  << exception.what()
+                  << std::endl;
     }
 }
 
