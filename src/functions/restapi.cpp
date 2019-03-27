@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <iostream>
+#include <memory>
 
 #include <restclient-cpp/restclient.h>
 
@@ -8,27 +9,24 @@
 #include "restapi.h"
 #include "config.h"
 
-namespace Gameap { namespace Rest {
+namespace Gameap {
+    Rest::RestapiException::RestapiException(std::string const& msg) : msg_(msg) {}
+    Rest::RestapiException::~RestapiException() {}
+    char const* Rest::RestapiException::what() const throw() { return msg_.c_str(); }
 
-    /**
-     * API Token
-     */
-    std::string api_token;
-
-    RestapiException::RestapiException(std::string const& msg) : msg_(msg) {}
-    RestapiException::~RestapiException() {}
-    char const* RestapiException::what() const throw() { return msg_.c_str(); }
+    std::string Rest::m_api_token = "";
+    int Rest::m_errors_count = 0;
 
     /**
      * Get Token. Set Token to variable api_token
      *
      * @return int
      */
-    int get_token()
+    int Rest::get_token()
     {
         Config& config = Config::getInstance();
 
-        RestClient::Connection* conn = new RestClient::Connection(config.api_host);
+        auto conn = std::make_shared<RestClient::Connection>(config.api_host);
 
         std::string uri = "/gdaemon_api/get_token";
         conn->AppendHeader("Authorization", "Bearer " + config.api_key);
@@ -38,26 +36,25 @@ namespace Gameap { namespace Rest {
         if (response.code != 200) {
             std::cerr << "RestClient HTTP response code: " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
-            throw RestapiException("RestClient error. Token getting error.");
+
+            m_errors_count++;
+
+            throw Rest::RestapiException("RestClient error. Token getting error.");
         } else {
+            m_errors_count = 0;
+
             Json::Value jvalue;
             Json::Reader jreader(Json::Features::strictMode());
 
             if (jreader.parse(response.body, jvalue, false)) {
                 if (!jvalue["token"].isString()) {
-                    throw RestapiException("Invalid token");
+                    throw Rest::RestapiException("Invalid token");
                 }
 
-                /*
-                if (jvalue["token"].size() == 0 ) {
-                    throw RestapiException("Token is null");
-                }
-                */
-
-                api_token = jvalue["token"].asString();
+                Rest::m_api_token = jvalue["token"].asString();
 
             } else {
-                throw RestapiException("JSON Parse error");
+                throw Rest::RestapiException("JSON Parse error");
             }
         }
 
@@ -70,29 +67,37 @@ namespace Gameap { namespace Rest {
      * @param uri
      * @return JSON value
      */
-    Json::Value get(const std::string& uri)
+    Json::Value Rest::get(const std::string& uri)
     {
         Config& config = Config::getInstance();
 
-        RestClient::Connection* conn = new RestClient::Connection(config.api_host);
+        auto conn = std::make_shared<RestClient::Connection>(config.api_host);
 
-        conn->AppendHeader("X-Auth-Token", api_token);
+        conn->AppendHeader("X-Auth-Token", m_api_token);
         conn->AppendHeader("Content-Type", "application/json");
         RestClient::Response response = conn->get(uri);
 
         if (response.code != 200) {
+            if (response.code == 401) {
+                get_token();
+            }
+
+            m_errors_count++;
+
             std::cerr << "RestClient HTTP response code: " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
 
-            throw RestapiException("RestClient error");
+            throw Rest::RestapiException("RestClient error");
         } else {
+            m_errors_count = 0;
+
             Json::Value jvalue;
             Json::Reader jreader(Json::Features::strictMode());
 
             if (jreader.parse(response.body, jvalue, false)) {
                 return jvalue;
             } else {
-                throw RestapiException("JSON Parse error");
+                throw Rest::RestapiException("JSON Parse error");
             }
         }
     }
@@ -102,15 +107,15 @@ namespace Gameap { namespace Rest {
      * @param uri
      * @param data
      */
-    void post(const std::string& uri, Json::Value data)
+    void Rest::post(const std::string& uri, Json::Value data)
     {
         Config& config = Config::getInstance();
 
         Json::FastWriter jwriter;
 
-        RestClient::Connection* conn = new RestClient::Connection(config.api_host);
+        auto conn = std::make_shared<RestClient::Connection>(config.api_host);
 
-        conn->AppendHeader("X-Auth-Token", api_token);
+        conn->AppendHeader("X-Auth-Token", m_api_token);
         conn->AppendHeader("Content-Type", "application/json");
 
         std::string dt = jwriter.write(data);
@@ -118,6 +123,7 @@ namespace Gameap { namespace Rest {
         RestClient::Response response = conn->post(uri, jwriter.write(data));
 
         if (response.code == 201) {
+            m_errors_count = 0;
             std::cout << "API. Resource Created" << std::endl;
         } else if (response.code == 422) {
             std::cerr << "RestClient HTTP response code: " << response.code << std::endl;
@@ -133,10 +139,16 @@ namespace Gameap { namespace Rest {
             }
 
         } else {
+            if (response.code == 401) {
+                get_token();
+            }
+
+            m_errors_count++;
+
             std::cerr << "RestClient HTTP response code: " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
 
-            throw RestapiException("RestClient error");
+            throw Rest::RestapiException("RestClient error");
         }
     }
 
@@ -145,28 +157,70 @@ namespace Gameap { namespace Rest {
      * @param uri
      * @param data
      */
-    void put(const std::string& uri, Json::Value data)
+    void Rest::put(const std::string& uri, Json::Value data)
     {
         Config& config = Config::getInstance();
 
         Json::FastWriter jwriter;
 
-        RestClient::Connection* conn = new RestClient::Connection(config.api_host);
+        auto conn = std::make_shared<RestClient::Connection>(config.api_host);
 
-        conn->AppendHeader("X-Auth-Token", api_token);
+        conn->AppendHeader("X-Auth-Token", m_api_token);
         conn->AppendHeader("Content-Type", "application/json");
 
         RestClient::Response response = conn->put(uri, jwriter.write(data));
+
+        if (response.code == 200) {
+            m_errors_count = 0;
+            std::cout << "API. Resource Updated" << std::endl;
+        } else if (response.code == 201) {
+            m_errors_count = 0;
+            std::cout << "API. Resource Created" << std::endl;
+        } else {
+            if (response.code == 401) {
+                get_token();
+            }
+
+            m_errors_count++;
+
+            std::cerr << "RestClient HTTP response code: " << response.code << std::endl;
+            std::cerr << "URL: " << config.api_host << uri << std::endl;
+
+            throw Rest::RestapiException("RestClient error");
+        }
+    }
+
+    /**
+     *
+     * @param uri
+     * @param data
+     */
+    void Rest::patch(const std::string& uri, Json::Value data)
+    {
+        Config& config = Config::getInstance();
+
+        Json::FastWriter jwriter;
+
+        auto conn = std::make_shared<RestClient::Connection>(config.api_host);
+
+        conn->AppendHeader("X-Auth-Token", m_api_token);
+        conn->AppendHeader("Content-Type", "application/json");
+
+        RestClient::Response response = conn->patch(uri, jwriter.write(data));
 
         if (response.code == 200) {
             std::cout << "API. Resource Updated" << std::endl;
         } else if (response.code == 201) {
             std::cout << "API. Resource Created" << std::endl;
         } else {
+            if (response.code == 401) {
+                get_token();
+            }
+
             std::cerr << "RestClient HTTP response code: " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
 
-            throw RestapiException("RestClient error");
+            throw Rest::RestapiException("RestClient error");
         }
     }
-}}
+}

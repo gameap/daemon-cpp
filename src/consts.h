@@ -14,3 +14,6 @@
 
 	typedef unsigned int uint;
 #endif
+
+#define SUCCESS_STATUS_INT 			0
+#define ERROR_STATUS_INT	       -1

@@ -1,5 +1,6 @@
 #include "tasks.h"
 #include "config.h"
+#include "consts.h"
 
 #include <boost/process.hpp>
 #include <boost/iostreams/stream.hpp>
@@ -76,7 +77,7 @@ void Task::run()
             gserver->clear_cmd_output();
             result_status = gserver->stop_server();
             
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            std::this_thread::sleep_for(std::chrono::seconds(5));
             gserver->status_server();
             
             // gserver = nullptr;
@@ -166,10 +167,10 @@ void Task::run()
     }
     else {
         // Unknown task
-        result_status = -1;
+        result_status = ERROR_STATUS_INT;
     }
 
-    if (result_status == 0) {
+    if (result_status == SUCCESS_STATUS_INT) {
         status = success;
     }
     else {
@@ -209,26 +210,18 @@ int Task::_single_exec(std::string cmd)
     std::cout << "CMD Exec: " << cmd << std::endl;
     _append_cmd_output(fs::current_path().string() + "# " + cmd);
 
-    bp::pipe out = bp::pipe();
-    bp:child c = exec(cmd, out);
-
-    bp::ipstream is(out);
-    std::string line;
-    while (c.running() && std::getline(is, line)) {
+    int exit_code = exec(cmd, [this](std::string line) {
         cmd_output.append(line + "\n");
-    }
+    });
 
-    c.wait();
-    //int result = c.exit_code();
-
-    return 0;
+    return exit_code;
 }
 
 // ---------------------------------------------------------------------
 
 void Task::_append_cmd_output(std::string line)
 {
-    cmd_output = cmd_output + line + std::to_string('\n');
+    cmd_output.append(line + "\n");
 }
 
 // ---------------------------------------------------------------------
@@ -238,17 +231,7 @@ std::string Task::get_output()
     if (server_id != 0 && gserver != nullptr) {
         std::string output;
 
-        /*
-        if (gserver->get_cmd_output(&output) == -1) {
-            return "";
-        }
-         */
-
         output = gserver->get_cmd_output();
-
-        // std::cout << "output: " << output << std::endl;
-        // std::cout << "cur_outpos: " << cur_outpos << std::endl;
-        // std::cout << "output->size(): " << output.size() << std::endl;
 
         if (output.size()-cur_outpos > 0) {
             std::string output_part = output.substr(cur_outpos, output.size());
@@ -291,7 +274,7 @@ int TaskList::delete_task(std::vector<Task *>::iterator it)
     if (idit != taskids.end()) {
         taskids.erase(idit);
     }
-    
+
     delete *it;
     tasklist.erase(it);
 
@@ -309,7 +292,7 @@ int TaskList::update_list()
     } catch (Gameap::Rest::RestapiException &exception) {
         // Try later
         std::cerr << exception.what() << std::endl;
-        return -1;
+        return ERROR_STATUS_INT;
     }
 
     for( Json::ValueIterator itr = jvalue.begin() ; itr != jvalue.end() ; itr++ ) {
@@ -345,7 +328,7 @@ int TaskList::update_list()
         insert(task);
     }
 
-    return 0;
+    return SUCCESS_STATUS_INT;
 }
 
 // ---------------------------------------------------------------------

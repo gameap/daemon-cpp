@@ -44,6 +44,11 @@ public:
     ushort stats_update_period;
     ushort stats_db_update_period;
 
+#ifdef _WIN32
+    std::string path_7zip;
+    std::string path_starter;
+#endif
+
     int parse();
 };
 

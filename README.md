@@ -90,6 +90,14 @@ Configuration file: daemon.cfg
 | stats_update_period       | no                    | integer   | Stats update period
 | stats_db_update_period    | no                    | integer   | Update database period
 
+### Other
+
+#### Only on Windows
+
+| Parameter                 | Required              | Type      | Info
+|---------------------------|-----------------------|-----------|------------
+| 7zip_path                 | no                    | string    | Path to 7zip unarchiver. Example: "C:\Program Files\7-Zip\7z.exe"
+
 ### Example daemon.cfg
 
 ```ini
@@ -105,7 +113,7 @@ password_authentication=false
 
 ; SSL/TLS
 
-client_certificate_file=/path/to/client.crt
+ca_certificate_file=/path/to/client.crt
 certificate_chain_file=/path/to/server.crt
 private_key_file=//path/to/server.key
 private_key_password=abracadabra

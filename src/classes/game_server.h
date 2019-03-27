@@ -36,41 +36,41 @@ namespace fs = boost::filesystem;
 
 class GameServer {
 private:
-    std::string uuid;
-    std::string uuid_short;
+    std::string m_uuid;
+    std::string m_uuid_short;
 
-    ulong server_id;
-    std::string ip;
-    uint server_port;
-    uint query_port;
-    uint rcon_port;
+    ulong m_server_id;
+    std::string m_ip;
 
-    bool staft_crash_disabled;
-    bool staft_crash;
+    uint m_server_port;
+    uint m_query_port;
+    uint m_rcon_port;
 
-    std::string user;
-    std::map<std::string, std::string> aliases;
+    bool m_staft_crash_disabled;
+    bool m_staft_crash;
+
+    std::string m_user;
+    std::map<std::string, std::string> m_aliases;
     
-    std::string start_command;
-    std::string game_scode;
+    std::string m_start_command;
+    std::string m_game_scode;
 
-    std::string game_localrep;
-    std::string game_remrep;
-    std::string gt_localrep;
-    std::string gt_remrep;
+    std::string m_game_localrep;
+    std::string m_game_remrep;
+    std::string m_gt_localrep;
+    std::string m_gt_remrep;
 
-    std::string steam_app_id;
-    std::string steam_app_set_config;
+    std::string m_steam_app_id;
+    std::string m_steam_app_set_config;
 
-    pid_t last_pid;
+    pid_t m_last_pid;
 
-    time_t last_update_vars;
+    time_t m_last_update_vars;
 
-    fs::path work_path;
+    fs::path m_work_path;
 
-    //std::string *cmd_output;
-    std::mutex cmd_output_mutex;
-    std::shared_ptr<std::string> cmd_output;
+    std::mutex m_cmd_output_mutex;
+    std::shared_ptr<std::string> m_cmd_output;
 
     int _unpack_archive(fs::path const & archive);
     
@@ -88,8 +88,14 @@ private:
     void _append_cmd_output(std::string line);
 
     void _set_installed(unsigned int status);
+
+    void _error(std::string msg);
     
 public:
+    bool m_active;
+    std::time_t m_last_process_check;
+    unsigned int m_installed;
+
     GameServer(ulong mserver_id);
     
     ~GameServer() {
@@ -115,15 +121,22 @@ public:
     int get_cmd_output(std::string * str_out);
     std::string get_cmd_output();
     void clear_cmd_output();
+
+    unsigned int get_id() {
+        return m_server_id;
+    }
 };
 
 // ---------------------------------------------------------------------
 
 class GameServersList {
 private:
-    std::map<ulong, GameServer *> servers_list;
+    std::map<ulong, std::shared_ptr<GameServer>> servers_list;
     
-    GameServersList() {}
+    GameServersList() {
+        update_list();
+    }
+
     GameServersList( const GameServersList&);  
     GameServersList& operator=( GameServersList& );
 

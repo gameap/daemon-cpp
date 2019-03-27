@@ -85,9 +85,13 @@ void FileServerSess::do_read()
                     if (read_complete(length)) {
                         switch (m_mode) {
                             case FSERV_AUTH: {
+                                m_read_binn = binn_open((void*)&m_read_buf[0]);
+
                                 try {
                                     cmd_process();
+                                    binn_free(m_read_binn);
                                 } catch (boost::filesystem::filesystem_error &e) {
+                                    binn_free(m_read_binn);
                                     response_msg(FSERV_STATUS_CRITICAL_ERROR, e.what(), true);
                                 }
                                 break;
@@ -184,17 +188,14 @@ void FileServerSess::clear_write_vars()
  */
 void FileServerSess::cmd_process()
 {
-    binn *read_binn;
-    read_binn = binn_open((void*)&m_read_buf[0]);
-
     unsigned char command;
 
-    if (!binn_list_get_uint8(read_binn, 1, &command)) {
+    if (!binn_list_get_uint8(m_read_binn, 1, &command)) {
+        binn_free(m_read_binn);
         response_msg(FSERV_STATUS_ERROR, "Invalid Binn data: reading command failed", true);
         return;
     }
 
-    std::cout << "command: " << binn_list_int16(read_binn, 1) << std::endl;
     clear_write_vars();
 
     switch (command) {
@@ -206,8 +207,8 @@ void FileServerSess::cmd_process()
         case FSERV_FILESEND: {
             // File send
             char * fname;
-            if (!binn_list_get_uint8(read_binn, 2, &m_sendfile_mode)
-                || !binn_list_get_str(read_binn, 3, &fname)
+            if (!binn_list_get_uint8(m_read_binn, 2, &m_sendfile_mode)
+                || !binn_list_get_str(m_read_binn, 3, &fname)
                     ) {
                 response_msg(FSERV_STATUS_ERROR, "Invalid Binn data", true);
                 break;
@@ -225,9 +226,9 @@ void FileServerSess::cmd_process()
                 uint chmod;
 
                 uint64 fsize;
-                if (!binn_list_get_uint64(read_binn, 4, &fsize)
-                    || !binn_list_get_bool(read_binn, 5, &make_dir)
-                    || !binn_list_get_uint8(read_binn, 6, (unsigned char *)&chmod)
+                if (!binn_list_get_uint64(m_read_binn, 4, &fsize)
+                    || !binn_list_get_bool(m_read_binn, 5, &make_dir)
+                    || !binn_list_get_uint8(m_read_binn, 6, (unsigned char *)&chmod)
                  ) {
                     response_msg(FSERV_STATUS_ERROR, "Invalid Binn data", true);
                     break;
@@ -266,8 +267,8 @@ void FileServerSess::cmd_process()
             char *dir;
             unsigned char type;
 
-            if (!binn_list_get_str(read_binn, 2, &dir)
-                || !binn_list_get_uint8(read_binn, 3, &type)
+            if (!binn_list_get_str(m_read_binn, 2, &dir)
+                || !binn_list_get_uint8(m_read_binn, 3, &type)
              ) {
                 response_msg(FSERV_STATUS_ERROR, "Invalid Binn data", true);
                 break;
@@ -338,6 +339,10 @@ void FileServerSess::cmd_process()
 
             response_msg(FSERV_STATUS_OK, "OK", false);
             binn_list_add_list(m_write_binn, files_binn);
+
+            binn_free(files_binn);
+            binn_free(file_info);
+
             do_write();
 
             break;
@@ -346,7 +351,7 @@ void FileServerSess::cmd_process()
         case FSERV_MKDIR: {
 
             char *path;
-            if (!binn_list_get_str(read_binn, 2, &path)) {
+            if (!binn_list_get_str(m_read_binn, 2, &path)) {
                 response_msg(FSERV_STATUS_ERROR, "Invalid Binn data", true);
                 break;
             }
@@ -377,9 +382,9 @@ void FileServerSess::cmd_process()
             char *newfile;
             BOOL copy;
 
-            if (!binn_list_get_str(read_binn, 2, &oldfile)
-                || !binn_list_get_str(read_binn, 3, &newfile)
-                || !binn_list_get_bool(read_binn, 4, &copy)
+            if (!binn_list_get_str(m_read_binn, 2, &oldfile)
+                || !binn_list_get_str(m_read_binn, 3, &newfile)
+                || !binn_list_get_bool(m_read_binn, 4, &copy)
              ) {
                 response_msg(FSERV_STATUS_ERROR, "Invalid Binn data", true);
                 break;
@@ -413,8 +418,8 @@ void FileServerSess::cmd_process()
             char *file;
             BOOL recursive ;
 
-            if (!binn_list_get_str(read_binn, 2, &file)
-                || !binn_list_get_bool(read_binn, 3, &recursive)
+            if (!binn_list_get_str(m_read_binn, 2, &file)
+                || !binn_list_get_bool(m_read_binn, 3, &recursive)
              ) {
                 response_msg(FSERV_STATUS_ERROR, "Invalid Binn data", true);
                 break;
@@ -451,7 +456,7 @@ void FileServerSess::cmd_process()
 
             char *file;
 
-            if (!binn_list_get_str(read_binn, 2, &file)) {
+            if (!binn_list_get_str(m_read_binn, 2, &file)) {
                 response_msg(FSERV_STATUS_ERROR, "Invalid Binn data", true);
                 break;
             }
@@ -462,7 +467,6 @@ void FileServerSess::cmd_process()
             }
 
             binn *file_info = binn_list();
-
             binn_list_add_str(file_info, file);
 
             struct stat stat_buf;
@@ -513,6 +517,7 @@ void FileServerSess::cmd_process()
 
             response_msg(FSERV_STATUS_OK, "File info", false);
             binn_list_add_list(m_write_binn, file_info);
+            binn_free(file_info);
             do_write();
 
             break;
@@ -522,8 +527,8 @@ void FileServerSess::cmd_process()
             char *file;
             ushort permissions;
 
-            if (!binn_list_get_str(read_binn, 2, &file)
-                || !binn_list_get_uint16(read_binn, 3, &permissions)
+            if (!binn_list_get_str(m_read_binn, 2, &file)
+                || !binn_list_get_uint16(m_read_binn, 3, &permissions)
              ) {
                 response_msg(FSERV_STATUS_ERROR, "Invalid Binn data", true);
                 break;
@@ -639,10 +644,26 @@ void FileServerSess::write_file(size_t length)
 {
     auto self(shared_from_this());
 
-    std::cout << "Filesize: " << (std::streamsize)m_filesize << std::endl;
+    if (m_filesize == 0) {
+        close_output_file();
+        clear_read_vars();
+
+        write_ok("Empty file");
+        return;
+    }
 
     if ( ! m_output_file.eof() && m_output_file.tellp() < (std::streamsize)m_filesize) {
-        m_output_file.write(m_read_buf, length);
+        m_output_file << m_read_buf;
+
+        if (m_output_file.bad()) {
+            std::cerr << "File write error" << std::endl;
+
+            close_output_file();
+            clear_read_vars();
+
+            response_msg(1, "File receiving error", true);
+            return;
+        }
 
         if (m_output_file.tellp() >= (std::streamsize)m_filesize) {
             std::cout << "File received: " << m_filename << std::endl;
@@ -661,7 +682,7 @@ void FileServerSess::write_file(size_t length)
         close_output_file();
         clear_read_vars();
 
-        response_msg(1, "File receiving error");
+        response_msg(1, "File receiving error", true);
     }
 }
 

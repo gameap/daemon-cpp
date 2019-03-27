@@ -3,14 +3,22 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 
 #include "typedefs.h"
 #include "config.h"
+
+namespace fs = boost::filesystem;
 
 int Config::parse()
 {
     boost::property_tree::ptree pt;
     std::string allowed_ip_str;
+
+    if (!fs::exists(cfg_file)) {
+        std::cerr << "Config file not found: " << cfg_file.c_str() << std::endl;
+        return -1;
+    }
 
     try {
         boost::optional<std::string> buf;
@@ -37,14 +45,18 @@ int Config::parse()
         private_key_password = pt.get_optional<std::string>("private_key_password").get_value_or("");
         dh_file = pt.get<std::string>("dh_file");
 
-        buf = pt.get_optional<std::string>("if_list");
-        if (*buf != "") {
-            boost::split(if_list, *buf, boost::is_any_of(" "));
+#ifdef _WIN32
+        path_7zip = pt.get_optional<std::string>("7zip_path").get_value_or("C:\\gameap\\tools\\7zip\\7za.exe");
+        path_starter = pt.get_optional<std::string>("starter_path").get_value_or("C:\\gameap\\daemon\\gameap-starter.exe");
+#endif
+        std::string if_list_cfg = pt.get_optional<std::string>("if_list").get_value_or("");
+        if (!if_list_cfg.empty()) {
+            boost::split(if_list, if_list_cfg, boost::is_any_of(" "));
         }
 
-        buf = pt.get_optional<std::string>("drives_list");
-        if (*buf != "") {
-            boost::split(drives_list, *buf, boost::is_any_of(" "));
+        std::string drives_list_cfg = pt.get_optional<std::string>("drives_list").get_value_or("");
+        if (!drives_list_cfg.empty()) {
+            boost::split(drives_list, drives_list_cfg, boost::is_any_of(" "));
         }
 
         boost::optional<ushort> bufushort;

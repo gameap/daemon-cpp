@@ -1,11 +1,15 @@
-#include <stdio.h>
+#include <cstdio>
 #include <iostream>
 #include <fstream>
 
 #include <csignal>
 
-void sighandler(int signum) {
+#include "classes/tasks.h"
 
+using namespace GameAP;
+
+void sighandler(int signum)
+{
     if (signum == SIGUSR1) {
         std::cout << "=== GameAP Daemon Status ===" << std::endl;
 
@@ -16,7 +20,11 @@ void sighandler(int signum) {
         output << "=== GameAP Daemon Status ===" << std::endl;
         output.close();
          */
-    }
+    } else if (signum == SIGTERM || signum == SIGINT) {
+        std::cout << "Handle signal" << std::endl;
+        std::cout << "Stopping tasks" << std::endl;
 
-    return;
+        TaskList& tasks = TaskList::getInstance();
+        tasks.stop = true;
+    }
 }

@@ -32,6 +32,11 @@ public:
     static constexpr auto END_SYMBOLS = "\xFF\xFF\xFF\xFF";
 
     FileServerSess(std::shared_ptr<Connection> connection) : m_connection(std::move(connection)) {};
+
+    ~FileServerSess() {
+        binn_free(m_write_binn);
+    };
+
     void start();
 
 private:
@@ -108,6 +113,7 @@ private:
     std::string m_write_msg;
     
     binn *m_write_binn;
+    binn *m_read_binn;
 
     /*
      * 0 - NoAuth
