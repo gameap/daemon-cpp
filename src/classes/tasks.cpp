@@ -19,170 +19,170 @@ namespace bp = ::boost::process;
 
 void Task::run()
 {
-    if (status != waiting) {
+    if (m_status != waiting) {
         return;
     }
 
-    task_started = time(nullptr);
-    status = working;
+    m_task_started = time(nullptr);
+    m_status = working;
 
     std::string qstr;
 
     try {
         Json::Value jdata;
-        jdata["status"] = status;
-        jdata["time_stchange"] = (uint) task_started;
-        Gameap::Rest::put("/gdaemon_api/tasks/" + std::to_string(task_id), jdata);
+        jdata["status"] = m_status;
+        jdata["time_stchange"] = (uint) m_task_started;
+        Gameap::Rest::put("/gdaemon_api/tasks/" + std::to_string(m_task_id), jdata);
     } catch (Gameap::Rest::RestapiException &exception) {
-        std::cerr << "Error updating task status [to status code " + std::to_string(status) + "]: "
+        std::cerr << "Error updating task status [to status code " + std::to_string(m_status) + "]: "
                   << exception.what()
                   << std::endl;
 
         return;
     }
 
-    std::cout << "task: " << task << std::endl;
+    std::cout << "task: " << m_task << std::endl;
 
     int result_status;
     GameServersList& gslist = GameServersList::getInstance();
     
-    if (! strcmp(task, TASK_GAME_SERVER_START)) {
+    if (! strcmp(m_task, TASK_GAME_SERVER_START)) {
         try {
-            gserver = gslist.get_server(server_id);
+            m_gserver = gslist.get_server(m_server_id);
 
-            if (gserver == nullptr) {
+            if (m_gserver == nullptr) {
                 throw std::runtime_error("gslist.get_server error");
             }
             
-            gserver->clear_cmd_output();
-            result_status = gserver->start_server();
+            m_gserver->clear_cmd_output();
+            result_status = m_gserver->start_server();
 
             std::this_thread::sleep_for(std::chrono::seconds(1));
-            gserver->status_server();
+            m_gserver->status_server();
             
-            // gserver = nullptr;
+            // m_gserver = nullptr;
         } catch (std::exception &e) {
-            status = error;
+            m_status = error;
             std::cerr << "gsstart error: " << e.what() << std::endl;
         }
     }
-    else if (! strcmp(task, TASK_GAME_SERVER_STOP)) {
+    else if (! strcmp(m_task, TASK_GAME_SERVER_STOP)) {
         try {
-            gserver = gslist.get_server(server_id);
+            m_gserver = gslist.get_server(m_server_id);
             
-            if (gserver == nullptr) {
+            if (m_gserver == nullptr) {
                 throw std::runtime_error("gslist.get_server error");
             }
             
-            gserver->clear_cmd_output();
-            result_status = gserver->stop_server();
+            m_gserver->clear_cmd_output();
+            result_status = m_gserver->stop_server();
             
             std::this_thread::sleep_for(std::chrono::seconds(5));
-            gserver->status_server();
+            m_gserver->status_server();
             
-            // gserver = nullptr;
+            // m_gserver = nullptr;
         } catch (std::exception &e) {
-            status = error;
+            m_status = error;
             std::cerr << "gsstop error: " << e.what() << std::endl;
         }
     }
-    else if (! strcmp(task, TASK_GAME_SERVER_RESTART)) {
+    else if (! strcmp(m_task, TASK_GAME_SERVER_RESTART)) {
         try {
-            gserver = gslist.get_server(server_id);
+            m_gserver = gslist.get_server(m_server_id);
             
-            if (gserver == nullptr) {
+            if (m_gserver == nullptr) {
                 throw std::runtime_error("gslist.get_server error");
             }
             
-            gserver->clear_cmd_output();
-            result_status = gserver->stop_server();
-            result_status = gserver->start_server();
+            m_gserver->clear_cmd_output();
+            result_status = m_gserver->stop_server();
+            result_status = m_gserver->start_server();
 
             std::this_thread::sleep_for(std::chrono::seconds(1));
-            gserver->status_server();
+            m_gserver->status_server();
             
-            // gserver = nullptr;
+            // m_gserver = nullptr;
         } catch (std::exception &e) {
-            status = error;
+            m_status = error;
             std::cerr << "gsstop error: " << e.what() << std::endl;
         }
     }
-    else if (!strcmp(task, TASK_GAME_SERVER_INSTALL) || !strcmp(task, TASK_GAME_SERVER_UPDATE)) {
+    else if (!strcmp(m_task, TASK_GAME_SERVER_INSTALL) || !strcmp(m_task, TASK_GAME_SERVER_UPDATE)) {
         try {
-            gserver = gslist.get_server(server_id);
+            m_gserver = gslist.get_server(m_server_id);
             
-            if (gserver == nullptr) {
+            if (m_gserver == nullptr) {
                 throw std::runtime_error("gslist.get_server error");
             }
             
-            gserver->clear_cmd_output();
-            result_status = gserver->update_server();
-            // gserver = nullptr;
+            m_gserver->clear_cmd_output();
+            result_status = m_gserver->update_server();
+            // m_gserver = nullptr;
         } catch (std::exception &e) {
-            status = error;
+            m_status = error;
             std::cerr << "gsinst error: " << e.what() << std::endl;
         }
     }
-    else if (! strcmp(task, TASK_GAME_SERVER_DELETE)) {
+    else if (! strcmp(m_task, TASK_GAME_SERVER_DELETE)) {
         try {
-            gserver = gslist.get_server(server_id);
+            m_gserver = gslist.get_server(m_server_id);
             
-            if (gserver == nullptr) {
+            if (m_gserver == nullptr) {
                 throw std::runtime_error("gslist.get_server error");
             }
             
-            gserver->clear_cmd_output();
-            result_status = gserver->delete_server();
+            m_gserver->clear_cmd_output();
+            result_status = m_gserver->delete_server();
             
-            // gserver = nullptr;
+            // m_gserver = nullptr;
         } catch (std::exception &e) {
-            status = error;
+            m_status = error;
             std::cerr << "gsdelete error: " << e.what() << std::endl;
         }
     }
-    else if (! strcmp(task, TASK_GAME_SERVER_MOVE)) {
+    else if (! strcmp(m_task, TASK_GAME_SERVER_MOVE)) {
         // Move game server to other ds
-        gserver = gslist.get_server(server_id);
-        gserver->clear_cmd_output();
+        m_gserver = gslist.get_server(m_server_id);
+        m_gserver->clear_cmd_output();
     }
-    else if (! strcmp(task, TASK_GAME_SERVER_EXECUTE)) {
+    else if (! strcmp(m_task, TASK_GAME_SERVER_EXECUTE)) {
         try {
-            if (server_id != 0) {
-                gserver = gslist.get_server(server_id);
+            if (m_server_id != 0) {
+                m_gserver = gslist.get_server(m_server_id);
 
-                if (gserver == nullptr) {
+                if (m_gserver == nullptr) {
                     throw std::runtime_error("gslist.get_server error");
                 }
 
-                gserver->clear_cmd_output();
-                result_status = gserver->cmd_exec(cmd);
+                m_gserver->clear_cmd_output();
+                result_status = m_gserver->cmd_exec(m_cmd);
             } else {
-                cmd_output = "";
-                result_status = _exec(cmd);
+                m_cmd_output = "";
+                result_status = _exec(m_cmd);
             }
         } catch (std::exception &e) {
-            status = error;
+            m_status = error;
             std::cerr << "cmdexec error: " << e.what() << std::endl;
         }
     }
     else {
-        // Unknown task
+        // Unknown m_task
         result_status = ERROR_STATUS_INT;
     }
 
     if (result_status == SUCCESS_STATUS_INT) {
-        status = success;
+        m_status = success;
     }
     else {
-        status = error;
+        m_status = error;
     }
 
     try {
         Json::Value jdata;
-        jdata["status"] = status;
-        Gameap::Rest::put("/gdaemon_api/tasks/" + std::to_string(task_id), jdata);
+        jdata["status"] = m_status;
+        Gameap::Rest::put("/gdaemon_api/tasks/" + std::to_string(m_task_id), jdata);
     } catch (Gameap::Rest::RestapiException &exception) {
-        std::cerr << "Error updating task status [to status code " + std::to_string(status) + "]: "
+        std::cerr << "Error updating task status [to status code " + std::to_string(m_status) + "]: "
                   << exception.what()
                   << std::endl;
     }
@@ -211,7 +211,7 @@ int Task::_single_exec(std::string cmd)
     _append_cmd_output(fs::current_path().string() + "# " + cmd);
 
     int exit_code = exec(cmd, [this](std::string line) {
-        cmd_output.append(line + "\n");
+        m_cmd_output.append(line + "\n");
     });
 
     return exit_code;
@@ -221,21 +221,21 @@ int Task::_single_exec(std::string cmd)
 
 void Task::_append_cmd_output(std::string line)
 {
-    cmd_output.append(line + "\n");
+    m_cmd_output.append(line + "\n");
 }
 
 // ---------------------------------------------------------------------
 
 std::string Task::get_output()
 {
-    if (server_id != 0 && gserver != nullptr) {
+    if (m_server_id != 0 && m_gserver != nullptr) {
         std::string output;
 
-        output = gserver->get_cmd_output();
+        output = m_gserver->get_cmd_output();
 
-        if (output.size()-cur_outpos > 0) {
-            std::string output_part = output.substr(cur_outpos, output.size());
-            cur_outpos += (output.size() - cur_outpos);
+        if (output.size()-m_cur_outpos > 0) {
+            std::string output_part = output.substr(m_cur_outpos, output.size());
+            m_cur_outpos += (output.size() - m_cur_outpos);
 
             return output_part;
         } else {
@@ -243,10 +243,10 @@ std::string Task::get_output()
         }
     }
 
-    if (server_id == 0) {
-        if (cmd_output.size()-cur_outpos > 0) {
-            std::string output_part = cmd_output.substr(cur_outpos, cmd_output.size());
-            cur_outpos += (cmd_output.size() - cur_outpos);
+    if (m_server_id == 0) {
+        if (m_cmd_output.size()-m_cur_outpos > 0) {
+            std::string output_part = m_cmd_output.substr(m_cur_outpos, m_cmd_output.size());
+            m_cur_outpos += (m_cmd_output.size() - m_cur_outpos);
             return output_part;
         }
     }
