@@ -23,6 +23,10 @@ void Task::run()
         return;
     }
 
+    if (m_server_id <= 0) {
+        return;
+    }
+
     m_task_started = time(nullptr);
     m_status = working;
 
