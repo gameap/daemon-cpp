@@ -23,12 +23,12 @@
 #define TIME_UPDDIFF 120
 
 #if defined(BOOST_POSIX_API)
-    #define AUTOINSTALLER_SCRIPT "gdaemon_autoinstall.sh"
+    #define AFTER_INSTALL_SCRIPT "gdaemon_autoinstall.sh"
 
     #define PROC_SHELL "sh"
     #define SHELL_PREF "-c"
 #elif defined(BOOST_WINDOWS_API)
-    #define AUTOINSTALLER_SCRIPT "gdaemon_autoinstall.bat"
+    #define AFTER_INSTALL_SCRIPT "gdaemon_autoinstall.bat"
 
     #define PROC_SHELL "cmd"
     #define SHELL_PREF "/c"

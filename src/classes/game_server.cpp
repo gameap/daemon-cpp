@@ -588,18 +588,18 @@ int GameServer::update_server()
         }
     #endif
 
-    // Run auto install script if exist
+    // Run after install script if exist
     // After execution, the script will be deleted
-    std::string autoinstaller_script = m_work_path / AUTOINSTALLER_SCRIPT;
-    if (fs::exists(autoinstaller_script) {
-        int result = _exec(autoinstaller_script);
+    std::string after_install_script = m_work_path / AFTER_INSTALL_SCRIPT;
+    if (fs::exists(after_install_script) {
+        int result = _exec(after_install_script);
 
         if (result != EXIT_SUCCESS_CODE) {
             _set_installed(0);
             return ERROR_STATUS_INT;
         }
 
-        fs::remove(autoinstaller_script);
+        fs::remove(after_install_script);
     }
 
     // Update installed = 1
