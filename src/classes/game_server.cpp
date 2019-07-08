@@ -56,6 +56,10 @@ void GameServer::_update_vars()
         return;
     }
 
+    if (m_install_process && m_install_status_changed < time(nullptr) - TIME_INSTALL_BLOCK) {
+        return;
+    }
+
     DedicatedServer& dedicatedServer = DedicatedServer::getInstance();
 
     Json::Value jvalue;
@@ -259,6 +263,11 @@ int GameServer::start_server()
 
 void GameServer::start_if_need()
 {
+    _try_unblock();
+    if (m_installed != SERVER_INTALLED) {
+        return;
+    }
+
     bool cur_status = status_server();
     
     if (!m_staft_crash) {
@@ -305,8 +314,7 @@ int GameServer::update_server()
         }
     }
 
-    // Update installed = 2. In process
-    _set_installed(2);
+    _set_installed(SERVER_INTALL_IN_PROCESS);
 
     DedicatedServer& deds = DedicatedServer::getInstance();
     std::string update_cmd = deds.get_script_cmd(DS_SCRIPT_UPDATE);
@@ -319,10 +327,10 @@ int GameServer::update_server()
         int result = _exec(update_cmd);
 
         if (result == EXIT_SUCCESS_CODE) {
-            _set_installed(1);
+            _set_installed(SERVER_INTALLED);
             return SUCCESS_STATUS_INT;
         } else {
-            _set_installed(0);
+            _set_installed(SERVER_NOT_INSTALLED);
             return ERROR_STATUS_INT;
         }
     }
@@ -344,7 +352,7 @@ int GameServer::update_server()
         // No Source to install =(
         _error("No source to install game");
 
-        _set_installed(0);
+        _set_installed(SERVER_NOT_INSTALLED);
         return ERROR_STATUS_INT;
     }
 
@@ -418,7 +426,7 @@ int GameServer::update_server()
         if (!fs::exists(steamcmd_fullpath)) {
             _error("SteamCMD not found: " + steamcmd_fullpath);
 
-            _set_installed(0);
+            _set_installed(SERVER_NOT_INSTALLED);
             return ERROR_STATUS_INT;
         }
 
@@ -479,7 +487,7 @@ int GameServer::update_server()
         if (!steamcmd_install_success) {
             _error("Game installation via SteamCMD failed");
 
-            _set_installed(0);
+            _set_installed(SERVER_NOT_INSTALLED);
             return ERROR_STATUS_INT;
         }
     }
@@ -502,7 +510,7 @@ int GameServer::update_server()
         std::string cmd = boost::str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % m_work_path.string());
 
         if (_exec(cmd) != EXIT_SUCCESS_CODE) {
-            _set_installed(0);
+            _set_installed(SERVER_NOT_INSTALLED);
             return ERROR_STATUS_INT;
         }
         
@@ -566,7 +574,7 @@ int GameServer::update_server()
         std::string cmd = boost::str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % m_work_path.string());
 
         if (_exec(cmd) != EXIT_SUCCESS_CODE) {
-            _set_installed(0);
+            _set_installed(SERVER_NOT_INSTALLED);
             return ERROR_STATUS_INT;
         }
         
@@ -596,7 +604,7 @@ int GameServer::update_server()
         int result = _exec(after_install_script.string());
 
         if (result != EXIT_SUCCESS_CODE) {
-            _set_installed(0);
+            _set_installed(SERVER_NOT_INSTALLED);
             return ERROR_STATUS_INT;
         }
 
@@ -604,7 +612,7 @@ int GameServer::update_server()
     }
 
     // Update installed = 1
-    _set_installed(1);
+    _set_installed(SERVER_INTALLED);
 
     return SUCCESS_STATUS_INT;
 }
@@ -621,7 +629,21 @@ void GameServer::_error(std::string msg)
 
 void GameServer::_set_installed(unsigned int status)
 {
+    m_install_process = (status == SERVER_INTALL_IN_PROCESS);
+    m_install_status_changed = std::time(nullptr);
     m_installed = status;
+}
+
+// ---------------------------------------------------------------------
+
+/**
+ * Timeout. Unblock some operations (eg installation)
+ */
+void GameServer::_try_unblock()
+{
+    if (m_install_process && m_install_status_changed < time(nullptr) - TIME_INSTALL_BLOCK) {
+        _set_installed(SERVER_NOT_INSTALLED);
+    }
 }
 
 // ---------------------------------------------------------------------
@@ -835,6 +857,10 @@ bool GameServer::_server_status_cmd()
  */
 bool GameServer::status_server()
 {
+    if (m_installed != SERVER_INTALLED) {
+        return false;
+    }
+
     try {
         _update_vars();
     } catch (std::exception &e) {
@@ -945,9 +971,12 @@ void GameServersList::stats_process()
         std::strftime(buffer, 32, "%F %T", ptm);
 
         jserver_data["id"] = server.second->get_id();
-        jserver_data["last_process_check"] = buffer;
-        jserver_data["process_active"] = static_cast<int>(server.second->m_active);
         jserver_data["installed"] = server.second->m_installed;
+
+        if (server.second->m_installed == SERVER_INTALLED) {
+            jserver_data["last_process_check"] = buffer;
+            jserver_data["process_active"] = static_cast<int>(server.second->m_active);
+        }
 
         jupdate_data.append(jserver_data);
     }
