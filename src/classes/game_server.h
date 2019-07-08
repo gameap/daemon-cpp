@@ -138,6 +138,9 @@ public:
 
     void loop();
 
+    void update();
+    void update(bool force);
+
     unsigned int get_id() {
         return m_server_id;
     }

@@ -87,6 +87,15 @@ void GameServersList::loop()
 
 // ---------------------------------------------------------------------
 
+void GameServersList::update_all(bool force)
+{
+    for (auto& server : servers_list) {
+        server.second->update(true);
+    }
+}
+
+// ---------------------------------------------------------------------
+
 GameServer * GameServersList::get_server(ulong server_id)
 {
     if (servers_list.find(server_id) == servers_list.end()) {

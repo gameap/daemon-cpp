@@ -146,7 +146,9 @@ int run_daemon()
     std::cout << "Starting..." << std::endl << std::endl;
 
     #ifdef __linux__
+        std::signal(SIGHUP, sighandler);
         std::signal(SIGUSR1, sighandler);
+        std::signal(SIGQUIT, sighandler);
         std::signal(SIGINT, sighandler);
         std::signal(SIGTERM, sighandler);
     #endif

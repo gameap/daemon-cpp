@@ -934,3 +934,17 @@ void GameServer::loop()
 
     start_if_need();
 }
+
+// ---------------------------------------------------------------------
+
+void GameServer::update()
+{
+    _update_vars(false);
+}
+
+// ---------------------------------------------------------------------
+
+void GameServer::update(bool force)
+{
+    _update_vars(force);
+}

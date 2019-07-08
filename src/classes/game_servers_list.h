@@ -26,6 +26,9 @@ public:
 
     GameServer * get_server(ulong server_id);
     void loop();
+
+    void update_all();
+    void update_all(bool force);
 };
 
 /* End namespace GameAP */
