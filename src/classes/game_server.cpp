@@ -590,9 +590,10 @@ int GameServer::update_server()
 
     // Run after install script if exist
     // After execution, the script will be deleted
-    std::string after_install_script = m_work_path / AFTER_INSTALL_SCRIPT;
-    if (fs::exists(after_install_script) {
-        int result = _exec(after_install_script);
+    fs::path after_install_script = m_work_path / AFTER_INSTALL_SCRIPT;
+    if (fs::exists(after_install_script))
+    {
+        int result = _exec(after_install_script.string());
 
         if (result != EXIT_SUCCESS_CODE) {
             _set_installed(0);
@@ -641,7 +642,8 @@ int GameServer::_unpack_archive(fs::path const & archive)
         else if (archive.extension().string() == ".gz")      cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive.string() % m_work_path.string());
         else if (archive.extension().string() == ".bz2")     cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive.string() % m_work_path.string());
         else if (archive.extension().string() == ".tar")     cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive.string() % m_work_path.string());
-        else cmd = boost::str(boost::format("unzip -o %1% -d %2%") % archive.string() % m_work_path.string());
+        else if (archive.extension().string() == ".zip")     cmd = boost::str(boost::format("unzip -o %1% -d %2%") % archive.string() % m_work_path.string());
+        else cmd = boost::str(boost::format("7z x %1% -aoa -o%2%") % archive.string() % m_work_path.string());
     #elif _WIN32
         Config& config = Config::getInstance();
 

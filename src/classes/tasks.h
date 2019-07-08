@@ -27,91 +27,91 @@ namespace GameAP {
 
 class Task {
 private:
-    ulong task_id;
-    ulong task_run_after;
+    ulong m_task_id;
+    ulong m_task_run_after;
     
-    ulong ds_id;
-    ulong server_id;
-    char task[8];
+    ulong m_ds_id;
+    ulong m_server_id;
+    char m_task[8];
     
-    std::string data;
-    std::string cmd;
-    std::string cmd_output;
+    std::string m_data;
+    std::string m_cmd;
+    std::string m_cmd_output;
     
-    size_t cur_outpos;
+    size_t m_cur_outpos;
     
     enum st {waiting = 1, working, error, success};
-    ushort status;
+    ushort m_status;
 
-    time_t task_started;
+    time_t m_task_started;
 
-    GameServer *gserver;
+    GameServer *m_gserver;
 
     int _exec(std::string cmd);
     int _single_exec(std::string cmd);
     void _append_cmd_output(std::string line);
 public:
-    Task(ulong mtask_id, ulong mds_id, ulong mserver_id, const char * mtask, const char * mdata, const char * mcmd, ushort mstatus) {
-        task_id = mtask_id;
-        ds_id = mds_id;
-        server_id = mserver_id;
+    Task(ulong task_id, ulong ds_id, ulong server_id, const char * task, const char * data, const char * cmd, ushort status) {
+        m_task_id = task_id;
+        m_ds_id = ds_id;
+        m_server_id = server_id;
 
-        ushort mcsz = strlen(mtask);
+        ushort mcsz = strlen(task);
         if (mcsz > 8) {
             mcsz = 8;
         }
-        memcpy(task, mtask, mcsz);
+        memcpy(m_task, task, mcsz);
 
         if (mcsz < 8) {
-            task[mcsz] = '\0';
+            m_task[mcsz] = '\0';
         }
         
-        data = mdata;
-        cmd = mcmd;
-        status = mstatus;
+        m_data = data;
+        m_cmd = cmd;
+        m_status = status;
 
-        gserver = nullptr;
+        m_gserver = nullptr;
         
-        cur_outpos = 0;
+        m_cur_outpos = 0;
     }
 
     ~Task() {
-        std::cout << "Task destructor: " << task_id << std::endl;
+        std::cout << "Task destructor: " << m_task_id << std::endl;
     }
     
-    // void start(ulong task_id, ulong ds_id, ulong server_id, char task[8], char * data, char * cmd);
+    // void start(ulong m_task_id, ulong m_ds_id, ulong m_server_id, char m_task[8], char * m_data, char * m_cmd);
 
     void run();
     std::string get_output();
 
     int get_status()
     {
-        return status;
+        return m_status;
     }
 
     ulong get_id()
     {
-        return task_id;
+        return m_task_id;
     }
     
     ulong get_server_id()
     {
-        return server_id;
+        return m_server_id;
     }
 
     ulong run_after(ulong aft)
     {
-        task_run_after = aft;
-        return task_run_after;
+        m_task_run_after = aft;
+        return m_task_run_after;
     }
 
     ulong run_after()
     {
-        return task_run_after;
+        return m_task_run_after;
     }
     
     time_t get_time_started() {
-        return task_started;
+        return m_task_started;
     }
 };
 

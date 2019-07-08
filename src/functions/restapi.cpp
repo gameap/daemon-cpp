@@ -34,7 +34,7 @@ namespace Gameap {
         RestClient::Response response = conn->get(uri);
 
         if (response.code != 200) {
-            std::cerr << "RestClient HTTP response code: " << response.code << std::endl;
+            std::cerr << "RestClient HTTP response code (GET): " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
 
             m_errors_count++;
@@ -84,7 +84,7 @@ namespace Gameap {
 
             m_errors_count++;
 
-            std::cerr << "RestClient HTTP response code: " << response.code << std::endl;
+            std::cerr << "RestClient HTTP response code (GET): " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
 
             throw Rest::RestapiException("RestClient error");
@@ -126,7 +126,7 @@ namespace Gameap {
             m_errors_count = 0;
             std::cout << "API. Resource Created" << std::endl;
         } else if (response.code == 422) {
-            std::cerr << "RestClient HTTP response code: " << response.code << std::endl;
+            std::cerr << "RestClient HTTP response code (POST): " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
 
             Json::Value jvalue;
@@ -145,7 +145,7 @@ namespace Gameap {
 
             m_errors_count++;
 
-            std::cerr << "RestClient HTTP response code: " << response.code << std::endl;
+            std::cerr << "RestClient HTTP response code (POST): " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
 
             throw Rest::RestapiException("RestClient error");
@@ -183,7 +183,7 @@ namespace Gameap {
 
             m_errors_count++;
 
-            std::cerr << "RestClient HTTP response code: " << response.code << std::endl;
+            std::cerr << "RestClient HTTP response code (PUT): " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
 
             throw Rest::RestapiException("RestClient error");
@@ -217,7 +217,7 @@ namespace Gameap {
                 get_token();
             }
 
-            std::cerr << "RestClient HTTP response code: " << response.code << std::endl;
+            std::cerr << "RestClient HTTP response code (PATCH): " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
 
             throw Rest::RestapiException("RestClient error");
