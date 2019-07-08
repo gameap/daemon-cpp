@@ -170,6 +170,7 @@ int run_daemon()
     auto run_daemon_server = [&]() {
         std::cout << "Running Daemon Server" << std::endl;
         run_server(config.listen_ip, config.listen_port);
+        std::cout << "Daemon Server stopped" << std::endl;
     };
 
     std::thread daemon_server(run_daemon_server);
