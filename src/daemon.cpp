@@ -198,7 +198,7 @@ int run_daemon()
             deds.update_db();
 
             try {
-                gslist.stats_process();
+                gslist.loop();
             } catch (std::exception &e) {
                 std::cerr << "Game servers stats process error: " << e.what() << std::endl;
             }

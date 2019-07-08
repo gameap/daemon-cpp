@@ -54,8 +54,6 @@ void GameServersList::stats_process()
     Json::Value jupdate_data;
 
     for (auto& server : servers_list) {
-        server.second->start_if_need();
-
         Json::Value jserver_data;
 
         std::tm * ptm = std::localtime(&server.second->m_last_process_check);
@@ -74,6 +72,17 @@ void GameServersList::stats_process()
     }
 
     Gameap::Rest::patch("/gdaemon_api/servers", jupdate_data);
+}
+
+// ---------------------------------------------------------------------
+
+void GameServersList::loop()
+{
+    stats_process();
+
+    for (auto& server : servers_list) {
+        server.second->loop();
+    }
 }
 
 // ---------------------------------------------------------------------

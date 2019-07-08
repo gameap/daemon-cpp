@@ -263,7 +263,6 @@ int GameServer::start_server()
 
 void GameServer::start_if_need()
 {
-    _try_unblock();
     if (m_installed != SERVER_INTALLED) {
         return;
     }
@@ -916,4 +915,14 @@ bool GameServer::status_server()
     Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(m_server_id), jdata);
 
     return (bool)m_active;
+}
+
+// ---------------------------------------------------------------------
+
+void GameServer::loop()
+{
+    _try_unblock();
+    _update_vars();
+
+    start_if_need();
 }

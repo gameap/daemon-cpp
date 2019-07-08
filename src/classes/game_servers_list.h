@@ -17,6 +17,7 @@ private:
     GameServersList& operator=( GameServersList& );
 
     int update_list();
+    void stats_process();
 public:
     static GameServersList& getInstance() {
         static GameServersList instance;
@@ -24,8 +25,7 @@ public:
     }
 
     GameServer * get_server(ulong server_id);
-
-    void stats_process();
+    void loop();
 };
 
 /* End namespace GameAP */

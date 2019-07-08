@@ -135,6 +135,8 @@ public:
     std::string get_cmd_output();
     void clear_cmd_output();
 
+    void loop();
+
     unsigned int get_id() {
         return m_server_id;
     }
