@@ -63,7 +63,7 @@ void GameServer::_update_vars(bool force)
         return;
     }
 
-    if (!force && m_install_process && m_install_status_changed >= time(nullptr) - TIME_INSTALL_BLOCK) {
+    if (!force && m_install_process) {
         return;
     }
 
@@ -648,7 +648,7 @@ void GameServer::_set_installed(unsigned int status)
  */
 void GameServer::_try_unblock()
 {
-    if (m_install_process && m_install_status_changed >= time(nullptr) - TIME_INSTALL_BLOCK) {
+    if (m_install_process && m_install_status_changed < time(nullptr) - TIME_INSTALL_BLOCK) {
         _set_installed(SERVER_NOT_INSTALLED);
     }
 }
