@@ -20,7 +20,7 @@ void sighandler(int signum)
         output << "=== GameAP Daemon Status ===" << std::endl;
         output.close();
          */
-    } else if (signum == SIGTERM || signum == SIGINT) {
+    } else if (signum == SIGQUIT || signum == SIGTERM || signum == SIGINT) {
         std::cout << "Handle signal" << std::endl;
         std::cout << "Stopping tasks" << std::endl;
 

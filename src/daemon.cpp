@@ -43,6 +43,7 @@ using namespace GameAP;
 int check_tasks()
 {
     TaskList& tasks = TaskList::getInstance();
+    tasks.stop = false;
 
     tasks.check_working_errors();
 
@@ -54,7 +55,6 @@ int check_tasks()
 
     std::string output = "";
 
-    tasks.stop = false;
     while (!tasks.stop) {
         tasks.update_list();
         for (std::vector<Task *>::iterator it = tasks.begin(); !tasks.is_end(it); it = tasks.next(it)) {
@@ -178,7 +178,9 @@ int run_daemon()
     } else {
         DedicatedServer &deds = DedicatedServer::getInstance();
         GameServersList &gslist = GameServersList::getInstance();
+
         TaskList& tasks = TaskList::getInstance();
+        tasks.stop = false;
 
         if (!boost::filesystem::exists(deds.get_work_path())) {
             boost::filesystem::create_directory(deds.get_work_path());
@@ -189,11 +191,7 @@ int run_daemon()
 
         boost::thread ctsk_thr(check_tasks);
 
-        while (true) {
-            if (tasks.stop) {
-                break;
-            }
-
+        while (!tasks.stop) {
             deds.stats_process();
             deds.update_db();
 
