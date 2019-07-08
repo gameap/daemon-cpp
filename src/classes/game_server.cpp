@@ -52,11 +52,18 @@ GameServer::GameServer(ulong mserver_id)
 
 void GameServer::_update_vars()
 {
-    if (time(nullptr) - m_last_update_vars < TIME_UPDDIFF) {
+    _update_vars(false);
+}
+
+// ---------------------------------------------------------------------
+
+void GameServer::_update_vars(bool force)
+{
+    if (!force && time(nullptr) - m_last_update_vars < TIME_UPDDIFF) {
         return;
     }
 
-    if (m_install_process && m_install_status_changed < time(nullptr) - TIME_INSTALL_BLOCK) {
+    if (!force && m_install_process && m_install_status_changed >= time(nullptr) - TIME_INSTALL_BLOCK) {
         return;
     }
 
@@ -313,6 +320,7 @@ int GameServer::update_server()
         }
     }
 
+    _update_vars(true);
     _set_installed(SERVER_INTALL_IN_PROCESS);
 
     DedicatedServer& deds = DedicatedServer::getInstance();
@@ -640,7 +648,7 @@ void GameServer::_set_installed(unsigned int status)
  */
 void GameServer::_try_unblock()
 {
-    if (m_install_process && m_install_status_changed < time(nullptr) - TIME_INSTALL_BLOCK) {
+    if (m_install_process && m_install_status_changed >= time(nullptr) - TIME_INSTALL_BLOCK) {
         _set_installed(SERVER_NOT_INSTALLED);
     }
 }

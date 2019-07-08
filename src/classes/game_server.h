@@ -96,6 +96,7 @@ private:
     bool _server_status_cmd();
 
     void _update_vars();
+    void _update_vars(bool force);
     void _append_cmd_output(std::string line);
 
     void _set_installed(unsigned int status);
