@@ -591,7 +591,8 @@ int GameServer::update_server()
     // Run after install script if exist
     // After execution, the script will be deleted
     fs::path after_install_script = m_work_path / AFTER_INSTALL_SCRIPT;
-    if (fs::exists(after_install_script) {
+    if (fs::exists(after_install_script))
+    {
         int result = _exec(after_install_script.string());
 
         if (result != EXIT_SUCCESS_CODE) {
