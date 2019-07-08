@@ -111,6 +111,7 @@ set(SOURCES_CPP
     classes/dedicated_server.cpp
     classes/game_servers_list.cpp
     classes/game_server.cpp
+    classes/task_list.cpp
     classes/tasks.cpp
     functions/restapi.cpp
     functions/auth.cpp

@@ -23,6 +23,7 @@
 #include "config.h"
 
 #include "classes/tasks.h"
+#include "classes/task_list.h"
 #include "classes/dedicated_server.h"
 #include "classes/game_servers_list.h"
 
