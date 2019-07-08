@@ -109,13 +109,14 @@ set(SOURCES_CPP
     functions/gstring.cpp
     functions/gsystem.cpp
     classes/dedicated_server.cpp
+    classes/game_servers_list.cpp
     classes/game_server.cpp
     classes/tasks.cpp
     functions/restapi.cpp
     functions/auth.cpp
     components/server/commands_component.cpp
     components/server/files_component.cpp
-    )
+)
 
 if (WIN32)
     set(GDAEMON_SOURCES_CPP control_windows.cpp)

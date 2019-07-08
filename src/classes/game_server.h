@@ -140,31 +140,6 @@ public:
     }
 };
 
-// ---------------------------------------------------------------------
-
-class GameServersList {
-private:
-    std::map<ulong, std::shared_ptr<GameServer>> servers_list;
-    
-    GameServersList() {
-        update_list();
-    }
-
-    GameServersList( const GameServersList&);  
-    GameServersList& operator=( GameServersList& );
-
-    int update_list();
-public:
-    static GameServersList& getInstance() {
-        static GameServersList instance;
-        return instance;
-    }
-
-    GameServer * get_server(ulong server_id);
-    
-    void stats_process();
-};
-
 /* End namespace GameAP */
 }
 

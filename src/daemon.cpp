@@ -24,7 +24,7 @@
 
 #include "classes/tasks.h"
 #include "classes/dedicated_server.h"
-#include "classes/game_server.h"
+#include "classes/game_servers_list.h"
 
 #include "functions/gcrypt.h"
 #include "functions/restapi.h"
