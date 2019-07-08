@@ -101,9 +101,10 @@ int monitor_daemon()
     siginfo_t siginfo;
 
     sigemptyset(&sigset);
+    sigaddset(&sigset, SIGHUP);
     sigaddset(&sigset, SIGQUIT);
-    // sigaddset(&sigset, SIGINT);
-    // sigaddset(&sigset, SIGTERM);
+    sigaddset(&sigset, SIGINT);
+    sigaddset(&sigset, SIGTERM);
     sigaddset(&sigset, SIGCHLD);
     sigaddset(&sigset, SIGUSR1);
 
@@ -136,12 +137,13 @@ int monitor_daemon()
 
             sigemptyset(&sigset);
 
+            sigaddset(&sigset, SIGHUP);
             sigaddset(&sigset, SIGQUIT);
-            // sigaddset(&sigset, SIGINT);
-            // sigaddset(&sigset, SIGTERM);
-
+            sigaddset(&sigset, SIGINT);
+            sigaddset(&sigset, SIGTERM);
             sigaddset(&sigset, SIGUSR1);
-            sigprocmask(SIG_BLOCK, &sigset, nullptr);
+
+            sigprocmask(SIG_UNBLOCK, &sigset, nullptr);
 
             status = run_daemon();
             exit(status);
@@ -167,10 +169,14 @@ int monitor_daemon()
                 kill(pid, SIGUSR1);
                 need_start = 0;
             }
+            else if (siginfo.si_signo == SIGHUP) {
+                kill(pid, SIGHUP);
+                need_start = 0;
+            }
             else {
                 std::cout << "GameAP Daemon Monitor signal: " << strsignal(siginfo.si_signo) << std::endl;
 
-                kill(pid, SIGTERM);
+                kill(pid, siginfo.si_signo);
                 status = 0;
                 break;
             }
@@ -228,14 +234,19 @@ int main(int argc, char** argv)
         }
 	}
 
-    #ifdef NON_DAEMON
-        run_daemon();
-        return 0;
-    #endif
-
 	#ifdef SYSCTL_DAEMON
+        close(STDIN_FILENO);
+        close(STDOUT_FILENO);
+        close(STDERR_FILENO);
+
+        freopen(config.output_log.c_str(), "w", stdout);
+        freopen(config.error_log.c_str(), "w", stderr);
+
 		monitor_daemon();
 	    return 0;
+    #elif NON_DAEMON
+        run_daemon();
+        return 0;
 	#else
 	    pid = fork();
 
