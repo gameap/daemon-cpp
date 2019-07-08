@@ -588,6 +588,20 @@ int GameServer::update_server()
         }
     #endif
 
+    // Run after install script if exist
+    // After execution, the script will be deleted
+    std::string after_install_script = m_work_path / AFTER_INSTALL_SCRIPT;
+    if (fs::exists(after_install_script) {
+        int result = _exec(after_install_script);
+
+        if (result != EXIT_SUCCESS_CODE) {
+            _set_installed(0);
+            return ERROR_STATUS_INT;
+        }
+
+        fs::remove(after_install_script);
+    }
+
     // Update installed = 1
     _set_installed(1);
 
@@ -869,7 +883,6 @@ bool GameServer::status_server()
     std::tm * ptm = std::localtime(&now);
     char buffer[32];
     std::strftime(buffer, 32, "%F %T", ptm);
-
 
     jdata["last_process_check"] = buffer;
 

@@ -23,9 +23,13 @@
 #define TIME_UPDDIFF 120
 
 #if defined(BOOST_POSIX_API)
+    #define AFTER_INSTALL_SCRIPT "gdaemon_after_install.sh"
+
     #define PROC_SHELL "sh"
     #define SHELL_PREF "-c"
 #elif defined(BOOST_WINDOWS_API)
+    #define AFTER_INSTALL_SCRIPT "gdaemon_after_install.bat"
+
     #define PROC_SHELL "cmd"
     #define SHELL_PREF "/c"
 #endif 

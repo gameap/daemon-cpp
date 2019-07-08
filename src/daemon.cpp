@@ -174,7 +174,6 @@ int run_daemon()
     if (config.ds_id == 0) {
         std::cout << "Empty Dedicated Server ID" << std::endl;
         std::cout << "Tasks feature disabled" << std::endl;
-        daemon_server.join();
     } else {
         DedicatedServer &deds = DedicatedServer::getInstance();
         GameServersList &gslist = GameServersList::getInstance();
@@ -206,6 +205,8 @@ int run_daemon()
             std::this_thread::sleep_for(std::chrono::seconds(5));
         }
     }
+
+    daemon_server.join();
 
     return 0;
 }
