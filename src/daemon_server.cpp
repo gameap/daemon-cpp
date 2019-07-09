@@ -1,10 +1,16 @@
+#include <chrono>
+
 #include "consts.h"
+
+#include "classes/task_list.h"
 
 #include "components/server/files_component.h"
 #include "components/server/commands_component.h"
 #include "daemon_server.h"
 #include "classes/dedicated_server.h"
 #include "functions/auth.h"
+
+using namespace GameAP;
 
 // ---------------------------------------------------------------------
 
@@ -215,11 +221,18 @@ int run_server(std::string ip, ushort port)
 
         DaemonServer s(io_service, endpoint);
 
-        io_service.run();
+        // TODO: Replace tasks.stop to some status checker class or something else
+        TaskList& tasks = TaskList::getInstance();
+
+        while(!tasks.stop) {
+            io_service.run_for(std::chrono::seconds(5));
+        }
+
     }
     catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n";
     }
+
 
     return 0;
 }

@@ -23,8 +23,9 @@
 #include "config.h"
 
 #include "classes/tasks.h"
+#include "classes/task_list.h"
 #include "classes/dedicated_server.h"
-#include "classes/game_server.h"
+#include "classes/game_servers_list.h"
 
 #include "functions/gcrypt.h"
 #include "functions/restapi.h"
@@ -42,6 +43,7 @@ using namespace GameAP;
 int check_tasks()
 {
     TaskList& tasks = TaskList::getInstance();
+    tasks.stop = false;
 
     tasks.check_working_errors();
 
@@ -53,7 +55,6 @@ int check_tasks()
 
     std::string output = "";
 
-    tasks.stop = false;
     while (!tasks.stop) {
         tasks.update_list();
         for (std::vector<Task *>::iterator it = tasks.begin(); !tasks.is_end(it); it = tasks.next(it)) {
@@ -145,7 +146,9 @@ int run_daemon()
     std::cout << "Starting..." << std::endl << std::endl;
 
     #ifdef __linux__
+        std::signal(SIGHUP, sighandler);
         std::signal(SIGUSR1, sighandler);
+        std::signal(SIGQUIT, sighandler);
         std::signal(SIGINT, sighandler);
         std::signal(SIGTERM, sighandler);
     #endif
@@ -167,6 +170,7 @@ int run_daemon()
     auto run_daemon_server = [&]() {
         std::cout << "Running Daemon Server" << std::endl;
         run_server(config.listen_ip, config.listen_port);
+        std::cout << "Daemon Server stopped" << std::endl;
     };
 
     std::thread daemon_server(run_daemon_server);
@@ -177,7 +181,9 @@ int run_daemon()
     } else {
         DedicatedServer &deds = DedicatedServer::getInstance();
         GameServersList &gslist = GameServersList::getInstance();
+
         TaskList& tasks = TaskList::getInstance();
+        tasks.stop = false;
 
         if (!boost::filesystem::exists(deds.get_work_path())) {
             boost::filesystem::create_directory(deds.get_work_path());
@@ -188,16 +194,12 @@ int run_daemon()
 
         boost::thread ctsk_thr(check_tasks);
 
-        while (true) {
-            if (tasks.stop) {
-                break;
-            }
-
+        while (!tasks.stop) {
             deds.stats_process();
             deds.update_db();
 
             try {
-                gslist.stats_process();
+                gslist.loop();
             } catch (std::exception &e) {
                 std::cerr << "Game servers stats process error: " << e.what() << std::endl;
             }

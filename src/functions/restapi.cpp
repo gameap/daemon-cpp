@@ -30,12 +30,20 @@ namespace Gameap {
 
         std::string uri = "/gdaemon_api/get_token";
         conn->AppendHeader("Authorization", "Bearer " + config.api_key);
-        conn->AppendHeader("Content-Type", "application/json");
+        conn->AppendHeader("Accept", "application/json");
         RestClient::Response response = conn->get(uri);
 
         if (response.code != 200) {
             std::cerr << "RestClient HTTP response code (GET): " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
+
+            if (!response.body.empty()) {
+                if (response.body.length() > 200) {
+                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 200) << " ..." << std::endl;
+                } else {
+                    std::cerr << "RestClient HTTP response: " << response.body << std::endl;
+                }
+            }
 
             m_errors_count++;
 
@@ -74,7 +82,7 @@ namespace Gameap {
         auto conn = std::make_shared<RestClient::Connection>(config.api_host);
 
         conn->AppendHeader("X-Auth-Token", m_api_token);
-        conn->AppendHeader("Content-Type", "application/json");
+        conn->AppendHeader("Accept", "application/json");
         RestClient::Response response = conn->get(uri);
 
         if (response.code != 200) {
@@ -86,6 +94,14 @@ namespace Gameap {
 
             std::cerr << "RestClient HTTP response code (GET): " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
+
+            if (!response.body.empty()) {
+                if (response.body.length() > 200) {
+                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 200) << " ..." << std::endl;
+                } else {
+                    std::cerr << "RestClient HTTP response: " << response.body << std::endl;
+                }
+            }
 
             throw Rest::RestapiException("RestClient error");
         } else {
@@ -117,6 +133,7 @@ namespace Gameap {
 
         conn->AppendHeader("X-Auth-Token", m_api_token);
         conn->AppendHeader("Content-Type", "application/json");
+        conn->AppendHeader("Accept", "application/json");
 
         std::string dt = jwriter.write(data);
 
@@ -148,6 +165,14 @@ namespace Gameap {
             std::cerr << "RestClient HTTP response code (POST): " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
 
+            if (!response.body.empty()) {
+                if (response.body.length() > 200) {
+                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 200) << " ..." << std::endl;
+                } else {
+                    std::cerr << "RestClient HTTP response: " << response.body << std::endl;
+                }
+            }
+
             throw Rest::RestapiException("RestClient error");
         }
     }
@@ -166,6 +191,7 @@ namespace Gameap {
         auto conn = std::make_shared<RestClient::Connection>(config.api_host);
 
         conn->AppendHeader("X-Auth-Token", m_api_token);
+        conn->AppendHeader("Accept", "application/json");
         conn->AppendHeader("Content-Type", "application/json");
 
         RestClient::Response response = conn->put(uri, jwriter.write(data));
@@ -186,6 +212,14 @@ namespace Gameap {
             std::cerr << "RestClient HTTP response code (PUT): " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
 
+            if (!response.body.empty()) {
+                if (response.body.length() > 200) {
+                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 200) << " ..." << std::endl;
+                } else {
+                    std::cerr << "RestClient HTTP response: " << response.body << std::endl;
+                }
+            }
+
             throw Rest::RestapiException("RestClient error");
         }
     }
@@ -204,6 +238,7 @@ namespace Gameap {
         auto conn = std::make_shared<RestClient::Connection>(config.api_host);
 
         conn->AppendHeader("X-Auth-Token", m_api_token);
+        conn->AppendHeader("Accept", "application/json");
         conn->AppendHeader("Content-Type", "application/json");
 
         RestClient::Response response = conn->patch(uri, jwriter.write(data));
@@ -219,6 +254,14 @@ namespace Gameap {
 
             std::cerr << "RestClient HTTP response code (PATCH): " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
+
+            if (!response.body.empty()) {
+                if (response.body.length() > 200) {
+                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 200) << " ..." << std::endl;
+                } else {
+                    std::cerr << "RestClient HTTP response: " << response.body << std::endl;
+                }
+            }
 
             throw Rest::RestapiException("RestClient error");
         }

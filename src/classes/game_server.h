@@ -20,7 +20,12 @@
 #define INST_FILE 1
 #define INST_DIR 2
 
+#define SERVER_NOT_INSTALLED        0
+#define SERVER_INSTALLED            1
+#define SERVER_INSTALL_IN_PROCESS   2
+
 #define TIME_UPDDIFF 120
+#define TIME_INSTALL_BLOCK 1800
 
 #if defined(BOOST_POSIX_API)
     #define AFTER_INSTALL_SCRIPT "gdaemon_after_install.sh"
@@ -67,6 +72,8 @@ private:
     std::string m_steam_app_id;
     std::string m_steam_app_set_config;
 
+    unsigned int m_install_status_changed;
+
     pid_t m_last_pid;
 
     time_t m_last_update_vars;
@@ -89,15 +96,18 @@ private:
     bool _server_status_cmd();
 
     void _update_vars();
+    void _update_vars(bool force);
     void _append_cmd_output(std::string line);
 
     void _set_installed(unsigned int status);
+    void _try_unblock();
 
     void _error(std::string msg);
     
 public:
     bool m_active;
     std::time_t m_last_process_check;
+    bool m_install_process;
     unsigned int m_installed;
 
     GameServer(ulong mserver_id);
@@ -126,34 +136,14 @@ public:
     std::string get_cmd_output();
     void clear_cmd_output();
 
+    void loop();
+
+    void update();
+    void update(bool force);
+
     unsigned int get_id() {
         return m_server_id;
     }
-};
-
-// ---------------------------------------------------------------------
-
-class GameServersList {
-private:
-    std::map<ulong, std::shared_ptr<GameServer>> servers_list;
-    
-    GameServersList() {
-        update_list();
-    }
-
-    GameServersList( const GameServersList&);  
-    GameServersList& operator=( GameServersList& );
-
-    int update_list();
-public:
-    static GameServersList& getInstance() {
-        static GameServersList instance;
-        return instance;
-    }
-
-    GameServer * get_server(ulong server_id);
-    
-    void stats_process();
 };
 
 /* End namespace GameAP */

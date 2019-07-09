@@ -38,6 +38,8 @@ GameServer::GameServer(ulong mserver_id)
     m_server_id = mserver_id;
     m_last_update_vars = 0;
 
+    m_last_process_check = 0;
+
     m_staft_crash_disabled = false;
     m_cmd_output = std::make_shared<std::string> ("");
 
@@ -52,7 +54,18 @@ GameServer::GameServer(ulong mserver_id)
 
 void GameServer::_update_vars()
 {
-    if (time(nullptr) - m_last_update_vars < TIME_UPDDIFF) {
+    _update_vars(false);
+}
+
+// ---------------------------------------------------------------------
+
+void GameServer::_update_vars(bool force)
+{
+    if (!force && time(nullptr) - m_last_update_vars < TIME_UPDDIFF) {
+        return;
+    }
+
+    if (!force && m_install_process) {
         return;
     }
 
@@ -259,6 +272,10 @@ int GameServer::start_server()
 
 void GameServer::start_if_need()
 {
+    if (m_installed != SERVER_INSTALLED) {
+        return;
+    }
+
     bool cur_status = status_server();
     
     if (!m_staft_crash) {
@@ -305,8 +322,8 @@ int GameServer::update_server()
         }
     }
 
-    // Update installed = 2. In process
-    _set_installed(2);
+    _update_vars(true);
+    _set_installed(SERVER_INSTALL_IN_PROCESS);
 
     DedicatedServer& deds = DedicatedServer::getInstance();
     std::string update_cmd = deds.get_script_cmd(DS_SCRIPT_UPDATE);
@@ -319,10 +336,10 @@ int GameServer::update_server()
         int result = _exec(update_cmd);
 
         if (result == EXIT_SUCCESS_CODE) {
-            _set_installed(1);
+            _set_installed(SERVER_INSTALLED);
             return SUCCESS_STATUS_INT;
         } else {
-            _set_installed(0);
+            _set_installed(SERVER_NOT_INSTALLED);
             return ERROR_STATUS_INT;
         }
     }
@@ -344,7 +361,7 @@ int GameServer::update_server()
         // No Source to install =(
         _error("No source to install game");
 
-        _set_installed(0);
+        _set_installed(SERVER_NOT_INSTALLED);
         return ERROR_STATUS_INT;
     }
 
@@ -418,7 +435,7 @@ int GameServer::update_server()
         if (!fs::exists(steamcmd_fullpath)) {
             _error("SteamCMD not found: " + steamcmd_fullpath);
 
-            _set_installed(0);
+            _set_installed(SERVER_NOT_INSTALLED);
             return ERROR_STATUS_INT;
         }
 
@@ -479,7 +496,7 @@ int GameServer::update_server()
         if (!steamcmd_install_success) {
             _error("Game installation via SteamCMD failed");
 
-            _set_installed(0);
+            _set_installed(SERVER_NOT_INSTALLED);
             return ERROR_STATUS_INT;
         }
     }
@@ -502,7 +519,7 @@ int GameServer::update_server()
         std::string cmd = boost::str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % m_work_path.string());
 
         if (_exec(cmd) != EXIT_SUCCESS_CODE) {
-            _set_installed(0);
+            _set_installed(SERVER_NOT_INSTALLED);
             return ERROR_STATUS_INT;
         }
         
@@ -566,7 +583,7 @@ int GameServer::update_server()
         std::string cmd = boost::str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % m_work_path.string());
 
         if (_exec(cmd) != EXIT_SUCCESS_CODE) {
-            _set_installed(0);
+            _set_installed(SERVER_NOT_INSTALLED);
             return ERROR_STATUS_INT;
         }
         
@@ -596,7 +613,7 @@ int GameServer::update_server()
         int result = _exec(after_install_script.string());
 
         if (result != EXIT_SUCCESS_CODE) {
-            _set_installed(0);
+            _set_installed(SERVER_NOT_INSTALLED);
             return ERROR_STATUS_INT;
         }
 
@@ -604,7 +621,7 @@ int GameServer::update_server()
     }
 
     // Update installed = 1
-    _set_installed(1);
+    _set_installed(SERVER_INSTALLED);
 
     return SUCCESS_STATUS_INT;
 }
@@ -621,7 +638,21 @@ void GameServer::_error(std::string msg)
 
 void GameServer::_set_installed(unsigned int status)
 {
+    m_install_process = (status == SERVER_INSTALL_IN_PROCESS);
+    m_install_status_changed = std::time(nullptr);
     m_installed = status;
+}
+
+// ---------------------------------------------------------------------
+
+/**
+ * Timeout. Unblock some operations (eg installation)
+ */
+void GameServer::_try_unblock()
+{
+    if (m_install_process && m_install_status_changed < time(nullptr) - TIME_INSTALL_BLOCK) {
+        _set_installed(SERVER_NOT_INSTALLED);
+    }
 }
 
 // ---------------------------------------------------------------------
@@ -835,6 +866,10 @@ bool GameServer::_server_status_cmd()
  */
 bool GameServer::status_server()
 {
+    if (m_installed != SERVER_INSTALLED) {
+        return false;
+    }
+
     try {
         _update_vars();
     } catch (std::exception &e) {
@@ -894,84 +929,24 @@ bool GameServer::status_server()
 
 // ---------------------------------------------------------------------
 
-int GameServersList::update_list()
+void GameServer::loop()
 {
-    Config& config = Config::getInstance();
+    _try_unblock();
+    _update_vars();
 
-    Json::Value jvalue;
-
-    try {
-        jvalue = Gameap::Rest::get("/gdaemon_api/servers?fields[servers]=id");
-    } catch (Gameap::Rest::RestapiException &exception) {
-        // Try later
-        std::cerr << exception.what() << std::endl;
-        return ERROR_STATUS_INT;
-    }
-
-    for (Json::ValueIterator itr = jvalue.begin(); itr != jvalue.end(); ++itr) {
-        ulong server_id = getJsonUInt((*itr)["id"]);
-
-        if (servers_list.find(server_id) == servers_list.end()) {
-
-            std::shared_ptr<GameServer> gserver = std::make_shared<GameServer>(server_id);
-
-            try {
-                servers_list.insert(
-                    servers_list.end(),
-                    std::pair<ulong, std::shared_ptr<GameServer>>(server_id, gserver)
-                );
-            } catch (std::exception &e) {
-                std::cerr << "GameServer #" << server_id << " insert error: " << e.what() << std::endl;
-            }
-        }
-    }
-
-    return SUCCESS_STATUS_INT;
+    start_if_need();
 }
 
 // ---------------------------------------------------------------------
 
-void GameServersList::stats_process()
+void GameServer::update()
 {
-    Json::Value jupdate_data;
-
-    for (auto& server : servers_list) {
-        server.second->start_if_need();
-
-        Json::Value jserver_data;
-
-        std::tm * ptm = std::localtime(&server.second->m_last_process_check);
-        char buffer[32];
-        std::strftime(buffer, 32, "%F %T", ptm);
-
-        jserver_data["id"] = server.second->get_id();
-        jserver_data["last_process_check"] = buffer;
-        jserver_data["process_active"] = static_cast<int>(server.second->m_active);
-        jserver_data["installed"] = server.second->m_installed;
-
-        jupdate_data.append(jserver_data);
-    }
-
-    Gameap::Rest::patch("/gdaemon_api/servers", jupdate_data);
+    _update_vars(false);
 }
 
 // ---------------------------------------------------------------------
 
-GameServer * GameServersList::get_server(ulong server_id)
+void GameServer::update(bool force)
 {
-    if (servers_list.find(server_id) == servers_list.end()) {
-        if (update_list() == ERROR_STATUS_INT) {
-            return nullptr;
-        }
-
-        if (servers_list.find(server_id) == servers_list.end()) {
-            return nullptr;
-        }
-    }
-
-    if (servers_list[server_id] == nullptr) {
-        return nullptr;
-    }
-    
-    return servers_list[server_id].get();
+    _update_vars(force);
 }

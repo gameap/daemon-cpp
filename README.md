@@ -22,7 +22,7 @@ master          |[![Build Status](https://travis-ci.org/gameap/GDaemon2.svg?bran
 * [Rest Client C++](https://github.com/mrtazz/restclient-cpp)
 * CURL Library
 * [Json C++ Library](https://github.com/open-source-parsers/jsoncpp)
-* Boost Libraries: Boost System, Boost Filesystem, Boost Iostreams, Boost Thread, Boost Process
+* Boost Libraries (>= 1.66.0): Boost System, Boost Filesystem, Boost Iostreams, Boost Thread, Boost Process
 
 ### Compiling on Linux
 
