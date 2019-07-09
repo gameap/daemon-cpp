@@ -38,8 +38,8 @@ namespace Gameap {
             std::cerr << "URL: " << config.api_host << uri << std::endl;
 
             if (!response.body.empty()) {
-                if (response.body.length() > 100) {
-                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 100) << std::endl;
+                if (response.body.length() > 200) {
+                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 200) << " ..." << std::endl;
                 } else {
                     std::cerr << "RestClient HTTP response: " << response.body << std::endl;
                 }
@@ -96,8 +96,8 @@ namespace Gameap {
             std::cerr << "URL: " << config.api_host << uri << std::endl;
 
             if (!response.body.empty()) {
-                if (response.body.length() > 100) {
-                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 100) << std::endl;
+                if (response.body.length() > 200) {
+                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 200) << " ..." << std::endl;
                 } else {
                     std::cerr << "RestClient HTTP response: " << response.body << std::endl;
                 }
@@ -166,8 +166,8 @@ namespace Gameap {
             std::cerr << "URL: " << config.api_host << uri << std::endl;
 
             if (!response.body.empty()) {
-                if (response.body.length() > 100) {
-                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 100) << std::endl;
+                if (response.body.length() > 200) {
+                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 200) << " ..." << std::endl;
                 } else {
                     std::cerr << "RestClient HTTP response: " << response.body << std::endl;
                 }
@@ -213,8 +213,8 @@ namespace Gameap {
             std::cerr << "URL: " << config.api_host << uri << std::endl;
 
             if (!response.body.empty()) {
-                if (response.body.length() > 100) {
-                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 100) << "..." << std::endl;
+                if (response.body.length() > 200) {
+                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 200) << " ..." << std::endl;
                 } else {
                     std::cerr << "RestClient HTTP response: " << response.body << std::endl;
                 }
@@ -256,8 +256,8 @@ namespace Gameap {
             std::cerr << "URL: " << config.api_host << uri << std::endl;
 
             if (!response.body.empty()) {
-                if (response.body.length() > 100) {
-                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 100) << std::endl;
+                if (response.body.length() > 200) {
+                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 200) << " ..." << std::endl;
                 } else {
                     std::cerr << "RestClient HTTP response: " << response.body << std::endl;
                 }
