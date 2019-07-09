@@ -37,6 +37,14 @@ namespace Gameap {
             std::cerr << "RestClient HTTP response code (GET): " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
 
+            if (!response.body.empty()) {
+                if (response.body.length() > 100) {
+                    std::cerr << "RestClient HTTP response: " << response.body.substr(100) << std::endl;
+                } else {
+                    std::cerr << "RestClient HTTP response: " << response.body << std::endl;
+                }
+            }
+
             m_errors_count++;
 
             throw Rest::RestapiException("RestClient error. Token getting error.");
@@ -86,6 +94,14 @@ namespace Gameap {
 
             std::cerr << "RestClient HTTP response code (GET): " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
+
+            if (!response.body.empty()) {
+                if (response.body.length() > 100) {
+                    std::cerr << "RestClient HTTP response: " << response.body.substr(100) << std::endl;
+                } else {
+                    std::cerr << "RestClient HTTP response: " << response.body << std::endl;
+                }
+            }
 
             throw Rest::RestapiException("RestClient error");
         } else {
@@ -148,6 +164,14 @@ namespace Gameap {
             std::cerr << "RestClient HTTP response code (POST): " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
 
+            if (!response.body.empty()) {
+                if (response.body.length() > 100) {
+                    std::cerr << "RestClient HTTP response: " << response.body.substr(100) << std::endl;
+                } else {
+                    std::cerr << "RestClient HTTP response: " << response.body << std::endl;
+                }
+            }
+
             throw Rest::RestapiException("RestClient error");
         }
     }
@@ -186,6 +210,14 @@ namespace Gameap {
             std::cerr << "RestClient HTTP response code (PUT): " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
 
+            if (!response.body.empty()) {
+                if (response.body.length() > 100) {
+                    std::cerr << "RestClient HTTP response: " << response.body.substr(100) << std::endl;
+                } else {
+                    std::cerr << "RestClient HTTP response: " << response.body << std::endl;
+                }
+            }
+
             throw Rest::RestapiException("RestClient error");
         }
     }
@@ -219,6 +251,14 @@ namespace Gameap {
 
             std::cerr << "RestClient HTTP response code (PATCH): " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
+
+            if (!response.body.empty()) {
+                if (response.body.length() > 100) {
+                    std::cerr << "RestClient HTTP response: " << response.body.substr(100) << std::endl;
+                } else {
+                    std::cerr << "RestClient HTTP response: " << response.body << std::endl;
+                }
+            }
 
             throw Rest::RestapiException("RestClient error");
         }
