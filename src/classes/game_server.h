@@ -21,8 +21,8 @@
 #define INST_DIR 2
 
 #define SERVER_NOT_INSTALLED        0
-#define SERVER_INTALLED             1
-#define SERVER_INTALL_IN_PROCESS    2
+#define SERVER_INSTALLED            1
+#define SERVER_INSTALL_IN_PROCESS   2
 
 #define TIME_UPDDIFF 120
 #define TIME_INSTALL_BLOCK 1800

@@ -38,6 +38,8 @@ GameServer::GameServer(ulong mserver_id)
     m_server_id = mserver_id;
     m_last_update_vars = 0;
 
+    m_last_process_check = 0;
+
     m_staft_crash_disabled = false;
     m_cmd_output = std::make_shared<std::string> ("");
 
@@ -270,7 +272,7 @@ int GameServer::start_server()
 
 void GameServer::start_if_need()
 {
-    if (m_installed != SERVER_INTALLED) {
+    if (m_installed != SERVER_INSTALLED) {
         return;
     }
 
@@ -321,7 +323,7 @@ int GameServer::update_server()
     }
 
     _update_vars(true);
-    _set_installed(SERVER_INTALL_IN_PROCESS);
+    _set_installed(SERVER_INSTALL_IN_PROCESS);
 
     DedicatedServer& deds = DedicatedServer::getInstance();
     std::string update_cmd = deds.get_script_cmd(DS_SCRIPT_UPDATE);
@@ -334,7 +336,7 @@ int GameServer::update_server()
         int result = _exec(update_cmd);
 
         if (result == EXIT_SUCCESS_CODE) {
-            _set_installed(SERVER_INTALLED);
+            _set_installed(SERVER_INSTALLED);
             return SUCCESS_STATUS_INT;
         } else {
             _set_installed(SERVER_NOT_INSTALLED);
@@ -619,7 +621,7 @@ int GameServer::update_server()
     }
 
     // Update installed = 1
-    _set_installed(SERVER_INTALLED);
+    _set_installed(SERVER_INSTALLED);
 
     return SUCCESS_STATUS_INT;
 }
@@ -636,7 +638,7 @@ void GameServer::_error(std::string msg)
 
 void GameServer::_set_installed(unsigned int status)
 {
-    m_install_process = (status == SERVER_INTALL_IN_PROCESS);
+    m_install_process = (status == SERVER_INSTALL_IN_PROCESS);
     m_install_status_changed = std::time(nullptr);
     m_installed = status;
 }
@@ -864,7 +866,7 @@ bool GameServer::_server_status_cmd()
  */
 bool GameServer::status_server()
 {
-    if (m_installed != SERVER_INTALLED) {
+    if (m_installed != SERVER_INSTALLED) {
         return false;
     }
 
