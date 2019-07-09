@@ -34,6 +34,8 @@ int GameServersList::update_list()
             std::shared_ptr<GameServer> gserver = std::make_shared<GameServer>(server_id);
 
             try {
+                gserver->update(true);
+
                 servers_list.insert(
                         servers_list.end(),
                         std::pair<ulong, std::shared_ptr<GameServer>>(server_id, gserver)
