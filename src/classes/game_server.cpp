@@ -641,6 +641,14 @@ void GameServer::_set_installed(unsigned int status)
     m_install_process = (status == SERVER_INSTALL_IN_PROCESS);
     m_install_status_changed = std::time(nullptr);
     m_installed = status;
+
+    try {
+        Json::Value jdata;
+        jdata["installed"] = m_installed;
+        Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(m_server_id), jdata);
+    } catch (Gameap::Rest::RestapiException &exception) {
+        std::cerr << exception.what() << '\n';
+    }
 }
 
 // ---------------------------------------------------------------------

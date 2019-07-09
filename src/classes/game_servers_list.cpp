@@ -57,7 +57,6 @@ void GameServersList::stats_process()
         Json::Value jserver_data;
 
         jserver_data["id"] = server.second->get_id();
-        jserver_data["installed"] = server.second->m_installed;
 
         if (server.second->m_last_process_check > 0 && server.second->m_installed == SERVER_INSTALLED) {
             std::tm * ptm = std::localtime(&server.second->m_last_process_check);
@@ -66,9 +65,8 @@ void GameServersList::stats_process()
 
             jserver_data["last_process_check"] = buffer;
             jserver_data["process_active"] = static_cast<int>(server.second->m_active);
+            jupdate_data.append(jserver_data);
         }
-
-        jupdate_data.append(jserver_data);
     }
 
     try {
