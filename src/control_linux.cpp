@@ -19,6 +19,8 @@
 
 #include <iostream>
 #include <fstream>
+#include <chrono>
+#include <thread>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <ctime>
@@ -178,11 +180,17 @@ int monitor_daemon()
 
                 kill(pid, siginfo.si_signo);
                 status = 0;
+
+                // Waiting childs
+                while (kill(pid, 0) == 0) {
+                    std::this_thread::sleep_for(std::chrono::seconds(1));
+                }
+
                 break;
             }
         }
 
-        sleep(5);
+        std::this_thread::sleep_for(std::chrono::seconds(5));
     }
 
     std::cout << "GameAP Daemon stopped" << std::endl;
