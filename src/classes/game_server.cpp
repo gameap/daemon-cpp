@@ -44,7 +44,7 @@ GameServer::GameServer(ulong mserver_id)
     m_cmd_output = std::make_shared<std::string> ("");
 
     try {
-        _update_vars();
+        _update_vars(true);
     } catch (std::exception &e) {
         std::cerr << "Server update vars error: " << e.what() << std::endl;
     }
