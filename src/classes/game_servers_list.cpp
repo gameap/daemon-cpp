@@ -71,18 +71,22 @@ void GameServersList::stats_process()
         jupdate_data.append(jserver_data);
     }
 
-    Gameap::Rest::patch("/gdaemon_api/servers", jupdate_data);
+    try {
+        Gameap::Rest::patch("/gdaemon_api/servers", jupdate_data);
+    } catch (Gameap::Rest::RestapiException &exception) {
+        std::cerr << exception.what() << '\n';
+    }
 }
 
 // ---------------------------------------------------------------------
 
 void GameServersList::loop()
 {
-    stats_process();
-
     for (auto& server : servers_list) {
         server.second->loop();
     }
+
+    stats_process();
 }
 
 // ---------------------------------------------------------------------
