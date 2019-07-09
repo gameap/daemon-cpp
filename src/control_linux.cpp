@@ -182,9 +182,7 @@ int monitor_daemon()
                 status = 0;
 
                 // Waiting childs
-                while (kill(pid, 0) == 0) {
-                    std::this_thread::sleep_for(std::chrono::seconds(1));
-                }
+                wait(&status);
 
                 break;
             }
