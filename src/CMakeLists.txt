@@ -37,12 +37,25 @@ if(NOT Boost_FOUND)
     message(SEND_ERROR "Failed to find boost components")
     return()
 endif()
-message( STATUS "Found boost: ${Boost_LIBRARIES}" )
+
+if ("${Boost_LIBRARIES}" STREQUAL "")
+    set(BOOST_LIBS
+            Boost::thread
+            Boost::system
+            Boost::filesystem
+            Boost::iostreams
+            )
+else()
+    set(BOOST_LIBS
+            ${Boost_LIBRARIES}
+            )
+endif()
+message( STATUS "Found boost: ${BOOST_LIBS}" )
 
 find_library(JSONCPP_LIBRARY
-    NAMES libjson libjsoncpp jsoncpp
-    HINTS "${CMAKE_PREFIX_PATH}"
-    )
+        NAMES libjson libjsoncpp jsoncpp
+        HINTS "${CMAKE_PREFIX_PATH}"
+        )
 
 if( "${JSONCPP_LIBRARY}" STREQUAL "JSONCPP_LIBRARY-NOTFOUND" )
     message( FATAL_ERROR "Failed to find jsoncpp" )
@@ -55,9 +68,9 @@ if (NOT ${JSONCPP_INCLUDE_PATH} STREQUAL "JSONCPP_INCLUDE_PATH-NOTFOUND")
 endif()
 
 find_library(BINN_LIBRARY
-    NAMES libbinn binn
-    HINTS "${CMAKE_PREFIX_PATH}"
-    )
+        NAMES libbinn binn
+        HINTS "${CMAKE_PREFIX_PATH}"
+        )
 
 if( "${BINN_LIBRARY}" STREQUAL "BINN_LIBRARY-NOTFOUND" )
     message( FATAL_ERROR "Failed to find binn" )
@@ -70,9 +83,9 @@ if (NOT ${BINN_INCLUDE_PATH} STREQUAL "BINN_INCLUDE_PATH-NOTFOUND")
 endif()
 
 find_library(RESTCLIENT_LIBRARY
-    NAMES librestclient-cpp restclient-cpp
-    HINTS "${CMAKE_PREFIX_PATH}"
-    )
+        NAMES librestclient-cpp restclient-cpp
+        HINTS "${CMAKE_PREFIX_PATH}"
+        )
 
 if( "${RESTCLIENT_LIBRARY}" STREQUAL "RESTCLIENT_LIBRARY-NOTFOUND" )
     message( FATAL_ERROR "Failed to find restclient-cpp" )
@@ -81,9 +94,9 @@ message( STATUS "Found restclient-cpp: ${RESTCLIENT_LIBRARY}" )
 
 if(UNIX)
     find_library(CRYPT_LIBRARY
-        NAMES libcrypt crypt
-        HINTS "${CMAKE_PREFIX_PATH}"
-        )
+            NAMES libcrypt crypt
+            HINTS "${CMAKE_PREFIX_PATH}"
+            )
 
     if( "${CRYPT_LIBRARY}" STREQUAL "CRYPT_LIBRARY-NOTFOUND" )
         message( FATAL_ERROR "Failed to find crypt" )
@@ -103,21 +116,21 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs)
 
 set(SOURCES_CPP
-    config.cpp
-    daemon.cpp
-    daemon_server.cpp
-    functions/gstring.cpp
-    functions/gsystem.cpp
-    classes/dedicated_server.cpp
-    classes/game_servers_list.cpp
-    classes/game_server.cpp
-    classes/task_list.cpp
-    classes/tasks.cpp
-    functions/restapi.cpp
-    functions/auth.cpp
-    components/server/commands_component.cpp
-    components/server/files_component.cpp
-)
+        config.cpp
+        daemon.cpp
+        daemon_server.cpp
+        functions/gstring.cpp
+        functions/gsystem.cpp
+        classes/dedicated_server.cpp
+        classes/game_servers_list.cpp
+        classes/game_server.cpp
+        classes/task_list.cpp
+        classes/tasks.cpp
+        functions/restapi.cpp
+        functions/auth.cpp
+        components/server/commands_component.cpp
+        components/server/files_component.cpp
+        )
 
 if (WIN32)
     set(GDAEMON_SOURCES_CPP control_windows.cpp)
@@ -131,16 +144,16 @@ add_executable(gameap-daemon ${SOURCES_CPP} ${GDAEMON_SOURCES_CPP})
 
 if (WIN32)
     target_link_libraries (gameap-daemon
-        ${BINN_LIBRARY}
-        ${Boost_LIBRARIES}
-        ${RESTCLIENT_LIBRARY}
-        ${CURL_LIBRARIES}
-        ${JSONCPP_LIBRARY}
-        ${OPENSSL_LIBRARIES}
-        ${CMAKE_DL_LIBS}
-        ${ZLIB_LIBRARIES}
-        ${CMAKE_THREAD_LIBS_INIT}
-        )
+            ${BINN_LIBRARY}
+            ${BOOST_LIBS}
+            ${RESTCLIENT_LIBRARY}
+            ${CURL_LIBRARIES}
+            ${JSONCPP_LIBRARY}
+            ${OPENSSL_LIBRARIES}
+            ${CMAKE_DL_LIBS}
+            ${ZLIB_LIBRARIES}
+            ${CMAKE_THREAD_LIBS_INIT}
+            )
 elseif(UNIX)
 
     if(SYSCTL_DAEMON)
@@ -157,19 +170,19 @@ elseif(UNIX)
         set_target_properties(gameap-daemon PROPERTIES LINK_SEARCH_START_STATIC 1)
         set_target_properties(gameap-daemon PROPERTIES LINK_SEARCH_END_STATIC 1)
     endif()
-        
+
     target_link_libraries (gameap-daemon
-        ${BINN_LIBRARY}
-        ${Boost_LIBRARIES}
-        ${RESTCLIENT_LIBRARY}
-        ${CURL_LIBRARIES}
-        ${JSONCPP_LIBRARY}
-        ${OPENSSL_LIBRARIES}
-        ${CMAKE_DL_LIBS}
-        ${CRYPT_LIBRARY}
-        ${ZLIB_LIBRARIES}
-        ${CMAKE_THREAD_LIBS_INIT}
-        )
+            ${BINN_LIBRARY}
+            ${BOOST_LIBS}
+            ${RESTCLIENT_LIBRARY}
+            ${CURL_LIBRARIES}
+            ${JSONCPP_LIBRARY}
+            ${OPENSSL_LIBRARIES}
+            ${CMAKE_DL_LIBS}
+            ${CRYPT_LIBRARY}
+            ${ZLIB_LIBRARIES}
+            ${CMAKE_THREAD_LIBS_INIT}
+            )
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -g" )
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -g" )
