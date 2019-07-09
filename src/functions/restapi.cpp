@@ -30,7 +30,7 @@ namespace Gameap {
 
         std::string uri = "/gdaemon_api/get_token";
         conn->AppendHeader("Authorization", "Bearer " + config.api_key);
-        conn->AppendHeader("Content-Type", "application/json");
+        conn->AppendHeader("Accept", "application/json");
         RestClient::Response response = conn->get(uri);
 
         if (response.code != 200) {
@@ -39,7 +39,7 @@ namespace Gameap {
 
             if (!response.body.empty()) {
                 if (response.body.length() > 100) {
-                    std::cerr << "RestClient HTTP response: " << response.body.substr(100) << std::endl;
+                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 100) << std::endl;
                 } else {
                     std::cerr << "RestClient HTTP response: " << response.body << std::endl;
                 }
@@ -82,7 +82,7 @@ namespace Gameap {
         auto conn = std::make_shared<RestClient::Connection>(config.api_host);
 
         conn->AppendHeader("X-Auth-Token", m_api_token);
-        conn->AppendHeader("Content-Type", "application/json");
+        conn->AppendHeader("Accept", "application/json");
         RestClient::Response response = conn->get(uri);
 
         if (response.code != 200) {
@@ -97,7 +97,7 @@ namespace Gameap {
 
             if (!response.body.empty()) {
                 if (response.body.length() > 100) {
-                    std::cerr << "RestClient HTTP response: " << response.body.substr(100) << std::endl;
+                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 100) << std::endl;
                 } else {
                     std::cerr << "RestClient HTTP response: " << response.body << std::endl;
                 }
@@ -133,6 +133,7 @@ namespace Gameap {
 
         conn->AppendHeader("X-Auth-Token", m_api_token);
         conn->AppendHeader("Content-Type", "application/json");
+        conn->AppendHeader("Accept", "application/json");
 
         std::string dt = jwriter.write(data);
 
@@ -166,7 +167,7 @@ namespace Gameap {
 
             if (!response.body.empty()) {
                 if (response.body.length() > 100) {
-                    std::cerr << "RestClient HTTP response: " << response.body.substr(100) << std::endl;
+                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 100) << std::endl;
                 } else {
                     std::cerr << "RestClient HTTP response: " << response.body << std::endl;
                 }
@@ -190,6 +191,7 @@ namespace Gameap {
         auto conn = std::make_shared<RestClient::Connection>(config.api_host);
 
         conn->AppendHeader("X-Auth-Token", m_api_token);
+        conn->AppendHeader("Accept", "application/json");
         conn->AppendHeader("Content-Type", "application/json");
 
         RestClient::Response response = conn->put(uri, jwriter.write(data));
@@ -212,7 +214,7 @@ namespace Gameap {
 
             if (!response.body.empty()) {
                 if (response.body.length() > 100) {
-                    std::cerr << "RestClient HTTP response: " << response.body.substr(100) << std::endl;
+                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 100) << "..." << std::endl;
                 } else {
                     std::cerr << "RestClient HTTP response: " << response.body << std::endl;
                 }
@@ -236,6 +238,7 @@ namespace Gameap {
         auto conn = std::make_shared<RestClient::Connection>(config.api_host);
 
         conn->AppendHeader("X-Auth-Token", m_api_token);
+        conn->AppendHeader("Accept", "application/json");
         conn->AppendHeader("Content-Type", "application/json");
 
         RestClient::Response response = conn->patch(uri, jwriter.write(data));
@@ -254,7 +257,7 @@ namespace Gameap {
 
             if (!response.body.empty()) {
                 if (response.body.length() > 100) {
-                    std::cerr << "RestClient HTTP response: " << response.body.substr(100) << std::endl;
+                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 100) << std::endl;
                 } else {
                     std::cerr << "RestClient HTTP response: " << response.body << std::endl;
                 }
