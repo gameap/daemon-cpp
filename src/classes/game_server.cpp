@@ -37,6 +37,8 @@ GameServer::GameServer(ulong mserver_id)
 {
     m_server_id = mserver_id;
     m_last_update_vars = 0;
+    m_install_process = false;
+    m_install_status_changed = 0;
 
     m_last_process_check = 0;
 
