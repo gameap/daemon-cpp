@@ -49,11 +49,12 @@ void Task::run()
 
     int result_status;
     GameServersList& gslist = GameServersList::getInstance();
+
+    m_gserver = gslist.get_server(m_server_id);
+    m_gserver->update(true);
     
     if (! strcmp(m_task, TASK_GAME_SERVER_START)) {
         try {
-            m_gserver = gslist.get_server(m_server_id);
-
             if (m_gserver == nullptr) {
                 throw std::runtime_error("gslist.get_server error");
             }
@@ -63,8 +64,6 @@ void Task::run()
 
             std::this_thread::sleep_for(std::chrono::seconds(1));
             m_gserver->status_server();
-            
-            // m_gserver = nullptr;
         } catch (std::exception &e) {
             m_status = error;
             std::cerr << "gsstart error: " << e.what() << std::endl;
@@ -72,8 +71,6 @@ void Task::run()
     }
     else if (! strcmp(m_task, TASK_GAME_SERVER_STOP)) {
         try {
-            m_gserver = gslist.get_server(m_server_id);
-            
             if (m_gserver == nullptr) {
                 throw std::runtime_error("gslist.get_server error");
             }
@@ -83,8 +80,6 @@ void Task::run()
             
             std::this_thread::sleep_for(std::chrono::seconds(5));
             m_gserver->status_server();
-            
-            // m_gserver = nullptr;
         } catch (std::exception &e) {
             m_status = error;
             std::cerr << "gsstop error: " << e.what() << std::endl;
@@ -92,8 +87,6 @@ void Task::run()
     }
     else if (! strcmp(m_task, TASK_GAME_SERVER_RESTART)) {
         try {
-            m_gserver = gslist.get_server(m_server_id);
-            
             if (m_gserver == nullptr) {
                 throw std::runtime_error("gslist.get_server error");
             }
@@ -104,8 +97,6 @@ void Task::run()
 
             std::this_thread::sleep_for(std::chrono::seconds(1));
             m_gserver->status_server();
-            
-            // m_gserver = nullptr;
         } catch (std::exception &e) {
             m_status = error;
             std::cerr << "gsstop error: " << e.what() << std::endl;
@@ -113,15 +104,12 @@ void Task::run()
     }
     else if (!strcmp(m_task, TASK_GAME_SERVER_INSTALL) || !strcmp(m_task, TASK_GAME_SERVER_UPDATE)) {
         try {
-            m_gserver = gslist.get_server(m_server_id);
-            
             if (m_gserver == nullptr) {
                 throw std::runtime_error("gslist.get_server error");
             }
             
             m_gserver->clear_cmd_output();
             result_status = m_gserver->update_server();
-            // m_gserver = nullptr;
         } catch (std::exception &e) {
             m_status = error;
             std::cerr << "gsinst error: " << e.what() << std::endl;
@@ -129,16 +117,16 @@ void Task::run()
     }
     else if (! strcmp(m_task, TASK_GAME_SERVER_DELETE)) {
         try {
-            m_gserver = gslist.get_server(m_server_id);
-            
             if (m_gserver == nullptr) {
                 throw std::runtime_error("gslist.get_server error");
             }
             
             m_gserver->clear_cmd_output();
-            result_status = m_gserver->delete_server();
-            
-            // m_gserver = nullptr;
+            result_status = m_gserver->delete_files();
+
+            if (result_status == SUCCESS_STATUS_INT) {
+                gslist.delete_server(m_server_id);
+            }
         } catch (std::exception &e) {
             m_status = error;
             std::cerr << "gsdelete error: " << e.what() << std::endl;
@@ -146,7 +134,6 @@ void Task::run()
     }
     else if (! strcmp(m_task, TASK_GAME_SERVER_MOVE)) {
         // Move game server to other ds
-        m_gserver = gslist.get_server(m_server_id);
         m_gserver->clear_cmd_output();
     }
     else if (! strcmp(m_task, TASK_GAME_SERVER_EXECUTE)) {

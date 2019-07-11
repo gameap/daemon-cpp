@@ -788,11 +788,11 @@ bool GameServer::_copy_dir(
 // ---------------------------------------------------------------------
 
 /**
- * Delete Game serve
+ * Remove game server files
  *
  * @return 0 success, -1 error
  */
-int GameServer::delete_server()
+int GameServer::delete_files()
 {
     if (status_server()) {
         if (stop_server() == ERROR_STATUS_INT) {
@@ -800,12 +800,7 @@ int GameServer::delete_server()
         }
     }
 
-    // installed = 0.
-    {
-        Json::Value jdata;
-        jdata["installed"] = 0;
-        Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(m_server_id), jdata);
-    }
+    _set_installed(SERVER_NOT_INSTALLED);
 
     DedicatedServer& deds = DedicatedServer::getInstance();
     std::string delete_cmd  = deds.get_script_cmd(DS_SCRIPT_DELETE);

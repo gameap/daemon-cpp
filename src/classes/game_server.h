@@ -24,7 +24,7 @@
 #define SERVER_INSTALLED            1
 #define SERVER_INSTALL_IN_PROCESS   2
 
-#define TIME_UPDDIFF 120
+#define TIME_UPDDIFF 60
 #define TIME_INSTALL_BLOCK 1800
 
 #if defined(BOOST_POSIX_API)
@@ -113,13 +113,13 @@ public:
     GameServer(ulong mserver_id);
     
     ~GameServer() {
-        //delete cmd_output;
+        // TODO: Implement waiting until the operations (installation and other) finishing successfully
         std::cout << "Game Server Destruct" << std::endl;
     }
     
     int install_game_server();
     int update_server();
-    int delete_server();
+    int delete_files();
     int move_game_server();
     int cmd_exec(std::string cmd);
 

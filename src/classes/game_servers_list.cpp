@@ -116,3 +116,10 @@ GameServer * GameServersList::get_server(ulong server_id)
 
     return servers_list[server_id].get();
 }
+
+// ---------------------------------------------------------------------
+
+GameServersList::delete(ulong server_id)
+{
+    servers_list.erace(server_id);
+}
