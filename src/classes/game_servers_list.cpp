@@ -119,7 +119,11 @@ GameServer * GameServersList::get_server(ulong server_id)
 
 // ---------------------------------------------------------------------
 
-GameServersList::delete(ulong server_id)
+void GameServersList::delete_server(ulong server_id)
 {
-    servers_list.erace(server_id);
+    std::map<ulong, std::shared_ptr<GameServer>>::iterator it = servers_list.find(server_id);
+
+    if (it != servers_list.end()) {
+        servers_list.erase(it);
+    }
 }

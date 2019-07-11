@@ -25,7 +25,7 @@ public:
     }
 
     GameServer * get_server(ulong server_id);
-    delete_server(ulong server_id);
+    void delete_server(ulong server_id);
     void loop();
 
     void update_all();
