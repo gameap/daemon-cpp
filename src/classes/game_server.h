@@ -99,6 +99,8 @@ private:
     void _update_vars(bool force);
     void _append_cmd_output(std::string line);
 
+    int _update_server();
+
     void _set_installed(unsigned int status);
     void _try_unblock();
 

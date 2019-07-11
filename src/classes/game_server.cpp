@@ -316,7 +316,7 @@ int GameServer::stop_server()
 
 // ---------------------------------------------------------------------
 
-int GameServer::update_server()
+int GameServer::_update_server()
 {
     if (status_server()) {
         if (stop_server() == ERROR_STATUS_INT) {
@@ -626,6 +626,22 @@ int GameServer::update_server()
     _set_installed(SERVER_INSTALLED);
 
     return SUCCESS_STATUS_INT;
+}
+
+// ---------------------------------------------------------------------
+
+int GameServer::update_server()
+{
+    int result;
+
+    try {
+        result = _update_server();
+    } catch (std::exception &e) {
+        result = ERROR_STATUS_INT;
+        _set_installed(SERVER_NOT_INSTALLED);
+    }
+
+    return result;
 }
 
 // ---------------------------------------------------------------------
@@ -954,4 +970,9 @@ void GameServer::update()
 void GameServer::update(bool force)
 {
     _update_vars(force);
+}
+
+void GameServer::set_installed_status(unsigned int status)
+{
+    _set_installed(status);
 }

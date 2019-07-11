@@ -47,7 +47,9 @@ void Task::run()
 
     std::cout << "task: " << m_task << std::endl;
 
-    int result_status;
+    // Initialized error status
+    int result_status = ERROR_STATUS_INT;
+
     GameServersList& gslist = GameServersList::getInstance();
 
     m_gserver = gslist.get_server(m_server_id);
@@ -65,7 +67,8 @@ void Task::run()
             std::this_thread::sleep_for(std::chrono::seconds(1));
             m_gserver->status_server();
         } catch (std::exception &e) {
-            m_status = error;
+            m_gserver->start_server();
+            result_status = ERROR_STATUS_INT;
             std::cerr << "gsstart error: " << e.what() << std::endl;
         }
     }
@@ -81,7 +84,7 @@ void Task::run()
             std::this_thread::sleep_for(std::chrono::seconds(5));
             m_gserver->status_server();
         } catch (std::exception &e) {
-            m_status = error;
+            result_status = ERROR_STATUS_INT;
             std::cerr << "gsstop error: " << e.what() << std::endl;
         }
     }
@@ -98,7 +101,7 @@ void Task::run()
             std::this_thread::sleep_for(std::chrono::seconds(1));
             m_gserver->status_server();
         } catch (std::exception &e) {
-            m_status = error;
+            result_status = ERROR_STATUS_INT;
             std::cerr << "gsstop error: " << e.what() << std::endl;
         }
     }
@@ -111,7 +114,7 @@ void Task::run()
             m_gserver->clear_cmd_output();
             result_status = m_gserver->update_server();
         } catch (std::exception &e) {
-            m_status = error;
+            result_status = ERROR_STATUS_INT;
             std::cerr << "gsinst error: " << e.what() << std::endl;
         }
     }
@@ -128,7 +131,7 @@ void Task::run()
                 gslist.delete_server(m_server_id);
             }
         } catch (std::exception &e) {
-            m_status = error;
+            result_status = ERROR_STATUS_INT;
             std::cerr << "gsdelete error: " << e.what() << std::endl;
         }
     }
@@ -152,7 +155,7 @@ void Task::run()
                 result_status = _exec(m_cmd);
             }
         } catch (std::exception &e) {
-            m_status = error;
+            result_status = ERROR_STATUS_INT;
             std::cerr << "cmdexec error: " << e.what() << std::endl;
         }
     }
