@@ -70,6 +70,7 @@ void Task::run()
             m_gserver->start_server();
             result_status = ERROR_STATUS_INT;
             std::cerr << "gsstart error: " << e.what() << std::endl;
+            _append_cmd_output(e.what());
         }
     }
     else if (! strcmp(m_task, TASK_GAME_SERVER_STOP)) {
@@ -86,6 +87,7 @@ void Task::run()
         } catch (std::exception &e) {
             result_status = ERROR_STATUS_INT;
             std::cerr << "gsstop error: " << e.what() << std::endl;
+            _append_cmd_output(e.what());
         }
     }
     else if (! strcmp(m_task, TASK_GAME_SERVER_RESTART)) {
@@ -103,6 +105,7 @@ void Task::run()
         } catch (std::exception &e) {
             result_status = ERROR_STATUS_INT;
             std::cerr << "gsstop error: " << e.what() << std::endl;
+            _append_cmd_output(e.what());
         }
     }
     else if (!strcmp(m_task, TASK_GAME_SERVER_INSTALL) || !strcmp(m_task, TASK_GAME_SERVER_UPDATE)) {
@@ -116,6 +119,7 @@ void Task::run()
         } catch (std::exception &e) {
             result_status = ERROR_STATUS_INT;
             std::cerr << "gsinst error: " << e.what() << std::endl;
+            _append_cmd_output(e.what());
         }
     }
     else if (! strcmp(m_task, TASK_GAME_SERVER_DELETE)) {
@@ -133,6 +137,7 @@ void Task::run()
         } catch (std::exception &e) {
             result_status = ERROR_STATUS_INT;
             std::cerr << "gsdelete error: " << e.what() << std::endl;
+            _append_cmd_output(e.what());
         }
     }
     else if (! strcmp(m_task, TASK_GAME_SERVER_MOVE)) {
@@ -157,6 +162,7 @@ void Task::run()
         } catch (std::exception &e) {
             result_status = ERROR_STATUS_INT;
             std::cerr << "cmdexec error: " << e.what() << std::endl;
+            _append_cmd_output(e.what());
         }
     }
     else {
@@ -215,35 +221,40 @@ int Task::_single_exec(std::string cmd)
 
 void Task::_append_cmd_output(std::string line)
 {
+    m_cmd_output_mutex.lock();
     m_cmd_output.append(line + "\n");
+    m_cmd_output_mutex.unlock();
 }
 
 // ---------------------------------------------------------------------
 
 std::string Task::get_output()
 {
+    std::string output_part;
+
     if (m_server_id != 0 && m_gserver != nullptr) {
         std::string output;
 
         output = m_gserver->get_cmd_output();
 
-        if (output.size()-m_cur_outpos > 0) {
-            std::string output_part = output.substr(m_cur_outpos, output.size());
+        if (output.size() - m_cur_outpos > 0) {
+            output_part = output.substr(m_cur_outpos, output.size());
             m_cur_outpos += (output.size() - m_cur_outpos);
-
-            return output_part;
-        } else {
-            return "";
         }
     }
 
-    if (m_server_id == 0) {
+    if (m_server_id != 0 && m_status == error) {
+        output_part.append(m_cmd_output);
+
+        m_cmd_output_mutex.lock();
+        m_cmd_output.clear();
+        m_cmd_output_mutex.unlock();
+    } else if (m_server_id == 0) {
         if (m_cmd_output.size()-m_cur_outpos > 0) {
-            std::string output_part = m_cmd_output.substr(m_cur_outpos, m_cmd_output.size());
+            output_part = m_cmd_output.substr(m_cur_outpos, m_cmd_output.size());
             m_cur_outpos += (m_cmd_output.size() - m_cur_outpos);
-            return output_part;
         }
     }
 
-    return "";
+    return output_part;
 }

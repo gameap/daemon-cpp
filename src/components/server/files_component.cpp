@@ -108,6 +108,8 @@ void FileServerSess::do_read()
 
                     }
                 }
+            } else if (ec != boost::asio::error::operation_aborted) {
+                (*m_connection->socket).shutdown();
             }
         });
 }
@@ -159,10 +161,10 @@ void FileServerSess::do_write()
         if (!ec) {
             m_write_msg.erase();
             do_read();
+        } else if (ec != boost::asio::error::operation_aborted) {
+            (*m_connection->socket).shutdown();
         }
     });
-
-    do_read();
 }
 
 /**
@@ -653,7 +655,8 @@ void FileServerSess::write_file(size_t length)
     }
 
     if ( ! m_output_file.eof() && m_output_file.tellp() < (std::streamsize)m_filesize) {
-        m_output_file << m_read_buf;
+        m_output_file.write((char*) &m_read_buf, length);
+        std::cout << "Write file" << std::endl;
 
         if (m_output_file.bad()) {
             std::cerr << "File write error" << std::endl;
@@ -672,7 +675,6 @@ void FileServerSess::write_file(size_t length)
             clear_read_vars();
 
             write_ok();
-            // do_read();
         } else {
             do_read();
         }

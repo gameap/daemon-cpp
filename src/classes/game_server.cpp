@@ -576,8 +576,7 @@ int GameServer::_update_server()
     }
     else if (game_mod_install_from == INST_FROM_LOCREP && gt_source == INST_DIR) {
         if (_copy_dir(source_path, m_work_path) == false) {
-            _error("Unable to copy from " + source_path.string() + m_work_path.string());
-            std::cerr << "Unable to copy from " << source_path << " to " << m_work_path << std::endl;
+            _error("Unable to copy from " + source_path.string() + " to " + m_work_path.string());
             return ERROR_STATUS_INT;
         }
     }
@@ -637,6 +636,7 @@ int GameServer::update_server()
     try {
         result = _update_server();
     } catch (std::exception &e) {
+        _error(e.what());
         result = ERROR_STATUS_INT;
         _set_installed(SERVER_NOT_INSTALLED);
     }
@@ -649,7 +649,7 @@ int GameServer::update_server()
 void GameServer::_error(std::string msg)
 {
     _append_cmd_output(msg);
-    std::cerr << msg << std::endl;
+    std::cerr << msg << '\n';
 }
 
 // ---------------------------------------------------------------------
@@ -689,8 +689,7 @@ int GameServer::_unpack_archive(fs::path const & archive)
 
     if (archive.extension().string() == ".rar") {
         std::string errorMsg = "RAR archive not supported. Use 7z, zip, tar, xz, gz or bz2 archives";
-        _append_cmd_output(errorMsg);
-        std::cerr << errorMsg << std::endl;
+        _error(errorMsg);
         return ERROR_STATUS_INT;
     }
 
@@ -749,24 +748,20 @@ bool GameServer::_copy_dir(
     try {
         // Check whether the function call is valid
         if(!fs::exists(source) || !fs::is_directory(source)) {
-            _append_cmd_output("Source dir not found:  " + source.string());
-            std::cerr << "Source directory " << source.string()
-                << " does not exist or is not a directory." << '\n';
+            _error("Source dir not found:  " + source.string() + " does not exist or is not a directory.");
             return false;
         }
         
         if (!fs::exists(destination)) {
             // Create the destination directory
             if (!fs::create_directory(destination)) {
-                _append_cmd_output("Create failed:  " + destination.string());
-                std::cerr << "Unable to create destination directory"
-                    << destination.string() << '\n';
+                _error("Unable to create destination directory" + destination.string());
                 return false;
             }
         }
         
     } catch(fs::filesystem_error const & e) {
-        std::cerr << e.what() << std::endl;
+        _error(e.what());
         return false;
     }
 
@@ -793,7 +788,7 @@ bool GameServer::_copy_dir(
                 }
             }
         } catch(fs::filesystem_error const & e) {
-            std:: cerr << e.what() << std::endl;
+            _error(e.what());
             return false;
         }
     }
@@ -834,7 +829,7 @@ int GameServer::delete_files()
             fs::remove_all(m_work_path);
         }
         catch (fs::filesystem_error &e) {
-            std::cerr << "Error remove: " << e.what() << std::endl;
+            _error("Unable to remove: " + std::string(e.what()));
             return ERROR_STATUS_INT;
         }
     }
@@ -970,9 +965,4 @@ void GameServer::update()
 void GameServer::update(bool force)
 {
     _update_vars(force);
-}
-
-void GameServer::set_installed_status(unsigned int status)
-{
-    _set_installed(status);
 }

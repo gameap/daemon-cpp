@@ -38,6 +38,7 @@ private:
     std::string m_data;
     std::string m_cmd;
     std::string m_cmd_output;
+    std::mutex m_cmd_output_mutex;
     
     size_t m_cur_outpos;
     
