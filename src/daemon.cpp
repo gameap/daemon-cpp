@@ -96,7 +96,7 @@ int check_tasks()
                     }
                 }
 
-                if (output.empty() == false) {
+                if (output.length() > 0) {
 
                     try {
                         Json::Value jdata;
@@ -112,7 +112,7 @@ int check_tasks()
             }
 
             // End task. Erase data
-            if ((**it).get_status() == TASK_ERROR || (**it).get_status() == TASK_SUCCESS) {
+            if ((**it).get_status() == TASK_ERROR || (**it).get_status() == TASK_SUCCESS || (**it).get_status() == TASK_CANCELED) {
                 if (output.empty()) {
                     try {
                         output = (**it).get_output();

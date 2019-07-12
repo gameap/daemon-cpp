@@ -149,6 +149,8 @@ namespace Gameap {
             Json::Value jvalue;
             Json::Reader jreader(Json::Features::strictMode());
 
+            std::cerr << "RestClient Request: " << data.asString() << '\n';
+
             if (jreader.parse(response.body, jvalue, false)) {
                 std::cerr << "Error: " << jvalue["message"].asString() << std::endl;
             } else {
@@ -212,6 +214,8 @@ namespace Gameap {
             std::cerr << "RestClient HTTP response code (PUT): " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
 
+            std::cerr << "RestClient Request: " << data.asString() << '\n';
+
             if (!response.body.empty()) {
                 if (response.body.length() > 200) {
                     std::cerr << "RestClient HTTP response: " << response.body.substr(0, 200) << " ..." << std::endl;
@@ -254,6 +258,8 @@ namespace Gameap {
 
             std::cerr << "RestClient HTTP response code (PATCH): " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
+
+            std::cerr << "RestClient Request: " << data.asString() << '\n';
 
             if (!response.body.empty()) {
                 if (response.body.length() > 200) {
