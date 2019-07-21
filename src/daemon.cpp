@@ -96,23 +96,36 @@ int check_tasks()
                     }
                 }
 
-                if (output.empty() == false) {
+                if (output.length() > 0) {
 
-                    try {
-                        Json::Value jdata;
-                        jdata["output"] = output;
-                        Gameap::Rest::put("/gdaemon_api/tasks/" + std::to_string((**it).get_id()) + "/output", jdata);
-                        output.erase();
-                    } catch (Gameap::Rest::RestapiException &exception) {
-                        std::cerr << "Output updating error: "
-                                  << exception.what()
-                                  << std::endl;
+                    // Try to update output.
+                    // Erase output after successful update or 5 unsuccessful attempts to update
+
+                    ushort output_update_tries = 0;
+                    while (output_update_tries < 5) {
+
+                        output_update_tries++;
+
+                        try {
+                            Json::Value jdata;
+                            jdata["output"] = output;
+                            Gameap::Rest::put("/gdaemon_api/tasks/" + std::to_string((**it).get_id()) + "/output", jdata);
+                            break;
+                        } catch (Gameap::Rest::RestapiException &exception) {
+                            std::cerr << "Output updating error: "
+                                      << exception.what()
+                                      << std::endl;
+
+                            std::this_thread::sleep_for(std::chrono::seconds(10));
+                        }
                     }
+
+                    output.erase();
                 }
             }
 
             // End task. Erase data
-            if ((**it).get_status() == TASK_ERROR || (**it).get_status() == TASK_SUCCESS) {
+            if ((**it).get_status() == TASK_ERROR || (**it).get_status() == TASK_SUCCESS || (**it).get_status() == TASK_CANCELED) {
                 if (output.empty()) {
                     try {
                         output = (**it).get_output();

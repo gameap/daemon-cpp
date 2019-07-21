@@ -11,6 +11,7 @@
 #define TASK_WORKING    2
 #define TASK_ERROR      3
 #define TASK_SUCCESS    4
+#define TASK_CANCELED   5
 
 #define TASK_GAME_SERVER_START      "gsstart"
 #define TASK_GAME_SERVER_PAUSE      "gspause" // NOT implemented
@@ -38,6 +39,7 @@ private:
     std::string m_data;
     std::string m_cmd;
     std::string m_cmd_output;
+    std::mutex m_cmd_output_mutex;
     
     size_t m_cur_outpos;
     

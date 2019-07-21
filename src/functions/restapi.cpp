@@ -135,9 +135,8 @@ namespace Gameap {
         conn->AppendHeader("Content-Type", "application/json");
         conn->AppendHeader("Accept", "application/json");
 
-        std::string dt = jwriter.write(data);
-
-        RestClient::Response response = conn->post(uri, jwriter.write(data));
+        std::string write_data = jwriter.write(data);
+        RestClient::Response response = conn->post(uri, write_data);
 
         if (response.code == 201) {
             m_errors_count = 0;
@@ -148,6 +147,8 @@ namespace Gameap {
 
             Json::Value jvalue;
             Json::Reader jreader(Json::Features::strictMode());
+
+            std::cerr << "RestClient Request: " << write_data << '\n';
 
             if (jreader.parse(response.body, jvalue, false)) {
                 std::cerr << "Error: " << jvalue["message"].asString() << std::endl;
@@ -194,7 +195,8 @@ namespace Gameap {
         conn->AppendHeader("Accept", "application/json");
         conn->AppendHeader("Content-Type", "application/json");
 
-        RestClient::Response response = conn->put(uri, jwriter.write(data));
+        std::string write_data = jwriter.write(data);
+        RestClient::Response response = conn->put(uri, write_data);
 
         if (response.code == 200) {
             m_errors_count = 0;
@@ -211,6 +213,8 @@ namespace Gameap {
 
             std::cerr << "RestClient HTTP response code (PUT): " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
+
+            std::cerr << "RestClient Request: " << write_data << '\n';
 
             if (!response.body.empty()) {
                 if (response.body.length() > 200) {
@@ -241,7 +245,8 @@ namespace Gameap {
         conn->AppendHeader("Accept", "application/json");
         conn->AppendHeader("Content-Type", "application/json");
 
-        RestClient::Response response = conn->patch(uri, jwriter.write(data));
+        std::string write_data = jwriter.write(data);
+        RestClient::Response response = conn->patch(uri, write_data);
 
         if (response.code == 200) {
             std::cout << "API. Resource Updated" << std::endl;
@@ -254,6 +259,8 @@ namespace Gameap {
 
             std::cerr << "RestClient HTTP response code (PATCH): " << response.code << std::endl;
             std::cerr << "URL: " << config.api_host << uri << std::endl;
+
+            std::cerr << "RestClient Request: " << write_data << '\n';
 
             if (!response.body.empty()) {
                 if (response.body.length() > 200) {

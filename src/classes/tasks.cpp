@@ -47,13 +47,16 @@ void Task::run()
 
     std::cout << "task: " << m_task << std::endl;
 
-    int result_status;
+    // Initialized error status
+    int result_status = ERROR_STATUS_INT;
+
     GameServersList& gslist = GameServersList::getInstance();
+
+    m_gserver = gslist.get_server(m_server_id);
+    m_gserver->update(true);
     
     if (! strcmp(m_task, TASK_GAME_SERVER_START)) {
         try {
-            m_gserver = gslist.get_server(m_server_id);
-
             if (m_gserver == nullptr) {
                 throw std::runtime_error("gslist.get_server error");
             }
@@ -63,17 +66,15 @@ void Task::run()
 
             std::this_thread::sleep_for(std::chrono::seconds(1));
             m_gserver->status_server();
-            
-            // m_gserver = nullptr;
         } catch (std::exception &e) {
-            m_status = error;
+            m_gserver->start_server();
+            result_status = ERROR_STATUS_INT;
             std::cerr << "gsstart error: " << e.what() << std::endl;
+            _append_cmd_output(e.what());
         }
     }
     else if (! strcmp(m_task, TASK_GAME_SERVER_STOP)) {
         try {
-            m_gserver = gslist.get_server(m_server_id);
-            
             if (m_gserver == nullptr) {
                 throw std::runtime_error("gslist.get_server error");
             }
@@ -83,17 +84,14 @@ void Task::run()
             
             std::this_thread::sleep_for(std::chrono::seconds(5));
             m_gserver->status_server();
-            
-            // m_gserver = nullptr;
         } catch (std::exception &e) {
-            m_status = error;
+            result_status = ERROR_STATUS_INT;
             std::cerr << "gsstop error: " << e.what() << std::endl;
+            _append_cmd_output(e.what());
         }
     }
     else if (! strcmp(m_task, TASK_GAME_SERVER_RESTART)) {
         try {
-            m_gserver = gslist.get_server(m_server_id);
-            
             if (m_gserver == nullptr) {
                 throw std::runtime_error("gslist.get_server error");
             }
@@ -104,49 +102,46 @@ void Task::run()
 
             std::this_thread::sleep_for(std::chrono::seconds(1));
             m_gserver->status_server();
-            
-            // m_gserver = nullptr;
         } catch (std::exception &e) {
-            m_status = error;
+            result_status = ERROR_STATUS_INT;
             std::cerr << "gsstop error: " << e.what() << std::endl;
+            _append_cmd_output(e.what());
         }
     }
     else if (!strcmp(m_task, TASK_GAME_SERVER_INSTALL) || !strcmp(m_task, TASK_GAME_SERVER_UPDATE)) {
         try {
-            m_gserver = gslist.get_server(m_server_id);
-            
             if (m_gserver == nullptr) {
                 throw std::runtime_error("gslist.get_server error");
             }
             
             m_gserver->clear_cmd_output();
             result_status = m_gserver->update_server();
-            // m_gserver = nullptr;
         } catch (std::exception &e) {
-            m_status = error;
+            result_status = ERROR_STATUS_INT;
             std::cerr << "gsinst error: " << e.what() << std::endl;
+            _append_cmd_output(e.what());
         }
     }
     else if (! strcmp(m_task, TASK_GAME_SERVER_DELETE)) {
         try {
-            m_gserver = gslist.get_server(m_server_id);
-            
             if (m_gserver == nullptr) {
                 throw std::runtime_error("gslist.get_server error");
             }
             
             m_gserver->clear_cmd_output();
-            result_status = m_gserver->delete_server();
-            
-            // m_gserver = nullptr;
+            result_status = m_gserver->delete_files();
+
+            if (result_status == SUCCESS_STATUS_INT) {
+                gslist.delete_server(m_server_id);
+            }
         } catch (std::exception &e) {
-            m_status = error;
+            result_status = ERROR_STATUS_INT;
             std::cerr << "gsdelete error: " << e.what() << std::endl;
+            _append_cmd_output(e.what());
         }
     }
     else if (! strcmp(m_task, TASK_GAME_SERVER_MOVE)) {
         // Move game server to other ds
-        m_gserver = gslist.get_server(m_server_id);
         m_gserver->clear_cmd_output();
     }
     else if (! strcmp(m_task, TASK_GAME_SERVER_EXECUTE)) {
@@ -165,8 +160,9 @@ void Task::run()
                 result_status = _exec(m_cmd);
             }
         } catch (std::exception &e) {
-            m_status = error;
+            result_status = ERROR_STATUS_INT;
             std::cerr << "cmdexec error: " << e.what() << std::endl;
+            _append_cmd_output(e.what());
         }
     }
     else {
@@ -225,35 +221,40 @@ int Task::_single_exec(std::string cmd)
 
 void Task::_append_cmd_output(std::string line)
 {
+    m_cmd_output_mutex.lock();
     m_cmd_output.append(line + "\n");
+    m_cmd_output_mutex.unlock();
 }
 
 // ---------------------------------------------------------------------
 
 std::string Task::get_output()
 {
+    std::string output_part;
+
     if (m_server_id != 0 && m_gserver != nullptr) {
         std::string output;
 
         output = m_gserver->get_cmd_output();
 
-        if (output.size()-m_cur_outpos > 0) {
-            std::string output_part = output.substr(m_cur_outpos, output.size());
+        if (output.size() - m_cur_outpos > 0) {
+            output_part = output.substr(m_cur_outpos, output.size());
             m_cur_outpos += (output.size() - m_cur_outpos);
-
-            return output_part;
-        } else {
-            return "";
         }
     }
 
-    if (m_server_id == 0) {
+    if (m_server_id != 0 && m_status == error) {
+        output_part.append(m_cmd_output);
+
+        m_cmd_output_mutex.lock();
+        m_cmd_output.clear();
+        m_cmd_output_mutex.unlock();
+    } else if (m_server_id == 0) {
         if (m_cmd_output.size()-m_cur_outpos > 0) {
-            std::string output_part = m_cmd_output.substr(m_cur_outpos, m_cmd_output.size());
+            output_part = m_cmd_output.substr(m_cur_outpos, m_cmd_output.size());
             m_cur_outpos += (m_cmd_output.size() - m_cur_outpos);
-            return output_part;
         }
     }
 
-    return "";
+    return output_part;
 }

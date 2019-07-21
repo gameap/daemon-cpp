@@ -37,6 +37,8 @@ GameServer::GameServer(ulong mserver_id)
 {
     m_server_id = mserver_id;
     m_last_update_vars = 0;
+    m_install_process = false;
+    m_install_status_changed = 0;
 
     m_last_process_check = 0;
 
@@ -44,7 +46,7 @@ GameServer::GameServer(ulong mserver_id)
     m_cmd_output = std::make_shared<std::string> ("");
 
     try {
-        _update_vars();
+        _update_vars(true);
     } catch (std::exception &e) {
         std::cerr << "Server update vars error: " << e.what() << std::endl;
     }
@@ -314,7 +316,7 @@ int GameServer::stop_server()
 
 // ---------------------------------------------------------------------
 
-int GameServer::update_server()
+int GameServer::_update_server()
 {
     if (status_server()) {
         if (stop_server() == ERROR_STATUS_INT) {
@@ -574,8 +576,7 @@ int GameServer::update_server()
     }
     else if (game_mod_install_from == INST_FROM_LOCREP && gt_source == INST_DIR) {
         if (_copy_dir(source_path, m_work_path) == false) {
-            _error("Unable to copy from " + source_path.string() + m_work_path.string());
-            std::cerr << "Unable to copy from " << source_path << " to " << m_work_path << std::endl;
+            _error("Unable to copy from " + source_path.string() + " to " + m_work_path.string());
             return ERROR_STATUS_INT;
         }
     }
@@ -628,10 +629,27 @@ int GameServer::update_server()
 
 // ---------------------------------------------------------------------
 
+int GameServer::update_server()
+{
+    int result;
+
+    try {
+        result = _update_server();
+    } catch (std::exception &e) {
+        _error(e.what());
+        result = ERROR_STATUS_INT;
+        _set_installed(SERVER_NOT_INSTALLED);
+    }
+
+    return result;
+}
+
+// ---------------------------------------------------------------------
+
 void GameServer::_error(std::string msg)
 {
     _append_cmd_output(msg);
-    std::cerr << msg << std::endl;
+    std::cerr << msg << '\n';
 }
 
 // ---------------------------------------------------------------------
@@ -641,6 +659,14 @@ void GameServer::_set_installed(unsigned int status)
     m_install_process = (status == SERVER_INSTALL_IN_PROCESS);
     m_install_status_changed = std::time(nullptr);
     m_installed = status;
+
+    try {
+        Json::Value jdata;
+        jdata["installed"] = m_installed;
+        Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(m_server_id), jdata);
+    } catch (Gameap::Rest::RestapiException &exception) {
+        std::cerr << exception.what() << '\n';
+    }
 }
 
 // ---------------------------------------------------------------------
@@ -663,8 +689,7 @@ int GameServer::_unpack_archive(fs::path const & archive)
 
     if (archive.extension().string() == ".rar") {
         std::string errorMsg = "RAR archive not supported. Use 7z, zip, tar, xz, gz or bz2 archives";
-        _append_cmd_output(errorMsg);
-        std::cerr << errorMsg << std::endl;
+        _error(errorMsg);
         return ERROR_STATUS_INT;
     }
 
@@ -723,24 +748,20 @@ bool GameServer::_copy_dir(
     try {
         // Check whether the function call is valid
         if(!fs::exists(source) || !fs::is_directory(source)) {
-            _append_cmd_output("Source dir not found:  " + source.string());
-            std::cerr << "Source directory " << source.string()
-                << " does not exist or is not a directory." << '\n';
+            _error("Source dir not found:  " + source.string() + " does not exist or is not a directory.");
             return false;
         }
         
         if (!fs::exists(destination)) {
             // Create the destination directory
             if (!fs::create_directory(destination)) {
-                _append_cmd_output("Create failed:  " + destination.string());
-                std::cerr << "Unable to create destination directory"
-                    << destination.string() << '\n';
+                _error("Unable to create destination directory" + destination.string());
                 return false;
             }
         }
         
     } catch(fs::filesystem_error const & e) {
-        std::cerr << e.what() << std::endl;
+        _error(e.what());
         return false;
     }
 
@@ -767,7 +788,7 @@ bool GameServer::_copy_dir(
                 }
             }
         } catch(fs::filesystem_error const & e) {
-            std:: cerr << e.what() << std::endl;
+            _error(e.what());
             return false;
         }
     }
@@ -778,11 +799,11 @@ bool GameServer::_copy_dir(
 // ---------------------------------------------------------------------
 
 /**
- * Delete Game serve
+ * Remove game server files
  *
  * @return 0 success, -1 error
  */
-int GameServer::delete_server()
+int GameServer::delete_files()
 {
     if (status_server()) {
         if (stop_server() == ERROR_STATUS_INT) {
@@ -790,12 +811,7 @@ int GameServer::delete_server()
         }
     }
 
-    // installed = 0.
-    {
-        Json::Value jdata;
-        jdata["installed"] = 0;
-        Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(m_server_id), jdata);
-    }
+    _set_installed(SERVER_NOT_INSTALLED);
 
     DedicatedServer& deds = DedicatedServer::getInstance();
     std::string delete_cmd  = deds.get_script_cmd(DS_SCRIPT_DELETE);
@@ -813,7 +829,7 @@ int GameServer::delete_server()
             fs::remove_all(m_work_path);
         }
         catch (fs::filesystem_error &e) {
-            std::cerr << "Error remove: " << e.what() << std::endl;
+            _error("Unable to remove: " + std::string(e.what()));
             return ERROR_STATUS_INT;
         }
     }

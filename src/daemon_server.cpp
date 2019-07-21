@@ -92,6 +92,8 @@ void DaemonServerSess::do_read()
                             binn_free(read_binn);
                             do_write();
                         }
+                    } else if (ec != boost::asio::error::operation_aborted) {
+                        (*connection_->socket).shutdown();
                     }
                     else {
                         std::cout << "ERROR: " << ec << std::endl;
@@ -166,6 +168,8 @@ void DaemonServerSess::do_write()
         [this, self](boost::system::error_code ec, std::size_t) {
             if (!ec) {
                 do_read();
+            } else if (ec != boost::asio::error::operation_aborted) {
+                (*connection_->socket).shutdown();
             }
     });
 }

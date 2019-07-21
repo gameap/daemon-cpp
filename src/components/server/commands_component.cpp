@@ -34,6 +34,8 @@ void CommandsSession::do_read()
 
                 m_read_buffer.consume(length);
                 cmd_process();
+            } else if (ec != boost::asio::error::operation_aborted) {
+                (*m_connection->socket).shutdown();
             }
         });
 }
@@ -51,10 +53,10 @@ void CommandsSession::do_write()
             if (!ec) {
                 m_write_msg.erase();
                 do_read();
+            } else if (ec != boost::asio::error::operation_aborted) {
+                (*m_connection->socket).shutdown();
             }
         });
-
-    do_read();
 }
 
 /**

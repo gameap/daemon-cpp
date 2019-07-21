@@ -57,7 +57,6 @@ void GameServersList::stats_process()
         Json::Value jserver_data;
 
         jserver_data["id"] = server.second->get_id();
-        jserver_data["installed"] = server.second->m_installed;
 
         if (server.second->m_last_process_check > 0 && server.second->m_installed == SERVER_INSTALLED) {
             std::tm * ptm = std::localtime(&server.second->m_last_process_check);
@@ -66,23 +65,26 @@ void GameServersList::stats_process()
 
             jserver_data["last_process_check"] = buffer;
             jserver_data["process_active"] = static_cast<int>(server.second->m_active);
+            jupdate_data.append(jserver_data);
         }
-
-        jupdate_data.append(jserver_data);
     }
 
-    Gameap::Rest::patch("/gdaemon_api/servers", jupdate_data);
+    try {
+        Gameap::Rest::patch("/gdaemon_api/servers", jupdate_data);
+    } catch (Gameap::Rest::RestapiException &exception) {
+        std::cerr << exception.what() << '\n';
+    }
 }
 
 // ---------------------------------------------------------------------
 
 void GameServersList::loop()
 {
-    stats_process();
-
     for (auto& server : servers_list) {
         server.second->loop();
     }
+
+    stats_process();
 }
 
 // ---------------------------------------------------------------------
@@ -113,4 +115,15 @@ GameServer * GameServersList::get_server(ulong server_id)
     }
 
     return servers_list[server_id].get();
+}
+
+// ---------------------------------------------------------------------
+
+void GameServersList::delete_server(ulong server_id)
+{
+    std::map<ulong, std::shared_ptr<GameServer>>::iterator it = servers_list.find(server_id);
+
+    if (it != servers_list.end()) {
+        servers_list.erase(it);
+    }
 }
