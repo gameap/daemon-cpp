@@ -528,7 +528,7 @@ int GameServer::_update_server()
         std::string archive = boost::str(boost::format("%1%/%2%") % m_work_path.string() % source_path.filename().string());
         
         if (_unpack_archive(archive) == ERROR_STATUS_INT) {
-            _error("Unable to unpack: " + source_path.string());
+            _error("Unable to unpack: " + archive);
 
             fs::remove(archive);
             return ERROR_STATUS_INT;
@@ -591,7 +591,7 @@ int GameServer::_update_server()
         std::string archive = boost::str(boost::format("%1%/%2%") % m_work_path.string() % source_path.filename().string());
 
         if (_unpack_archive(archive) == ERROR_STATUS_INT) {
-            _error("Unable to unpack: " + source_path.string());
+            _error("Unable to unpack: " + archive);
             fs::remove(archive);
             return ERROR_STATUS_INT;
         }

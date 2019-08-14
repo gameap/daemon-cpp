@@ -36,6 +36,7 @@ public:
     static constexpr ushort DAEMON_SERVER_MODE_AUTH       = 1;
     static constexpr ushort DAEMON_SERVER_MODE_CMD        = 2;
     static constexpr ushort DAEMON_SERVER_MODE_FILES      = 3;
+    static constexpr ushort DAEMON_SERVER_MODE_STATUS     = 4;
 
     DaemonServerSess(std::shared_ptr<Connection> connection)
             : connection_(std::move(connection))

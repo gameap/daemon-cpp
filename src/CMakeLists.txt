@@ -130,6 +130,7 @@ set(SOURCES_CPP
         functions/auth.cpp
         components/server/commands_component.cpp
         components/server/files_component.cpp
+        components/server/status_component.cpp
         )
 
 if (WIN32)
