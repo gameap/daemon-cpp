@@ -886,6 +886,10 @@ bool GameServer::status_server()
         return false;
     }
 
+    if (m_last_process_check > time(nullptr) - TIME_CACHE_STATUS) {
+        return m_active;
+    }
+
     try {
         _update_vars();
     } catch (std::exception &e) {

@@ -27,6 +27,8 @@
 #define TIME_UPDDIFF 60
 #define TIME_INSTALL_BLOCK 1800
 
+#define TIME_CACHE_STATUS 30
+
 #if defined(BOOST_POSIX_API)
     #define AFTER_INSTALL_SCRIPT "gdaemon_after_install.sh"
 
