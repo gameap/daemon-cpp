@@ -226,7 +226,7 @@ void GameServer::clear_cmd_output()
 
 // ---------------------------------------------------------------------
 
-void GameServer::replace_shortcodes(std::string &cmd)
+void GameServer::_replace_shortcodes(std::string &cmd)
 {
     cmd = str_replace("{dir}", m_work_path.string(), cmd);
 
@@ -261,7 +261,7 @@ int GameServer::start_server()
 
     DedicatedServer& deds = DedicatedServer::getInstance();
     std::string cmd  = str_replace("{command}", m_start_command, deds.get_script_cmd(DS_SCRIPT_START));
-    replace_shortcodes(cmd);
+    _replace_shortcodes(cmd);
 
     m_staft_crash_disabled = false;
 
@@ -305,7 +305,7 @@ int GameServer::stop_server()
     DedicatedServer& deds = DedicatedServer::getInstance();
     // std::string cmd  = str_replace("{command}", "", deds.get_script_cmd(DS_SCRIPT_STOP));
     std::string cmd  = deds.get_script_cmd(DS_SCRIPT_STOP);
-    replace_shortcodes(cmd);
+    _replace_shortcodes(cmd);
 
     m_staft_crash_disabled = true;
     
@@ -334,7 +334,7 @@ int GameServer::_update_server()
     std::cout << "Server update starting..." << std::endl;
 
     if (update_cmd.length() > 0) {
-        replace_shortcodes(update_cmd);
+        _replace_shortcodes(update_cmd);
         int result = _exec(update_cmd);
 
         if (result == EXIT_SUCCESS_CODE) {
@@ -817,7 +817,7 @@ int GameServer::delete_files()
     std::string delete_cmd  = deds.get_script_cmd(DS_SCRIPT_DELETE);
 
     if (delete_cmd.length() > 0) {
-        replace_shortcodes(delete_cmd);
+        _replace_shortcodes(delete_cmd);
         int result = _exec(delete_cmd);
 
         if (result != EXIT_SUCCESS_CODE) {
@@ -866,7 +866,7 @@ bool GameServer::_server_status_cmd()
 {
     DedicatedServer& deds = DedicatedServer::getInstance();
     std::string status_cmd  = deds.get_script_cmd(DS_SCRIPT_STATUS);
-    replace_shortcodes(status_cmd);
+    _replace_shortcodes(status_cmd);
 
     int result = _exec(status_cmd, true);
 

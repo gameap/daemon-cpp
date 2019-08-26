@@ -44,6 +44,46 @@ namespace GameAP {
 namespace fs = boost::filesystem;
 
 class GameServer {
+public:
+    bool m_active;
+    std::time_t m_last_process_check;
+    bool m_install_process;
+    unsigned int m_installed;
+
+    GameServer(ulong mserver_id);
+    
+    ~GameServer() {
+        // TODO: Implement waiting until the operations (installation and other) finishing successfully
+        std::cout << "Game Server Destruct" << std::endl;
+    }
+    
+    int install_game_server();
+    int update_server();
+    int delete_files();
+    int move_game_server();
+    int cmd_exec(std::string cmd);
+
+    int start_server();
+    void start_if_need();
+    int stop_server();
+    bool status_server();
+
+    int get_game_server_load();
+    
+    // size_t get_cmd_output(std::string * output, size_t position);
+    int get_cmd_output(std::string * str_out);
+    std::string get_cmd_output();
+    void clear_cmd_output();
+
+    void loop();
+
+    void update();
+    void update(bool force);
+
+    unsigned int get_id() {
+        return m_server_id;
+    }
+
 private:
     std::string m_uuid;
     std::string m_uuid_short;
@@ -60,7 +100,7 @@ private:
 
     std::string m_user;
     std::map<std::string, std::string> m_aliases;
-    
+
     std::string m_start_command;
     std::string m_game_scode;
 
@@ -83,11 +123,13 @@ private:
     std::mutex m_cmd_output_mutex;
     std::shared_ptr<std::string> m_cmd_output;
 
+    void _replace_shortcodes(std::string &cmd);
+
     int _unpack_archive(fs::path const & archive);
-    
+
     bool _copy_dir(
-        fs::path const & source,
-        fs::path const & destination
+            fs::path const & source,
+            fs::path const & destination
     );
 
     int _exec(std::string cmd, bool not_append);
@@ -105,47 +147,6 @@ private:
     void _try_unblock();
 
     void _error(std::string msg);
-    
-public:
-    bool m_active;
-    std::time_t m_last_process_check;
-    bool m_install_process;
-    unsigned int m_installed;
-
-    GameServer(ulong mserver_id);
-    
-    ~GameServer() {
-        // TODO: Implement waiting until the operations (installation and other) finishing successfully
-        std::cout << "Game Server Destruct" << std::endl;
-    }
-    
-    int install_game_server();
-    int update_server();
-    int delete_files();
-    int move_game_server();
-    int cmd_exec(std::string cmd);
-
-    void replace_shortcodes(std::string &cmd);
-    int start_server();
-    void start_if_need();
-    int stop_server();
-    bool status_server();
-
-    int get_game_server_load();
-    
-    // size_t get_cmd_output(std::string * output, size_t position);
-    int get_cmd_output(std::string * str_out);
-    std::string get_cmd_output();
-    void clear_cmd_output();
-
-    void loop();
-
-    void update();
-    void update(bool force);
-
-    unsigned int get_id() {
-        return m_server_id;
-    }
 };
 
 /* End namespace GameAP */

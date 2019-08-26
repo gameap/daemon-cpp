@@ -9,17 +9,6 @@
 namespace GameAP {
 
 class TaskList {
-private:
-    enum st {waiting = 1, working, error, success};
-
-    std::vector<Task *>tasklist;
-    std::vector<ulong>taskids;
-
-    void _clear_tasklist();
-
-    TaskList() {}
-    TaskList( const TaskList&);
-    TaskList& operator=( TaskList& );
 public:
     static TaskList& getInstance() {
         static TaskList instance;
@@ -40,6 +29,17 @@ public:
     bool is_end(std::vector<Task *>::iterator curit);
 
     bool stop;
+private:
+    enum st {waiting = 1, working, error, success};
+
+    std::vector<Task *>tasklist;
+    std::vector<ulong>taskids;
+
+    void _clear_tasklist();
+
+    TaskList() {}
+    TaskList( const TaskList&);
+    TaskList& operator=( TaskList& );
 };
 
 /* End namespace GameAP */
