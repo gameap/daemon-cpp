@@ -234,7 +234,8 @@ int run_server(std::string ip, ushort port)
 
     }
     catch (std::exception& e) {
-        std::cerr << "Exception: " << e.what() << "\n";
+        std::cerr << "Daemon Server. Exception: " << e.what() << "\n";
+        return 1;
     }
 
 

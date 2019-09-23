@@ -180,14 +180,22 @@ int run_daemon()
         return -1;
     }
 
-    auto run_daemon_server = [&]() {
-        std::cout << "Running Daemon Server" << std::endl;
-        run_server(config.listen_ip, config.listen_port);
-        std::cout << "Daemon Server stopped" << std::endl;
-    };
+    // Run Daemon Server
+    std::thread daemon_server([&]() {
+        // TODO: Check fails
+        // TODO: Replace tasks.stop to some status checker class or something else
+        TaskList& tasks = TaskList::getInstance();
 
-    std::thread daemon_server(run_daemon_server);
+        int server_exit_status;
 
+        while (!tasks.stop) {
+            std::cout << "Running Daemon Server" << std::endl;
+            server_exit_status = run_server(config.listen_ip, config.listen_port);
+            std::cout << "Daemon Server stopped (Exit status: " << server_exit_status << ")" << std::endl;
+        }
+    });
+
+    // Run Tasks
     if (config.ds_id == 0) {
         std::cout << "Empty Dedicated Server ID" << std::endl;
         std::cout << "Tasks feature disabled" << std::endl;
