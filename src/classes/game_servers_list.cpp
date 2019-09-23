@@ -64,7 +64,7 @@ void GameServersList::stats_process()
             std::strftime(buffer, 32, "%F %T", ptm);
 
             jserver_data["last_process_check"] = buffer;
-            jserver_data["process_active"] = static_cast<int>(server.second->m_active);
+            jserver_data["process_active"] = static_cast<int>(server.second->status_server());
             jupdate_data.append(jserver_data);
         }
     }

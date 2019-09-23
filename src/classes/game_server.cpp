@@ -932,18 +932,6 @@ bool GameServer::status_server()
 
     m_last_process_check = std::time(nullptr);
 
-    Json::Value jdata;
-    jdata["process_active"] = (int)m_active;
-
-    std::time_t now = std::time(nullptr);
-    std::tm * ptm = std::localtime(&now);
-    char buffer[32];
-    std::strftime(buffer, 32, "%F %T", ptm);
-
-    jdata["last_process_check"] = buffer;
-
-    Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(m_server_id), jdata);
-
     return (bool)m_active;
 }
 
