@@ -31,6 +31,10 @@ namespace Gameap {
         std::string uri = "/gdaemon_api/get_token";
         conn->AppendHeader("Authorization", "Bearer " + config.api_key);
         conn->AppendHeader("Accept", "application/json");
+        conn->SetUserAgent("GameAP Daemon");
+        conn->FollowRedirects(true);
+        conn->FollowRedirects(true, 3);
+
         RestClient::Response response = conn->get(uri);
 
         if (response.code != 200) {
@@ -83,6 +87,11 @@ namespace Gameap {
 
         conn->AppendHeader("X-Auth-Token", m_api_token);
         conn->AppendHeader("Accept", "application/json");
+
+        conn->SetUserAgent("GameAP Daemon");
+        conn->FollowRedirects(true);
+        conn->FollowRedirects(true, 3);
+
         RestClient::Response response = conn->get(uri);
 
         if (response.code != 200) {
@@ -134,6 +143,10 @@ namespace Gameap {
         conn->AppendHeader("X-Auth-Token", m_api_token);
         conn->AppendHeader("Content-Type", "application/json");
         conn->AppendHeader("Accept", "application/json");
+
+        conn->SetUserAgent("GameAP Daemon");
+        conn->FollowRedirects(true);
+        conn->FollowRedirects(true, 3);
 
         std::string write_data = jwriter.write(data);
         RestClient::Response response = conn->post(uri, write_data);
@@ -195,6 +208,10 @@ namespace Gameap {
         conn->AppendHeader("Accept", "application/json");
         conn->AppendHeader("Content-Type", "application/json");
 
+        conn->SetUserAgent("GameAP Daemon");
+        conn->FollowRedirects(true);
+        conn->FollowRedirects(true, 3);
+
         std::string write_data = jwriter.write(data);
         RestClient::Response response = conn->put(uri, write_data);
 
@@ -244,6 +261,10 @@ namespace Gameap {
         conn->AppendHeader("X-Auth-Token", m_api_token);
         conn->AppendHeader("Accept", "application/json");
         conn->AppendHeader("Content-Type", "application/json");
+
+        conn->SetUserAgent("GameAP Daemon");
+        conn->FollowRedirects(true);
+        conn->FollowRedirects(true, 3);
 
         std::string write_data = jwriter.write(data);
         RestClient::Response response = conn->patch(uri, write_data);
