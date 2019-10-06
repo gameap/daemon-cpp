@@ -23,7 +23,7 @@ void Task::run()
         return;
     }
 
-    if (m_server_id <= 0) {
+    if (m_server_id < 0 && m_task != TASK_GAME_SERVER_EXECUTE) {
         return;
     }
 
@@ -52,9 +52,11 @@ void Task::run()
 
     GameServersList& gslist = GameServersList::getInstance();
 
-    m_gserver = gslist.get_server(m_server_id);
-    m_gserver->update(true);
-    
+    if (m_server_id > 0) {
+        m_gserver = gslist.get_server(m_server_id);
+        m_gserver->update(true);
+    }
+
     if (! strcmp(m_task, TASK_GAME_SERVER_START)) {
         try {
             if (m_gserver == nullptr) {
