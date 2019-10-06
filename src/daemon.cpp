@@ -77,7 +77,11 @@ int check_tasks()
                 }
 
                 tasks_thrs.create_thread([=]() {
-                    (**it).run();
+                    try {
+                        (**it).run();
+                    } catch (std::exception &e) {
+                        std::cerr << "Run tasks error: " << e.what() << std::endl;
+                    }
                 });
 
                 tasks_runned.push_back((**it).get_id());
