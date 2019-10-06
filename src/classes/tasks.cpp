@@ -23,7 +23,7 @@ void Task::run()
         return;
     }
 
-    if (m_server_id < 0 && m_task != TASK_GAME_SERVER_EXECUTE) {
+    if (m_server_id <= 0 && m_task != TASK_GAME_SERVER_EXECUTE) {
         return;
     }
 
