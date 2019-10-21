@@ -431,6 +431,8 @@ int GameServer::_update_server()
         fs::create_directories(m_work_path);
     }
 
+    fs::current_path(m_work_path);
+
     if (game_install_from == INST_FROM_STEAM) {
         std::string steamcmd_fullpath = steamcmd_path + "/" + STEAMCMD;
 
@@ -452,9 +454,11 @@ int GameServer::_update_server()
         // SteamCMD installation fail without this command
 
         Config& config = Config::getInstance();
+        DedicatedServer& dedicatedServer = DedicatedServer::getInstance();
+        fs::path ds_work_path = dedicatedServer.get_work_path();
 
-        if (fs::exists(fs::current_path() / "daemon" / "runas.exe")) {
-            steamcmd_fullpath = fs::current_path().string() 
+        if (fs::exists(ds_work_path / "daemon" / "runas.exe")) {
+            steamcmd_fullpath = ds_work_path.string()
                 + "\\daemon\\runas.exe -w:"
                 + m_work_path.string() 
                 + " " 
