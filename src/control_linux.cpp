@@ -122,8 +122,7 @@ void monitor_daemon()
         if (pid == -1) {
             std::cout << "GameAP Daemon Fork failed" << std::endl;
         }
-        else if (!pid)
-        {
+        else if (!pid) {
             struct sigaction sigact{};
             sigact.sa_flags = SA_SIGINFO;
             sigact.sa_sigaction = signal_error;
@@ -147,8 +146,7 @@ void monitor_daemon()
             int run_daemon_status = run_daemon();
             exit(run_daemon_status);
         }
-        else
-        {
+        else {
             sigwaitinfo(&sigset, &siginfo);
 
             if (siginfo.si_signo == SIGCHLD) {
@@ -202,11 +200,14 @@ int main(int argc, char** argv)
 
 	Config& config = Config::getInstance();
 	config.cfg_file = "daemon.cfg";
-	config.output_log = std::string(LOG_DIRECTORY) + std::string(LOG_MAIN_FILE);
-	config.error_log = std::string(LOG_DIRECTORY) + std::string(LOG_ERROR_FILE);
 
-    if (!fs::exists(LOG_DIRECTORY)) {
-        fs::create_directory(LOG_DIRECTORY);
+    std::string log_directory = (getuid() == 0) ? std::string(LOG_DIRECTORY) : "logs/";
+
+    config.output_log = log_directory + std::string(LOG_MAIN_FILE);
+    config.error_log = log_directory + std::string(LOG_ERROR_FILE);
+
+    if (!fs::exists(log_directory)) {
+        fs::create_directory(log_directory);
     }
 
     time_t now = time(nullptr);
@@ -217,27 +218,27 @@ int main(int argc, char** argv)
     if (fs::exists(config.output_log) && fs::file_size(config.output_log) > 0) {
         fs::rename(
             config.output_log,
-            boost::str(boost::format("%1%main_%2%.log") % LOG_DIRECTORY % buffer_time)
+            boost::str(boost::format("%1%main_%2%.log") % log_directory % buffer_time)
         );
     }
 
     if (fs::exists(config.error_log) && fs::file_size(config.error_log) > 0) {
         fs::rename(
             config.error_log,
-            boost::str(boost::format("%1%error_%2%.log") % LOG_DIRECTORY % buffer_time)
+            boost::str(boost::format("%1%error_%2%.log") % log_directory % buffer_time)
         );
     }
 
-    plog::init<GameAP::DefaultLog>(plog::debug, config.output_log.c_str());
-    plog::init<GameAP::ErrorLog>(plog::debug, config.error_log.c_str());
-
-	for (int i = 0; i < argc - 1; i++) {
+    for (int i = 0; i < argc - 1; i++) {
 		if (std::string(argv[i]) == "-c") {
 			// Config file
 			config.cfg_file = std::string(argv[i + 1]);
             i++;
         }
 	}
+
+    plog::init<GameAP::MainLog>(plog::verbose, config.output_log.c_str());
+    plog::init<GameAP::ErrorLog>(plog::verbose, config.error_log.c_str());
 
 	#ifdef SYSCTL_DAEMON
         close(STDIN_FILENO);

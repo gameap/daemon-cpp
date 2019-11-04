@@ -64,7 +64,7 @@ public:
     int update_server();
     int delete_files();
     // int move_game_server(); // TODO: Implement
-    int cmd_exec(std::string cmd);
+    int cmd_exec(std::string command);
 
     int start_server();
     void start_if_need();
@@ -126,7 +126,7 @@ private:
     std::mutex m_cmd_output_mutex;
     std::shared_ptr<std::string> m_cmd_output;
 
-    void _replace_shortcodes(std::string &cmd);
+    void _replace_shortcodes(std::string &command);
 
     int _unpack_archive(fs::path const & archive);
 
@@ -135,8 +135,8 @@ private:
         fs::path const & destination
     );
 
-    int _exec(std::string cmd, bool not_append);
-    int _exec(std::string cmd);
+    int _exec(std::string command, bool not_append);
+    int _exec(std::string command);
 
     bool _server_status_cmd();
 
@@ -149,7 +149,7 @@ private:
     void _set_installed(unsigned int status);
     void _try_unblock();
 
-    void _error(std::string msg);
+    void _error(const std::string msg);
 };
 
 /* End namespace GameAP */

@@ -163,6 +163,14 @@ int run_daemon()
         return -1;
     }
 
+    plog::get<GameAP::MainLog>()->setMaxSeverity(
+        plog::severityFromString(config.log_level.c_str())
+    );
+
+    plog::get<GameAP::ErrorLog>()->setMaxSeverity(
+        plog::severityFromString(config.log_level.c_str())
+    );
+
     try {
         Gameap::Rest::get_token();
     } catch (Gameap::Rest::RestapiException &exception) {

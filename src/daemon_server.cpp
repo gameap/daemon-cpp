@@ -231,18 +231,17 @@ int run_server(const std::string& ip, const ushort port)
         std::vector<std::thread> v_services;
         v_services.reserve(DaemonServer::THREADS_NUM);
 
+        auto run_closure = [&io_service, &tasks] {
+            while(!tasks.stop) {
+                io_service.run_for(std::chrono::seconds(5));
+            }
+        };
+
         for (auto i = DaemonServer::THREADS_NUM - 1; i > 0; --i) {
-            v_services.emplace_back(
-                [&io_service] {
-                    io_service.run();
-                });
+            v_services.emplace_back(run_closure);
         }
 
-        while(!tasks.stop) {
-            io_service.run();
-        }
-
-        io_service.stop();
+        run_closure();
     }
     catch (std::exception& e) {
         GAMEAP_LOG_ERROR << "Daemon Server. Exception: " << e.what();

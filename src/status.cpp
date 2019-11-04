@@ -1,8 +1,8 @@
-#include <cstdio>
 #include <iostream>
-#include <fstream>
 
 #include <csignal>
+
+#include "log.h"
 
 #include "classes/task_list.h"
 #include "classes/game_servers_list.h"
@@ -13,7 +13,7 @@ using namespace GameAP;
 void sighandler(int signum)
 {
     if (signum == SIGUSR1) {
-        std::cout << "=== GameAP Daemon Status ===" << std::endl;
+        GAMEAP_LOG_DEBUG << "=== GameAP Daemon Status ===";
 
         /*
         std::ofstream output;
@@ -24,20 +24,20 @@ void sighandler(int signum)
          */
     } else if (signum == SIGHUP) {
         // Reloading
-        std::cout << "Handle signal" << std::endl;
+        GAMEAP_LOG_INFO << "Handle reload signal";
 
         Config& config = Config::getInstance();
         config.parse();
-        std::cout << "Config reloaded" << std::endl;
+        GAMEAP_LOG_INFO << "Config reloaded";
 
         GameServersList &gslist = GameServersList::getInstance();
         gslist.update_all(true);
 
-        std::cout << "Servers updated" << std::endl;
+        GAMEAP_LOG_INFO << "Servers updated";
 
     } else if (signum == SIGQUIT || signum == SIGTERM || signum == SIGINT) {
-        std::cout << "Handle signal" << std::endl;
-        std::cout << "Stopping tasks" << std::endl;
+        GAMEAP_LOG_INFO << "Handle quit signal";
+        GAMEAP_LOG_INFO << "Stopping tasks";
 
         TaskList& tasks = TaskList::getInstance();
         tasks.stop = true;

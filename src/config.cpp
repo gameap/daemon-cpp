@@ -68,6 +68,8 @@ int Config::parse()
         bufushort = pt.get_optional<ushort>("stats_db_update_period");
         if (*bufushort > 0) stats_db_update_period = *bufushort;
 
+        log_level = pt.get_optional<std::string>("log_level").get_value_or("debug");
+
     }
     catch (std::exception &e) {
         GAMEAP_LOG_ERROR << "Parse config error: " << e.what();
