@@ -13,6 +13,8 @@
 #undef BOOST_NO_CXX11_SCOPED_ENUMS
 #include <boost/format.hpp>
 
+#include "log.h"
+
 #include "functions/restapi.h"
 #include "functions/gsystem.h"
 #include "functions/gstring.h"
@@ -48,7 +50,7 @@ GameServer::GameServer(ulong mserver_id)
     try {
         _update_vars(true);
     } catch (std::exception &e) {
-        std::cerr << "Server update vars error: " << e.what() << std::endl;
+        GAMEAP_LOG_ERROR << "Server update vars error: " << e.what();
     }
 }
 
@@ -79,7 +81,7 @@ void GameServer::_update_vars(bool force)
         jvalue = Gameap::Rest::get("/gdaemon_api/servers/" + std::to_string(m_server_id));
     } catch (Gameap::Rest::RestapiException &exception) {
         // Try later
-        std::cerr << exception.what() << std::endl;
+        GAMEAP_LOG_ERROR << exception.what();
         return;
     }
 
@@ -155,7 +157,7 @@ void GameServer::_update_vars(bool force)
                 m_aliases.insert(std::pair<std::string, std::string>((*itr)["var"].asString(), std::to_string((*itr)["default"].asInt())));
             }
             else {
-                std::cerr << "Unknown alias type: " << (*itr)["default"] << std::endl;
+                GAMEAP_LOG_ERROR << "Unknown alias type: " << (*itr)["default"];
             }
         }
 
@@ -176,12 +178,12 @@ void GameServer::_update_vars(bool force)
                     m_aliases[itr.key().asString()] = std::to_string((*itr).asInt());
                 }
             } else {
-                std::cerr << "Unknown alias type: " << (*itr) << std::endl;
+                GAMEAP_LOG_ERROR << "Unknown alias type: " << (*itr);
             }
         }
     }
     catch (std::exception &e) {
-        std::cerr << "Aliases error: " << e.what() << std::endl;
+        GAMEAP_LOG_ERROR << "Aliases error: " << e.what();
     }
 
     m_last_update_vars = time(nullptr);
@@ -331,7 +333,7 @@ int GameServer::_update_server()
     std::string update_cmd = deds.get_script_cmd(DS_SCRIPT_UPDATE);
     std::string steamcmd_path = deds.get_steamcmd_path();
 
-    std::cout << "Server update starting..." << std::endl;
+    GAMEAP_LOG_INFO << "Server update starting...";
 
     if (update_cmd.length() > 0) {
         _replace_shortcodes(update_cmd);
@@ -653,7 +655,7 @@ int GameServer::update_server()
 void GameServer::_error(std::string msg)
 {
     _append_cmd_output(msg);
-    std::cerr << msg << '\n';
+    GAMEAP_LOG_ERROR << msg;
 }
 
 // ---------------------------------------------------------------------
@@ -669,7 +671,7 @@ void GameServer::_set_installed(unsigned int status)
         jdata["installed"] = m_installed;
         Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(m_server_id), jdata);
     } catch (Gameap::Rest::RestapiException &exception) {
-        std::cerr << exception.what() << '\n';
+        GAMEAP_LOG_ERROR << exception.what();
     }
 }
 
@@ -829,7 +831,7 @@ int GameServer::delete_files()
         }
     } else {
         try {
-            std::cout << "Remove path: " << m_work_path << std::endl;
+            GAMEAP_LOG_DEBUG << "Remove path: " << m_work_path;
             fs::remove_all(m_work_path);
         }
         catch (fs::filesystem_error &e) {
@@ -897,7 +899,7 @@ bool GameServer::status_server()
     try {
         _update_vars();
     } catch (std::exception &e) {
-        std::cerr << "Server update vars error: " << e.what() << std::endl;
+        GAMEAP_LOG_ERROR << "Server update vars error: " << e.what();
     }
 
     DedicatedServer& deds = DedicatedServer::getInstance();

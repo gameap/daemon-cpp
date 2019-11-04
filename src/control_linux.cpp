@@ -2,29 +2,27 @@
 	#define _GNU_SOURCE
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
-#include <string.h>
+#include <cstring>
 
 #include <sys/io.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/file.h>
 
 #include <execinfo.h>
 #include <unistd.h>
-#include <errno.h>
 #include <wait.h>
 
 #include <iostream>
-#include <fstream>
 #include <chrono>
 #include <thread>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <ctime>
 
+#include "log.h"
 #include "config.h"
 
 namespace fs = boost::filesystem;
@@ -94,10 +92,9 @@ void set_pid_file(const char* filename)
 
 // ---------------------------------------------------------------------
 
-int monitor_daemon()
+void monitor_daemon()
 {
     int      pid = -1;
-    int      status;
     int      need_start = 1;
     sigset_t sigset;
     siginfo_t siginfo;
@@ -127,7 +124,7 @@ int monitor_daemon()
         }
         else if (!pid)
         {
-            struct sigaction sigact;
+            struct sigaction sigact{};
             sigact.sa_flags = SA_SIGINFO;
             sigact.sa_sigaction = signal_error;
             sigemptyset(&sigact.sa_mask);
@@ -147,14 +144,15 @@ int monitor_daemon()
 
             sigprocmask(SIG_UNBLOCK, &sigset, nullptr);
 
-            status = run_daemon();
-            exit(status);
+            int run_daemon_status = run_daemon();
+            exit(run_daemon_status);
         }
         else
         {
             sigwaitinfo(&sigset, &siginfo);
 
             if (siginfo.si_signo == SIGCHLD) {
+                int status;
                 wait(&status);
 
                 status = WEXITSTATUS(status);
@@ -179,7 +177,7 @@ int monitor_daemon()
                 std::cout << "GameAP Daemon Monitor signal: " << strsignal(siginfo.si_signo) << std::endl;
 
                 kill(pid, siginfo.si_signo);
-                status = 0;
+                int status = 0;
 
                 // Waiting childs
                 wait(&status);
@@ -194,14 +192,12 @@ int monitor_daemon()
     std::cout << "GameAP Daemon stopped" << std::endl;
 
     unlink(PID_FILE);
-    return status;
 }
 
 // ---------------------------------------------------------------------
 
 int main(int argc, char** argv)
 {
-    int status;
     int pid;
 
 	Config& config = Config::getInstance();
@@ -231,6 +227,9 @@ int main(int argc, char** argv)
             boost::str(boost::format("%1%error_%2%.log") % LOG_DIRECTORY % buffer_time)
         );
     }
+
+    plog::init<GameAP::DefaultLog>(plog::debug, config.output_log.c_str());
+    plog::init<GameAP::ErrorLog>(plog::debug, config.error_log.c_str());
 
 	for (int i = 0; i < argc - 1; i++) {
 		if (std::string(argv[i]) == "-c") {
@@ -278,9 +277,7 @@ int main(int argc, char** argv)
 	        // run_daemon();
 	        monitor_daemon();
 
-	        status = 0;
-
-	        return status;
+	        return 0;
 	    }
 	    else {
 	        return 0;

@@ -1,5 +1,6 @@
 #include "files_component.h"
 
+#include "log.h"
 #include "config.h"
 
 #include <boost/format.hpp>
@@ -103,8 +104,8 @@ void FileServerSess::do_read()
                             }
                         }
                     } else {
-                        std::cout << "length: " << length << std::endl;
-                        std::cout << "Read incomplete" << std::endl;
+                        GAMEAP_LOG_VERBOSE << "length: " << length;
+                        GAMEAP_LOG_VERBOSE << "Read incomplete";
 
                     }
                 }
@@ -248,8 +249,8 @@ void FileServerSess::cmd_process()
                     return;
                 }
 
-                std::cout << "Filename: " << p << std::endl;
-                std::cout << "Filesize: " << fs::file_size(p) << std::endl;
+                GAMEAP_LOG_VERBOSE << "Filename: " << p;
+                GAMEAP_LOG_VERBOSE << "Filesize: " << fs::file_size(p);
 
                 binn_list_add_uint32(m_write_binn, FSERV_STATUS_FILE_TRANSFER_READY);
                 binn_list_add_str(m_write_binn, (char *)"File sending ready");
@@ -283,7 +284,7 @@ void FileServerSess::cmd_process()
 
             if (!fs::exists(dirp)) {
                 response_msg(FSERV_STATUS_ERROR, "Directory open error", true);
-                std::cerr << "Directory open error: " << dir << std::endl;
+                GAMEAP_LOG_ERROR << "Directory open error: " << dir;
                 break;
             }
 
@@ -335,7 +336,7 @@ void FileServerSess::cmd_process()
                     binn_list_add_list(files_binn, file_info);
                 }
                 catch (const std::exception & ex) {
-                    std::cerr << file.path().filename() << ": " << ex.what() << std::endl;
+                    GAMEAP_LOG_ERROR << file.path().filename() << ": " << ex.what();
                 }
             }
 
@@ -369,7 +370,7 @@ void FileServerSess::cmd_process()
                 fs::create_directories(p);
             }
             catch (fs::filesystem_error &e) {
-                std::cout << "Error mkdir: " << e.what() << std::endl;
+                GAMEAP_LOG_ERROR << "Error mkdir: " << e.what();
                 response_msg(FSERV_STATUS_ERROR, e.what(), true);
                 return;
             }
@@ -403,7 +404,7 @@ void FileServerSess::cmd_process()
                 }
             }
             catch (fs::filesystem_error &e) {
-                std::cout << "Error move: " << e.what() << std::endl;
+                GAMEAP_LOG_ERROR << "Error move: " << e.what();
                 response_msg(FSERV_STATUS_ERROR, e.what(), true);
                 return;
             }
@@ -442,7 +443,7 @@ void FileServerSess::cmd_process()
                 }
             }
             catch (fs::filesystem_error &e) {
-                std::cout << "Error remove: " << e.what() << std::endl;
+                GAMEAP_LOG_ERROR << "Error remove: " << e.what();
                 response_msg(FSERV_STATUS_ERROR, e.what(), true);
                 return;
             }
@@ -509,7 +510,7 @@ void FileServerSess::cmd_process()
 
                 binn_list_add_uint16(file_info, (unsigned short)fs::status(file).permissions());
             } else {
-                std::cerr << "error stat (" << errno << "): " << strerror(errno) << std::endl;
+                GAMEAP_LOG_ERROR << "error stat (" << errno << "): " << strerror(errno);
 
                 response_msg(FSERV_STATUS_ERROR, strerror(errno), true);
             }
@@ -566,7 +567,7 @@ void FileServerSess::cmd_process()
         };
 
         default : {
-            std::cout << "Unknown Command" << std::endl;
+            GAMEAP_LOG_WARNING << "Unknown Command";
             response_msg(FSERV_STATUS_UNKNOWN_COMMAND, "Unknown command", true);
             return;
         };
@@ -580,11 +581,11 @@ void FileServerSess::open_input_file()
 {
     m_input_file.open(m_filename, std::ios_base::binary);
     if (!m_input_file) {
-        std::cout << "failed to open " << m_filename << std::endl;
+        GAMEAP_LOG_ERROR << "failed to open " << m_filename;
         return;
     }
 
-    std::cout << "File opened: " << m_filename << std::endl;
+    GAMEAP_LOG_DEBUG << "File opened: " << m_filename;
 }
 
 /**
@@ -594,7 +595,7 @@ void FileServerSess::send_file()
 {
     auto self(shared_from_this());
 
-    std::cout << "Sending file" << std::endl;
+    GAMEAP_LOG_DEBUG << "Sending file";
     while (!m_input_file.eof()) {
         m_input_file.read(m_write_buf, (std::streamsize)max_length);
 
@@ -602,12 +603,12 @@ void FileServerSess::send_file()
         (*m_connection->socket).write_some(boost::asio::buffer(m_write_buf, m_input_file.gcount()), ec);
 
         if (ec) {
-            std::cout << "Sending file error (" << ec << "): " << ec.message() << std::endl;
+            GAMEAP_LOG_ERROR << "Sending file error (" << ec << "): " << ec.message();
             break;
         }
     }
 
-    std::cout << "File send success" << std::endl;
+    GAMEAP_LOG_INFO << "File send success";
     close_input_file();
     clear_read_vars();
 
@@ -631,11 +632,11 @@ void FileServerSess::open_output_file()
     m_output_file.open(m_filename, std::ios_base::binary);
 
     if (!m_output_file) {
-        std::cerr << "failed to open " << m_filename << std::endl;
+        GAMEAP_LOG_ERROR << "failed to open " << m_filename;
         return;
     }
 
-    std::cout << "File opened: " << m_filename << std::endl;
+    GAMEAP_LOG_DEBUG << "File opened: " << m_filename;
 }
 
 /**
@@ -656,10 +657,10 @@ void FileServerSess::write_file(size_t length)
 
     if ( ! m_output_file.eof() && m_output_file.tellp() < (std::streamsize)m_filesize) {
         m_output_file.write((char*) &m_read_buf, length);
-        std::cout << "Write file" << std::endl;
+        GAMEAP_LOG_DEBUG << "Write file";
 
         if (m_output_file.bad()) {
-            std::cerr << "File write error" << std::endl;
+            GAMEAP_LOG_ERROR << "File write error";
 
             close_output_file();
             clear_read_vars();
@@ -669,7 +670,7 @@ void FileServerSess::write_file(size_t length)
         }
 
         if (m_output_file.tellp() >= (std::streamsize)m_filesize) {
-            std::cout << "File received: " << m_filename << std::endl;
+            GAMEAP_LOG_INFO << "File received: " << m_filename;
 
             close_output_file();
             clear_read_vars();
@@ -680,7 +681,6 @@ void FileServerSess::write_file(size_t length)
         }
 
     } else {
-        std::cerr << "Error" << std::endl;
         close_output_file();
         clear_read_vars();
 
@@ -699,7 +699,7 @@ void FileServerSess::close_output_file()
     m_filename = "";
     m_filesize = 0;
 
-    std::cout << "File closed" << std::endl;
+    GAMEAP_LOG_INFO << "File closed";
 }
 
 /**
@@ -714,7 +714,6 @@ size_t FileServerSess::read_complete(size_t length)
 
     int found = 0;
     for (size_t i = m_read_length; i > m_read_length-length && found < 4; i--) {
-        // std::cout << i << ": " << m_read_buf[i-1] << std::endl;
         if (m_read_buf[i-1] == FSERV_END_SYMBOL) found++;
     }
 

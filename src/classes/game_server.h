@@ -9,6 +9,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
+#include "log.h"
 #include "dedicated_server.h"
 #include "typedefs.h"
 
@@ -56,13 +57,13 @@ public:
     
     ~GameServer() {
         // TODO: Implement waiting until the operations (installation and other) finishing successfully
-        std::cout << "Game Server Destruct" << std::endl;
+        GAMEAP_LOG_VERBOSE << "Game Server Destruct";
     }
     
-    int install_game_server();
+    // int install_game_server(); // TODO: Implement
     int update_server();
     int delete_files();
-    int move_game_server();
+    // int move_game_server(); // TODO: Implement
     int cmd_exec(std::string cmd);
 
     int start_server();
@@ -70,7 +71,7 @@ public:
     int stop_server();
     bool status_server();
 
-    int get_game_server_load();
+    // int get_game_server_load(); // TODO: Implement
     
     // size_t get_cmd_output(std::string * output, size_t position);
     int get_cmd_output(std::string * str_out);
@@ -130,8 +131,8 @@ private:
     int _unpack_archive(fs::path const & archive);
 
     bool _copy_dir(
-            fs::path const & source,
-            fs::path const & destination
+        fs::path const & source,
+        fs::path const & destination
     );
 
     int _exec(std::string cmd, bool not_append);

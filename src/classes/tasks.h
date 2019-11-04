@@ -4,6 +4,8 @@
 #include <iostream>
 #include <vector>
 
+#include "log.h"
+
 #include "classes/game_server.h"
 #include "classes/game_servers_list.h"
 
@@ -54,7 +56,7 @@ public:
     }
 
     ~Task() {
-        std::cout << "Task destructor: " << m_task_id << std::endl;
+        GAMEAP_LOG_VERBOSE << "Task destructor: " << m_task_id;
     }
 
     /**

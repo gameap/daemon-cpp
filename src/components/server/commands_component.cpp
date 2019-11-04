@@ -6,6 +6,7 @@
 
 #include <binn.h>
 
+#include "log.h"
 #include "commands_component.h"
 #include "functions/gsystem.h"
 
@@ -101,7 +102,7 @@ void CommandsSession::cmd_process()
 
             fs::current_path(work_dir);
 
-            std::cout << "Executing command: \"" << exec_command << "\"" << std::endl;
+            GAMEAP_LOG_DEBUG << "Executing command: \"" << exec_command << "\"";
             std::string out;
             int exit_code = GameAP::exec(std::string(exec_command), out);
 
@@ -116,7 +117,7 @@ void CommandsSession::cmd_process()
         };
 
         default: {
-            std::cerr << "Unknown Command" << std::endl;
+            GAMEAP_LOG_WARNING << "Unknown Command";
             response_msg(STATUS_UNKNOWN_COMMAND, "Unknown command", true);
             return;
         };

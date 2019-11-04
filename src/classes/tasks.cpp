@@ -38,14 +38,13 @@ void Task::run()
         jdata["time_stchange"] = (uint) m_task_started;
         Gameap::Rest::put("/gdaemon_api/tasks/" + std::to_string(m_task_id), jdata);
     } catch (Gameap::Rest::RestapiException &exception) {
-        std::cerr << "Error updating task status [to status code " + std::to_string(m_status) + "]: "
-                  << exception.what()
-                  << std::endl;
+        GAMEAP_LOG_ERROR << "Error updating task status [to status code " + std::to_string(m_status) + "]: "
+                  << exception.what();
 
         return;
     }
 
-    std::cout << "task: " << m_task << std::endl;
+    GAMEAP_LOG_DEBUG << "task: " << m_task;
 
     // Initialized error status
     int result_status = ERROR_STATUS_INT;
@@ -71,7 +70,7 @@ void Task::run()
         } catch (std::exception &e) {
             m_gserver->start_server();
             result_status = ERROR_STATUS_INT;
-            std::cerr << "gsstart error: " << e.what() << std::endl;
+            GAMEAP_LOG_ERROR << "gsstart error: " << e.what();
             _append_cmd_output(e.what());
         }
     }
@@ -88,7 +87,7 @@ void Task::run()
             m_gserver->status_server();
         } catch (std::exception &e) {
             result_status = ERROR_STATUS_INT;
-            std::cerr << "gsstop error: " << e.what() << std::endl;
+            GAMEAP_LOG_ERROR << "gsstop error: " << e.what();
             _append_cmd_output(e.what());
         }
     }
@@ -106,7 +105,7 @@ void Task::run()
             m_gserver->status_server();
         } catch (std::exception &e) {
             result_status = ERROR_STATUS_INT;
-            std::cerr << "gsstop error: " << e.what() << std::endl;
+            GAMEAP_LOG_ERROR << "gsstop error: " << e.what();
             _append_cmd_output(e.what());
         }
     }
@@ -120,7 +119,7 @@ void Task::run()
             result_status = m_gserver->update_server();
         } catch (std::exception &e) {
             result_status = ERROR_STATUS_INT;
-            std::cerr << "gsinst error: " << e.what() << std::endl;
+            GAMEAP_LOG_ERROR << "gsinst error: " << e.what();
             _append_cmd_output(e.what());
         }
     }
@@ -138,7 +137,7 @@ void Task::run()
             }
         } catch (std::exception &e) {
             result_status = ERROR_STATUS_INT;
-            std::cerr << "gsdelete error: " << e.what() << std::endl;
+            GAMEAP_LOG_ERROR << "gsdelete error: " << e.what();
             _append_cmd_output(e.what());
         }
     }
@@ -163,7 +162,7 @@ void Task::run()
             }
         } catch (std::exception &e) {
             result_status = ERROR_STATUS_INT;
-            std::cerr << "cmdexec error: " << e.what() << std::endl;
+            GAMEAP_LOG_ERROR << "cmdexec error: " << e.what();
             _append_cmd_output(e.what());
         }
     }
@@ -184,9 +183,8 @@ void Task::run()
         jdata["status"] = m_status;
         Gameap::Rest::put("/gdaemon_api/tasks/" + std::to_string(m_task_id), jdata);
     } catch (Gameap::Rest::RestapiException &exception) {
-        std::cerr << "Error updating task status [to status code " + std::to_string(m_status) + "]: "
-                  << exception.what()
-                  << std::endl;
+        GAMEAP_LOG_ERROR << "Error updating task status [to status code " + std::to_string(m_status) + "]: "
+                  << exception.what();
     }
 }
 
@@ -209,7 +207,7 @@ int Task::_exec(std::string cmd)
 
 int Task::_single_exec(std::string cmd)
 {
-    std::cout << "CMD Exec: " << cmd << std::endl;
+    GAMEAP_LOG_DEBUG << "CMD Exec: " << cmd;
     _append_cmd_output(fs::current_path().string() + "# " + cmd);
 
     int exit_code = exec(cmd, [this](std::string line) {

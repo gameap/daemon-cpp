@@ -9,6 +9,7 @@
 #include "status_component.h"
 #include "functions/gsystem.h"
 
+#include "log.h"
 #include "consts.h"
 
 namespace fs = boost::filesystem;
@@ -116,7 +117,7 @@ void StatusSession::cmd_process()
         };
 
         default: {
-            std::cerr << "Unknown Command" << std::endl;
+            GAMEAP_LOG_WARNING << "Unknown Command";
             response_msg(STATUS_UNKNOWN_COMMAND, "Unknown command", true);
             return;
         };

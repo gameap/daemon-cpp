@@ -6,6 +6,7 @@
 #include <boost/format.hpp>
 #include <functional>
 
+#include "log.h"
 #include "functions/restapi.h"
 
 #ifdef _WIN32
@@ -39,9 +40,9 @@ DedicatedServer::DedicatedServer()
     last_cpustat_time = 0;
     last_ifstat_time = 0;
 
-    std::cout << "ds_id: " << ds_id << std::endl;
-    std::cout << "stats_update_period: " << stats_update_period << std::endl;
-    std::cout << "db_update_period: " << db_update_period << std::endl;
+    GAMEAP_LOG_DEBUG << "ds_id: " << ds_id;
+    GAMEAP_LOG_DEBUG << "stats_update_period: " << stats_update_period;
+    GAMEAP_LOG_DEBUG << "db_update_period: " << db_update_period;
 
 	// get cpu count
     cpu_count = boost::thread::hardware_concurrency();
@@ -82,16 +83,16 @@ DedicatedServer::DedicatedServer()
         try {
             spi = fs::space(*it);
             drv_space[*it] = spi.capacity;
-            std::cout << "space capacity [" << *it << "]: " << drv_space[*it] << std::endl;
+            GAMEAP_LOG_DEBUG << "space capacity [" << *it << "]: " << drv_space[*it];
             drives.push_back(*it);
         } catch (fs::filesystem_error &e) {
-            std::cerr << "error get space: " << e.what() << std::endl;
+            GAMEAP_LOG_ERROR << "error get space: " << e.what();
         }
     }
 
     last_stats_update = time(nullptr);
 
-    std::cout << "Getting Dedicated server init data" << std::endl;
+    GAMEAP_LOG_DEBUG << "Getting Dedicated server init data";
 
     try {
         Json::Value jvalue = Gameap::Rest::get("/gdaemon_api/dedicated_servers/get_init_data/" + std::to_string(ds_id));
@@ -142,7 +143,7 @@ DedicatedServer::DedicatedServer()
 
     } catch (Gameap::Rest::RestapiException &exception) {
         // Try later
-        std::cerr << exception.what() << std::endl;
+        GAMEAP_LOG_ERROR << exception.what();
     }
 }
 
@@ -254,18 +255,6 @@ int DedicatedServer::stats_process()
 
 	stats.insert(stats.end(), cur_stats);
 
-    // std::cout
-        // << "cur_stats.loa: " << cur_stats.loa[0] << " " << cur_stats.loa[1] << " " << cur_stats.loa[2] << std::endl
-        // << "cur_stats.cpu_load: " << cur_stats.cpu_load << std::endl
-        // << "cur_stats.ram_us: " << cur_stats.ram_us << std::endl
-        // << "cur_stats.drv_us_space[\"/\"]: " << cur_stats.drv_us_space["/"] << std::endl
-        // << "cur_stats.drv_free_space[\"/\"]: " << cur_stats.drv_free_space["/"] << std::endl
-        // << "cur_stats.ifstats[lo].rxb: " << cur_stats.ifstats["lo"].rxb << std::endl
-        // << "cur_stats.ifstats[lo].txb: " << cur_stats.ifstats["lo"].txb << std::endl
-        // << "cur_stats.ifstats[lo].rxp: " << cur_stats.ifstats["lo"].txp << std::endl
-        // << "cur_stats.ifstats[lo].txp: " << cur_stats.ifstats["lo"].txp << std::endl
-    // << std::endl;
-
     last_stats_update = time(nullptr);
 
     return 0;
@@ -289,17 +278,17 @@ int DedicatedServer::get_net_load(std::map<std::string, netstats> &ifstats)
 
         pStats = (MIB_IPSTATS *) MALLOC(sizeof (MIB_IPSTATS));
         if (pStats == NULL) {
-            std::cerr << "Allocate memory error (get_net_load)" << std::endl;
+            GAMEAP_LOG_ERROR << "Allocate memory error (get_net_load)";
             return -1;
         }
         dwRetval = GetIpStatistics(pStats);
         if (dwRetval != NO_ERROR) {
-            std::cerr << "GetIpStatistics error: " << dwRetval << std::endl;
+            GAMEAP_LOG_ERROR << "GetIpStatistics error: " << dwRetval;
             return -1;
         }
 
-        std::cout << "pStats->dwInReceives: " << pStats->dwInReceives << std::endl;
-        std::cout << "pStats->dwOutRequests: " << pStats->dwOutRequests << std::endl;
+        GAMEAP_LOG_VERBOSE << "pStats->dwInReceives: " << pStats->dwInReceives;
+        GAMEAP_LOG_VERBOSE << "pStats->dwOutRequests: " << pStats->dwOutRequests;
         */
 
         std::string netstat_result;
@@ -313,7 +302,6 @@ int DedicatedServer::get_net_load(std::map<std::string, netstats> &ifstats)
 
         std::vector<std::string> split_lines;
         boost::split(split_lines, netstat_result, boost::is_any_of("\n\r"));
-        // std::cout << "split_lines size: " << split_lines.size() << std::endl;
 
         if (split_lines.size() != 11) {
             return -1;
@@ -357,32 +345,27 @@ int DedicatedServer::get_net_load(std::map<std::string, netstats> &ifstats)
             else current_ifstats["all"].txp += strtoull((*its).c_str(), NULL, 10);
             i++;
         }
-
-        // std::cout << "current_ifstats[\"all\"].rxb: " << current_ifstats["all"].rxb << std::endl;
-        // std::cout << "current_ifstats[\"all\"].txb: " << current_ifstats["all"].txb << std::endl;
-        // std::cout << "current_ifstats[\"all\"].rxp: " << current_ifstats["all"].rxp << std::endl;
-        // std::cout << "current_ifstats[\"all\"].txp: " << current_ifstats["all"].txp << std::endl;
     #elif __linux__
-        for (std::vector<std::string>::iterator it = interfaces.begin(); it != interfaces.end(); ++it) {
+        for (auto it = interfaces.begin(); it != interfaces.end(); ++it) {
             std::ifstream netstats;
             netstats.open(boost::str(boost::format("/sys/class/net/%s/statistics/rx_bytes") % *it), std::ios::in);
             netstats.getline(bufread, 32);
-            current_ifstats[*it].rxb = strtoull(bufread, NULL, 10);
+            current_ifstats[*it].rxb = strtoull(bufread, nullptr, 10);
             netstats.close();
 
             netstats.open(boost::str(boost::format("/sys/class/net/%s/statistics/tx_bytes") % *it), std::ios::in);
             netstats.getline(bufread, 32);
-            current_ifstats[*it].txb = strtoull(bufread, NULL, 10);
+            current_ifstats[*it].txb = strtoull(bufread, nullptr, 10);
             netstats.close();
 
             netstats.open(boost::str(boost::format("/sys/class/net/%s/statistics/rx_packets") % *it), std::ios::in);
             netstats.getline(bufread, 32);
-            current_ifstats[*it].rxp = strtoull(bufread, NULL, 10);
+            current_ifstats[*it].rxp = strtoull(bufread, nullptr, 10);
             netstats.close();
 
             netstats.open(boost::str(boost::format("/sys/class/net/%s/statistics/tx_packets") % *it), std::ios::in);
             netstats.getline(bufread, 32);
-            current_ifstats[*it].txp = strtoull(bufread, NULL, 10);
+            current_ifstats[*it].txp = strtoull(bufread, nullptr, 10);
             netstats.close();
         }
 	#endif
@@ -393,20 +376,13 @@ int DedicatedServer::get_net_load(std::map<std::string, netstats> &ifstats)
 
         int time_diff = current_time - last_ifstat_time;
 
-        for (std::vector<std::string>::iterator it = interfaces.begin(); it != interfaces.end(); ++it) {
+        for (auto it = interfaces.begin(); it != interfaces.end(); ++it) {
             if (current_ifstats.count(*it) > 0  && last_ifstats.count(*it) > 0) {
 
                 ifstats[*it].rxb = (current_ifstats[*it].rxb - last_ifstats[*it].rxb) / time_diff;
                 ifstats[*it].txb = (current_ifstats[*it].txb - last_ifstats[*it].txb) / time_diff;
                 ifstats[*it].rxp = (current_ifstats[*it].rxp - last_ifstats[*it].rxp) / time_diff;
                 ifstats[*it].txp = (current_ifstats[*it].txp - last_ifstats[*it].txp) / time_diff;
-
-                // std::cout << "last_ifstats[*it].rx: " << last_ifstats[*it].rxb << std::endl;
-                // std::cout << "current_ifstats[*it].rxb: " << current_ifstats[*it].rxb << std::endl;
-                // std::cout << "ifstats[*it].rxb: " << ifstats[*it].rxb << std::endl;
-                // std::cout << "ifstats[*it].txb: " << ifstats[*it].txb << std::endl;
-                // std::cout << "ifstats[*it].rxp: " << ifstats[*it].rxp << std::endl;
-                // std::cout << "ifstats[*it].txp: " << ifstats[*it].txp << std::endl;
             }
         }
     }
@@ -479,18 +455,18 @@ int DedicatedServer::get_cpu_load(std::vector<float> &cpu_percent)
         boost::split(split_lines, buf, boost::is_any_of("\n\r"));
 
         ushort cpuid = 0;
-        for (std::vector<std::string>::iterator itl = split_lines.begin()+1; itl != split_lines.end(); ++itl) {
+        for (auto itl = split_lines.begin()+1; itl != split_lines.end(); ++itl) {
             if (cpuid > cpu_count) break;
             // Line must begin only "cpu  ..."
             if (itl[0][0] != 'c') break;
 
-            // std::cout << *itl << std::endl;
+            // GAMEAP_LOG_VERBOSE << *itl;
 
             boost::split(split_spaces, *itl, boost::is_any_of("  "));
-            cpuload[0][cpuid] = strtoul(&split_spaces[1][0], NULL, 10); // User
-            cpuload[1][cpuid] = strtoul(&split_spaces[2][0], NULL, 10); // Nice
-            cpuload[2][cpuid] = strtoul(&split_spaces[3][0], NULL, 10); // System
-            cpuload[3][cpuid] = strtoul(&split_spaces[4][0], NULL, 10); // Idle
+            cpuload[0][cpuid] = strtoul(&split_spaces[1][0], nullptr, 10); // User
+            cpuload[1][cpuid] = strtoul(&split_spaces[2][0], nullptr, 10); // Nice
+            cpuload[2][cpuid] = strtoul(&split_spaces[3][0], nullptr, 10); // System
+            cpuload[3][cpuid] = strtoul(&split_spaces[4][0], nullptr, 10); // Idle
 
             cpuid++;
             split_spaces.clear();
@@ -515,21 +491,6 @@ int DedicatedServer::get_cpu_load(std::vector<float> &cpu_percent)
                 last_cpustat[2][i] = cpuload[2][i];
                 last_cpustat[3][i] = cpuload[3][i];
 
-                // std::cout << "cpuload[0][i]" << cpuload[0][i] << std::endl;
-                // std::cout << "cpuload[1][i]" << cpuload[1][i] << std::endl;
-                // std::cout << "cpuload[2][i]" << cpuload[2][i] << std::endl;
-                // std::cout << "cpuload[3][i]" << cpuload[3][i] << std::endl;
-
-                // std::cout << "oldcpuload[0][i]" << oldcpuload[0][i] << std::endl;
-                // std::cout << "oldcpuload[1][i]" << oldcpuload[1][i] << std::endl;
-                // std::cout << "oldcpuload[2][i]" << oldcpuload[2][i] << std::endl;
-                // std::cout << "oldcpuload[3][i]" << oldcpuload[3][i] << std::endl;
-
-                // std::cout << "loaddiff[0][i]" << loaddiff[0][i] << std::endl;
-                // std::cout << "loaddiff[1][i]" << loaddiff[1][i] << std::endl;
-                // std::cout << "loaddiff[2][i]" << loaddiff[2][i] << std::endl;
-                // std::cout << "loaddiff[3][i]" << loaddiff[3][i] << std::endl;
-
                 if ((loaddiff[0][i] != 0 || loaddiff[1][i] != 0 || loaddiff[2][i] != 0 || loaddiff[3][i] != 0) && time_between >= 1) {
                     try {
                         perc[i] = (
@@ -538,7 +499,7 @@ int DedicatedServer::get_cpu_load(std::vector<float> &cpu_percent)
                         ) * 100;
                     }
                     catch (std::logic_error &e) {
-                        std::cout << "CPU Load calculation error: " << e.what() << std::endl;
+                        GAMEAP_LOG_ERROR << "CPU Load calculation error: " << e.what();
                     }
 
                 } else {
@@ -546,12 +507,7 @@ int DedicatedServer::get_cpu_load(std::vector<float> &cpu_percent)
                 }
 
                 cpu_percent.push_back(perc[i]);
-                // std::cout << "CPU #" << i << ": " << perc[i] << std::endl;
             }
-
-            // cpu_percent = &perc;
-            // std::cout << "perc[0]: " << perc[0] << std::endl;
-            // std::cout << "cpu_percent[0]: " << (*cpu_percent)[0] << std::endl;
 
             last_cpustat_time = cpustat_time;
             return 0;
@@ -595,7 +551,6 @@ int DedicatedServer::update_db()
         // Cpu
         std::string cpu = "";
         for (int i = 0; i < item.cpu_load.size(); ++i) {
-            // std::cout << "CPU #" << i << " " << item.cpu_load[i] << std::endl;
             cpu +=  boost::str(boost::format("%.2f") % item.cpu_load[i]) + " ";
         }
 
@@ -649,9 +604,7 @@ int DedicatedServer::update_db()
         stats.clear();
         last_db_update = time(nullptr);
     } catch (Gameap::Rest::RestapiException &exception) {
-        std::cerr << "Output updating error: "
-                  << exception.what()
-                  << std::endl;
+        GAMEAP_LOG_ERROR << "Output updating error: " << exception.what();
     }
 }
 

@@ -6,6 +6,7 @@
 #include <boost/format.hpp>
 #include <iostream>
 
+#include "log.h"
 #include "config.h"
 
 #define LOG_DIRECTORY "log\\"
@@ -199,6 +200,9 @@ int _tmain (int argc, TCHAR *argv[])
             boost::str(boost::format("%1%error_%2%.log") % LOG_DIRECTORY % buffer_time)
         );
     }
+
+    plog::init<GameAP::DefaultLog>(plog::debug, config.output_log.c_str());
+    plog::init<GameAP::ErrorLog>(plog::debug, config.error_log.c_str());
 
 #ifndef NON_DAEMON
     freopen(config.output_log.c_str(), "w", stdout);

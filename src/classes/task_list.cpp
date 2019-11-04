@@ -6,6 +6,7 @@
 #include <json/json.h>
 #include <boost/iostreams/stream.hpp>
 
+#include "log.h"
 #include "functions/restapi.h"
 
 using namespace GameAP;
@@ -47,7 +48,7 @@ int TaskList::update_list()
         jvalue = Gameap::Rest::get("/gdaemon_api/tasks?filter[status]=waiting&append=status_num");
     } catch (Gameap::Rest::RestapiException &exception) {
         // Try later
-        std::cerr << exception.what() << std::endl;
+        GAMEAP_LOG_ERROR << exception.what();
         return ERROR_STATUS_INT;
     }
 
@@ -97,7 +98,7 @@ void TaskList::check_working_errors()
         jvalue = Gameap::Rest::get("/gdaemon_api/tasks?filter[status]=working&append=status_num");
     } catch (Gameap::Rest::RestapiException &exception) {
         // Try later
-        std::cerr << exception.what() << std::endl;
+        GAMEAP_LOG_ERROR << exception.what();
         return;
     }
 
@@ -115,9 +116,8 @@ void TaskList::check_working_errors()
                 jdata["status"] = error;
                 Gameap::Rest::put("/gdaemon_api/tasks/" + std::to_string(task_id), jdata);
             } catch (Gameap::Rest::RestapiException &exception) {
-                std::cerr << "Error updating task status [to status code " + std::to_string(error) + "]: "
-                          << exception.what()
-                          << std::endl;
+                GAMEAP_LOG_ERROR << "Error updating task status [to status code " + std::to_string(error) + "]: "
+                          << exception.what();
             }
         }
     }
@@ -173,7 +173,5 @@ bool TaskList::is_end(std::vector<Task *>::iterator curit)
 
 std::vector<Task *>::iterator TaskList::end()
 {
-    std::cout << "Tasklist size: " << tasklist.size() << std::endl;
-    std::cout << "Tasklist end: " << *tasklist.end() << std::endl;
     return tasklist.end();
 }

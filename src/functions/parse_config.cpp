@@ -1,3 +1,5 @@
+#include "log.h"
+
 /**
 * Парсер конфигурации
 */
@@ -14,7 +16,7 @@ int parse_config()
 		port = pt.get<int>("server_port");
 	}
 	catch (std::exception &e) {
-		// sstd::cerr << "Parse config error: " << e.what() << std::endl;
+		GAMEAP_LOG_ERROR << "Parse config error: " << e.what();
         return -1;
 	}
 

@@ -1,8 +1,8 @@
 #include <iostream>
 #include <functional>
-#include <iostream>
 #include <boost/asio.hpp>
 
+#include "log.h"
 #include "gsystem.h"
 
 #if defined(BOOST_POSIX_API)
@@ -42,7 +42,7 @@ namespace GameAP {
             child_proccess.wait();
             exit_code = child_proccess.exit_code();
         } catch (boost::process::process_error &e) {
-            std::cerr << "Execute error: " << e.what() << std::endl;
+            GAMEAP_LOG_ERROR << "Execute error: " << e.what();
             return -1;
         }
 
@@ -70,7 +70,7 @@ namespace GameAP {
             child_proccess.wait();
             exit_code = child_proccess.exit_code();
         } catch (boost::process::process_error &e) {
-            std::cerr << "Execute error: " << e.what() << std::endl;
+            GAMEAP_LOG_ERROR << "Execute error: " << e.what();
             return -1;
         }
 
@@ -85,7 +85,7 @@ namespace GameAP {
             bp::child child_proccess(bp::search_path(PROC_SHELL), args={SHELL_PREF, cmd}, (bp::std_out & bp::std_err) > out);
             return child_proccess;
         } catch (boost::process::process_error &e) {
-            std::cerr << "Execute error: " << e.what() << std::endl;
+            GAMEAP_LOG_ERROR << "Execute error: " << e.what();
         }
     }
 
