@@ -67,7 +67,7 @@ static void signal_error(int sig, siginfo_t *si, void *ptr)
             GAMEAP_LOG_ERROR << Messages[x];
 		}
 
-        GAMEAP_LOG_ERROR << "== End Backtrace ==" << std::endl;
+        GAMEAP_LOG_ERROR << std::endl << "== End Backtrace ==" << std::endl;
 		free(Messages);
 	}
 
