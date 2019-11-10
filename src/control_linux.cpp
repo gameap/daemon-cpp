@@ -47,7 +47,7 @@ static void signal_error(int sig, siginfo_t *si, void *ptr)
 	int    TraceSize;
 	char** Messages;
 
-    std::cout << "GameAP Daemon: " << strsignal(sig) << std::endl;
+    GAMEAP_LOG_ERROR << "GameAP Daemon: " << strsignal(sig);
 
 	#if __WORDSIZE == 64
 		ErrorAddr = (void*)((ucontext_t*)ptr)->uc_mcontext.gregs[REG_RIP];
@@ -61,17 +61,17 @@ static void signal_error(int sig, siginfo_t *si, void *ptr)
 	Messages = backtrace_symbols(Trace, TraceSize);
 
 	if (Messages) {
-		std::cerr << std::endl << "== Backtrace ==" << std::endl;
+        GAMEAP_LOG_ERROR << std::endl << "== Backtrace ==";
 
 		for (x = 1; x < TraceSize; x++) {
-            std::cerr << Messages[x] << std::endl;
+            GAMEAP_LOG_ERROR << Messages[x];
 		}
 
-        std::cerr << "== End Backtrace ==" << std::endl << std::endl;
+        GAMEAP_LOG_ERROR << "== End Backtrace ==" << std::endl;
 		free(Messages);
 	}
 
-    std::cout << "GameAP Daemon Stopped" << std::endl;
+    GAMEAP_LOG_INFO << "GameAP Daemon Stopped";
 	exit(CHILD_NEED_WORK);
 }
 
@@ -120,7 +120,7 @@ void monitor_daemon()
         need_start = 1;
 
         if (pid == -1) {
-            std::cout << "GameAP Daemon Fork failed" << std::endl;
+            GAMEAP_LOG_FATAL << "GameAP Daemon Fork failed";
         }
         else if (!pid) {
             struct sigaction sigact{};
@@ -156,11 +156,11 @@ void monitor_daemon()
                 status = WEXITSTATUS(status);
 
                 if (status == CHILD_NEED_TERMINATE) {
-                    std::cout << "GameAP Daemon Stopped" << std::endl;
+                    GAMEAP_LOG_INFO << "GameAP Daemon Stopped";
                     break;
                 }
                 else if (status == CHILD_NEED_WORK) {
-                    std::cout << "Restarting GameAP Daemon" << std::endl;
+                    GAMEAP_LOG_INFO << "Restarting GameAP Daemon";
                 }
             }
             else if (siginfo.si_signo == SIGUSR1) {
@@ -172,7 +172,7 @@ void monitor_daemon()
                 need_start = 0;
             }
             else {
-                std::cout << "GameAP Daemon Monitor signal: " << strsignal(siginfo.si_signo) << std::endl;
+                GAMEAP_LOG_INFO << "GameAP Daemon Monitor signal: " << strsignal(siginfo.si_signo);
 
                 kill(pid, siginfo.si_signo);
                 int status = 0;
@@ -187,7 +187,7 @@ void monitor_daemon()
         std::this_thread::sleep_for(std::chrono::seconds(5));
     }
 
-    std::cout << "GameAP Daemon stopped" << std::endl;
+    GAMEAP_LOG_INFO << "GameAP Daemon stopped";
 
     unlink(PID_FILE);
 }
@@ -257,7 +257,7 @@ int main(int argc, char** argv)
 	    pid = fork();
 
 	    if (pid == -1) {
-	        std::cerr << "Error: Start Daemon failed" << std::endl;
+	        GAMEAP_LOG_FATAL << "Error: Start Daemon failed";
 	        return -1;
 	    }
 	    else if (!pid) {
