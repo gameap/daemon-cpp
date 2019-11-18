@@ -601,13 +601,6 @@ int GameServer::_update_server()
         fs::remove(archive);
     }
 
-    #ifdef __linux__
-        if (m_user != "" && getuid() == 0) {
-            _exec(boost::str(boost::format("chown -R %1% %2%") % m_user % m_work_path.string()));
-            fs::permissions(m_work_path, fs::owner_all);
-        }
-    #endif
-
     // Run after install script if exist
     // After execution, the script will be deleted
     fs::path after_install_script = m_work_path / AFTER_INSTALL_SCRIPT;
@@ -621,6 +614,13 @@ int GameServer::_update_server()
 
         fs::remove(after_install_script);
     }
+
+    #ifdef __linux__
+        if (m_user != "" && getuid() == 0) {
+            _exec(boost::str(boost::format("chown -R %1% %2%") % m_user % m_work_path.string()));
+            fs::permissions(m_work_path, fs::owner_all);
+        }
+    #endif
 
     // Update installed = 1
     _set_installed(SERVER_INSTALLED);
