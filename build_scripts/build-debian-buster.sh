@@ -22,5 +22,5 @@ apt-get -y install \
     libssl-dev \
     libcurl4-openssl-dev
 
-cmake .
+cmake ..
 make
