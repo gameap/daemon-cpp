@@ -22,7 +22,7 @@ int GameServersList::update_list()
         jvalue = Gameap::Rest::get("/gdaemon_api/servers?fields[servers]=id");
     } catch (Gameap::Rest::RestapiException &exception) {
         // Try later
-        std::cerr << exception.what() << std::endl;
+        GAMEAP_LOG_ERROR << exception.what();
         return ERROR_STATUS_INT;
     }
 
@@ -39,7 +39,7 @@ int GameServersList::update_list()
                         std::pair<ulong, std::shared_ptr<GameServer>>(server_id, gserver)
                 );
             } catch (std::exception &e) {
-                std::cerr << "GameServer #" << server_id << " insert error: " << e.what() << std::endl;
+                GAMEAP_LOG_ERROR << "GameServer #" << server_id << " insert error: " << e.what();
             }
         }
     }
@@ -64,7 +64,7 @@ void GameServersList::stats_process()
             std::strftime(buffer, 32, "%F %T", ptm);
 
             jserver_data["last_process_check"] = buffer;
-            jserver_data["process_active"] = static_cast<int>(server.second->m_active);
+            jserver_data["process_active"] = static_cast<int>(server.second->status_server());
             jupdate_data.append(jserver_data);
         }
     }
@@ -72,7 +72,7 @@ void GameServersList::stats_process()
     try {
         Gameap::Rest::patch("/gdaemon_api/servers", jupdate_data);
     } catch (Gameap::Rest::RestapiException &exception) {
-        std::cerr << exception.what() << '\n';
+        GAMEAP_LOG_ERROR << exception.what() << '\n';
     }
 }
 

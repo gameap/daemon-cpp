@@ -5,6 +5,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
+#include "log.h"
 #include "typedefs.h"
 #include "config.h"
 
@@ -16,14 +17,14 @@ int Config::parse()
     std::string allowed_ip_str;
 
     if (!fs::exists(cfg_file)) {
-        std::cerr << "Config file not found: " << cfg_file.c_str() << std::endl;
+        GAMEAP_LOG_ERROR << "Config file not found: " << cfg_file.c_str();
         return -1;
     }
 
     try {
         boost::optional<std::string> buf;
 
-        std::cout << "Reading cfg file " << cfg_file.c_str() << std::endl;
+        GAMEAP_LOG_INFO << "Reading cfg file " << cfg_file.c_str();
         boost::property_tree::ini_parser::read_ini(cfg_file.c_str(), pt);
 
         ds_id           = pt.get_optional<uint>("ds_id").get_value_or(0);;
@@ -67,9 +68,11 @@ int Config::parse()
         bufushort = pt.get_optional<ushort>("stats_db_update_period");
         if (*bufushort > 0) stats_db_update_period = *bufushort;
 
+        log_level = pt.get_optional<std::string>("log_level").get_value_or("debug");
+
     }
     catch (std::exception &e) {
-        std::cerr << "Parse config error: " << e.what() << std::endl;
+        GAMEAP_LOG_ERROR << "Parse config error: " << e.what();
         return -1;
     }
 

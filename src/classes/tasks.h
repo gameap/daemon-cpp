@@ -4,6 +4,8 @@
 #include <iostream>
 #include <vector>
 
+#include "log.h"
+
 #include "classes/game_server.h"
 #include "classes/game_servers_list.h"
 
@@ -28,31 +30,6 @@
 namespace GameAP {
 
 class Task {
-private:
-    ulong m_task_id;
-    ulong m_task_run_after;
-    
-    ulong m_ds_id;
-    ulong m_server_id;
-    char m_task[8];
-    
-    std::string m_data;
-    std::string m_cmd;
-    std::string m_cmd_output;
-    std::mutex m_cmd_output_mutex;
-    
-    size_t m_cur_outpos;
-    
-    enum st {waiting = 1, working, error, success};
-    ushort m_status;
-
-    time_t m_task_started;
-
-    GameServer *m_gserver;
-
-    int _exec(std::string cmd);
-    int _single_exec(std::string cmd);
-    void _append_cmd_output(std::string line);
 public:
     Task(ulong task_id, ulong ds_id, ulong server_id, const char * task, const char * data, const char * cmd, ushort status) {
         m_task_id = task_id;
@@ -79,24 +56,38 @@ public:
     }
 
     ~Task() {
-        std::cout << "Task destructor: " << m_task_id << std::endl;
+        GAMEAP_LOG_VERBOSE << "Task destructor: " << m_task_id;
     }
-    
-    // void start(ulong m_task_id, ulong m_ds_id, ulong m_server_id, char m_task[8], char * m_data, char * m_cmd);
 
+    /**
+     * Run task
+     */
     void run();
+
+    /**
+     * Get the result of the task commands
+     */
     std::string get_output();
 
+    /**
+     * Get task status
+     */
     int get_status()
     {
         return m_status;
     }
 
+    /**
+     * Get task ID
+     */
     ulong get_id()
     {
         return m_task_id;
     }
-    
+
+    /**
+     * Get task server ID
+     */
     ulong get_server_id()
     {
         return m_server_id;
@@ -116,6 +107,32 @@ public:
     time_t get_time_started() {
         return m_task_started;
     }
+
+private:
+    ulong m_task_id;
+    ulong m_task_run_after;
+
+    ulong m_ds_id;
+    ulong m_server_id;
+    char m_task[8];
+
+    std::string m_data;
+    std::string m_cmd;
+    std::string m_cmd_output;
+    std::mutex m_cmd_output_mutex;
+
+    size_t m_cur_outpos;
+
+    enum st {waiting = 1, working, error, success};
+    ushort m_status;
+
+    time_t m_task_started;
+
+    GameServer *m_gserver;
+
+    int _exec(std::string cmd);
+    int _single_exec(std::string cmd);
+    void _append_cmd_output(std::string line);
 };
 
 

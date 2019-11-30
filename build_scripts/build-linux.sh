@@ -84,7 +84,5 @@ mv /usr/local/include/json /usr/local/include/jsoncpp/json
 # Compile GDAEMON
 #--------------------------
 cd $ROOTDIR
-git clone https://github.com/gameap/GDaemon2
-cd GDaemon2
-cmake -DUSE_STATIC_BOOST=1 .
+cmake -DUSE_STATIC_BOOST=1 ..
 make

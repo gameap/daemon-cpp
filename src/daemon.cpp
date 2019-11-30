@@ -1,25 +1,14 @@
-#include <stdio.h>
 #include <iostream>
 
 #ifdef __GNUC__
-#include <unistd.h>
 #include <thread>
 #endif
 
-#include <sstream>
 #include <vector>
-#include <map>
 #include <chrono>
-#include <thread>
-#include <ctime>
 
-#include <boost/format.hpp>
-
-#include "typedefs.h"
-
+#include "log.h"
 #include "daemon_server.h"
-#include "dl.h"
-
 #include "config.h"
 
 #include "classes/tasks.h"
@@ -27,7 +16,6 @@
 #include "classes/dedicated_server.h"
 #include "classes/game_servers_list.h"
 
-#include "functions/gcrypt.h"
 #include "functions/restapi.h"
 
 #include "status.h"
@@ -57,7 +45,7 @@ int check_tasks()
 
     while (!tasks.stop) {
         tasks.update_list();
-        for (std::vector<Task *>::iterator it = tasks.begin(); !tasks.is_end(it); it = tasks.next(it)) {
+        for (auto it = tasks.begin(); !tasks.is_end(it); it = tasks.next(it)) {
 
             std::vector<ulong>::iterator run_it     = std::find(tasks_runned.begin(), tasks_runned.end(), (**it).get_id());
             std::vector<ulong>::iterator swork_it    = std::find(servers_working.begin(), servers_working.end(), (**it).get_server_id());
@@ -77,7 +65,11 @@ int check_tasks()
                 }
 
                 tasks_thrs.create_thread([=]() {
-                    (**it).run();
+                    try {
+                        (**it).run();
+                    } catch (std::exception &e) {
+                        GAMEAP_LOG_ERROR << "Run tasks error: " << e.what();
+                    }
                 });
 
                 tasks_runned.push_back((**it).get_id());
@@ -92,7 +84,7 @@ int check_tasks()
                     try {
                         output = (**it).get_output();
                     } catch (std::exception &e) {
-                        std::cerr << "get_output() error: " << e.what() << std::endl;
+                        GAMEAP_LOG_ERROR << "get_output() error: " << e.what();
                     }
                 }
 
@@ -112,9 +104,7 @@ int check_tasks()
                             Gameap::Rest::put("/gdaemon_api/tasks/" + std::to_string((**it).get_id()) + "/output", jdata);
                             break;
                         } catch (Gameap::Rest::RestapiException &exception) {
-                            std::cerr << "Output updating error: "
-                                      << exception.what()
-                                      << std::endl;
+                            GAMEAP_LOG_ERROR << "Output updating error: " << exception.what();
 
                             std::this_thread::sleep_for(std::chrono::seconds(10));
                         }
@@ -130,7 +120,7 @@ int check_tasks()
                     try {
                         output = (**it).get_output();
                     } catch (std::exception &e) {
-                        std::cerr << "get_output() error: " << e.what() << std::endl;
+                        GAMEAP_LOG_ERROR << "get_output() error: " << e.what();
                     }
                 }
 
@@ -156,7 +146,7 @@ int check_tasks()
 
 int run_daemon()
 {
-    std::cout << "Starting..." << std::endl << std::endl;
+    GAMEAP_LOG_INFO << "Starting...";
 
     #ifdef __linux__
         std::signal(SIGHUP, sighandler);
@@ -169,28 +159,44 @@ int run_daemon()
     Config& config = Config::getInstance();
 
     if (config.parse() == -1) {
-		std::cerr << "Config parse error" << std::endl;
+        GAMEAP_LOG_ERROR << "Config parse error";
         return -1;
     }
+
+    plog::get<GameAP::MainLog>()->setMaxSeverity(
+        plog::severityFromString(config.log_level.c_str())
+    );
+
+    plog::get<GameAP::ErrorLog>()->setMaxSeverity(
+        plog::severityFromString(config.log_level.c_str())
+    );
 
     try {
         Gameap::Rest::get_token();
     } catch (Gameap::Rest::RestapiException &exception) {
-        std::cerr << exception.what() << std::endl;
+        GAMEAP_LOG_ERROR << exception.what();
         return -1;
     }
 
-    auto run_daemon_server = [&]() {
-        std::cout << "Running Daemon Server" << std::endl;
-        run_server(config.listen_ip, config.listen_port);
-        std::cout << "Daemon Server stopped" << std::endl;
-    };
+    // Run Daemon Server
+    std::thread daemon_server([&]() {
+        // TODO: Check fails
+        // TODO: Replace tasks.stop to some status checker class or something else
+        TaskList& tasks = TaskList::getInstance();
 
-    std::thread daemon_server(run_daemon_server);
+        int server_exit_status;
 
+        while (!tasks.stop) {
+            GAMEAP_LOG_INFO << "Running Daemon Server";
+            server_exit_status = run_server(config.listen_ip, config.listen_port);
+            GAMEAP_LOG_INFO << "Daemon Server stopped (Exit status: " << server_exit_status << ")";
+        }
+    });
+
+    // Run Tasks
     if (config.ds_id == 0) {
-        std::cout << "Empty Dedicated Server ID" << std::endl;
-        std::cout << "Tasks feature disabled" << std::endl;
+        GAMEAP_LOG_WARNING << "Empty Dedicated Server ID";
+        GAMEAP_LOG_WARNING << "Tasks feature disabled";
     } else {
         DedicatedServer &deds = DedicatedServer::getInstance();
         GameServersList &gslist = GameServersList::getInstance();
@@ -214,7 +220,7 @@ int run_daemon()
             try {
                 gslist.loop();
             } catch (std::exception &e) {
-                std::cerr << "Game servers stats process error: " << e.what() << std::endl;
+                GAMEAP_LOG_ERROR << "Game servers stats process error: " << e.what();
             }
 
             std::this_thread::sleep_for(std::chrono::seconds(5));

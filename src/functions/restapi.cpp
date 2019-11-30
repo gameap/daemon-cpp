@@ -1,11 +1,10 @@
-#include <cstdio>
-#include <iostream>
 #include <memory>
 
 #include <restclient-cpp/restclient.h>
 
 #include <json/json.h>
 
+#include "log.h"
 #include "restapi.h"
 #include "config.h"
 
@@ -31,17 +30,21 @@ namespace Gameap {
         std::string uri = "/gdaemon_api/get_token";
         conn->AppendHeader("Authorization", "Bearer " + config.api_key);
         conn->AppendHeader("Accept", "application/json");
+        conn->SetUserAgent("GameAP Daemon");
+        conn->FollowRedirects(true);
+        conn->FollowRedirects(true, 3);
+
         RestClient::Response response = conn->get(uri);
 
         if (response.code != 200) {
-            std::cerr << "RestClient HTTP response code (GET): " << response.code << std::endl;
-            std::cerr << "URL: " << config.api_host << uri << std::endl;
+            GAMEAP_LOG_ERROR << "RestClient HTTP response code (GET): " << response.code;
+            GAMEAP_LOG_ERROR << "URL: " << config.api_host << uri;
 
             if (!response.body.empty()) {
                 if (response.body.length() > 200) {
-                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 200) << " ..." << std::endl;
+                    GAMEAP_LOG_ERROR << "RestClient HTTP response: " << response.body.substr(0, 200) << " ...";
                 } else {
-                    std::cerr << "RestClient HTTP response: " << response.body << std::endl;
+                    GAMEAP_LOG_ERROR << "RestClient HTTP response: " << response.body;
                 }
             }
 
@@ -83,6 +86,11 @@ namespace Gameap {
 
         conn->AppendHeader("X-Auth-Token", m_api_token);
         conn->AppendHeader("Accept", "application/json");
+
+        conn->SetUserAgent("GameAP Daemon");
+        conn->FollowRedirects(true);
+        conn->FollowRedirects(true, 3);
+
         RestClient::Response response = conn->get(uri);
 
         if (response.code != 200) {
@@ -92,14 +100,14 @@ namespace Gameap {
 
             m_errors_count++;
 
-            std::cerr << "RestClient HTTP response code (GET): " << response.code << std::endl;
-            std::cerr << "URL: " << config.api_host << uri << std::endl;
+            GAMEAP_LOG_ERROR << "RestClient HTTP response code (GET): " << response.code;
+            GAMEAP_LOG_ERROR << "URL: " << config.api_host << uri;
 
             if (!response.body.empty()) {
                 if (response.body.length() > 200) {
-                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 200) << " ..." << std::endl;
+                    GAMEAP_LOG_ERROR << "RestClient HTTP response: " << response.body.substr(0, 200) << " ...";
                 } else {
-                    std::cerr << "RestClient HTTP response: " << response.body << std::endl;
+                    GAMEAP_LOG_ERROR << "RestClient HTTP response: " << response.body;
                 }
             }
 
@@ -135,25 +143,29 @@ namespace Gameap {
         conn->AppendHeader("Content-Type", "application/json");
         conn->AppendHeader("Accept", "application/json");
 
+        conn->SetUserAgent("GameAP Daemon");
+        conn->FollowRedirects(true);
+        conn->FollowRedirects(true, 3);
+
         std::string write_data = jwriter.write(data);
         RestClient::Response response = conn->post(uri, write_data);
 
         if (response.code == 201) {
             m_errors_count = 0;
-            std::cout << "API. Resource Created" << std::endl;
+            GAMEAP_LOG_DEBUG << "API. Resource Created";
         } else if (response.code == 422) {
-            std::cerr << "RestClient HTTP response code (POST): " << response.code << std::endl;
-            std::cerr << "URL: " << config.api_host << uri << std::endl;
+            GAMEAP_LOG_ERROR << "RestClient HTTP response code (POST): " << response.code;
+            GAMEAP_LOG_ERROR << "URL: " << config.api_host << uri;
 
             Json::Value jvalue;
             Json::Reader jreader(Json::Features::strictMode());
 
-            std::cerr << "RestClient Request: " << write_data << '\n';
+            GAMEAP_LOG_ERROR << "RestClient Request: " << write_data;
 
             if (jreader.parse(response.body, jvalue, false)) {
-                std::cerr << "Error: " << jvalue["message"].asString() << std::endl;
+                GAMEAP_LOG_ERROR << "Error: " << jvalue["message"].asString();
             } else {
-                std::cerr << "Error: " << response.body << std::endl;
+                GAMEAP_LOG_ERROR << "Error: " << response.body;
             }
 
         } else {
@@ -163,14 +175,14 @@ namespace Gameap {
 
             m_errors_count++;
 
-            std::cerr << "RestClient HTTP response code (POST): " << response.code << std::endl;
-            std::cerr << "URL: " << config.api_host << uri << std::endl;
+            GAMEAP_LOG_ERROR << "RestClient HTTP response code (POST): " << response.code;
+            GAMEAP_LOG_ERROR << "URL: " << config.api_host << uri;
 
             if (!response.body.empty()) {
                 if (response.body.length() > 200) {
-                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 200) << " ..." << std::endl;
+                    GAMEAP_LOG_ERROR << "RestClient HTTP response: " << response.body.substr(0, 200) << " ...";
                 } else {
-                    std::cerr << "RestClient HTTP response: " << response.body << std::endl;
+                    GAMEAP_LOG_ERROR << "RestClient HTTP response: " << response.body;
                 }
             }
 
@@ -195,15 +207,19 @@ namespace Gameap {
         conn->AppendHeader("Accept", "application/json");
         conn->AppendHeader("Content-Type", "application/json");
 
+        conn->SetUserAgent("GameAP Daemon");
+        conn->FollowRedirects(true);
+        conn->FollowRedirects(true, 3);
+
         std::string write_data = jwriter.write(data);
         RestClient::Response response = conn->put(uri, write_data);
 
         if (response.code == 200) {
             m_errors_count = 0;
-            std::cout << "API. Resource Updated" << std::endl;
+            GAMEAP_LOG_DEBUG << "API. Resource Updated";
         } else if (response.code == 201) {
             m_errors_count = 0;
-            std::cout << "API. Resource Created" << std::endl;
+            GAMEAP_LOG_DEBUG << "API. Resource Created";
         } else {
             if (response.code == 401) {
                 get_token();
@@ -211,16 +227,16 @@ namespace Gameap {
 
             m_errors_count++;
 
-            std::cerr << "RestClient HTTP response code (PUT): " << response.code << std::endl;
-            std::cerr << "URL: " << config.api_host << uri << std::endl;
+            GAMEAP_LOG_ERROR << "RestClient HTTP response code (PUT): " << response.code;
+            GAMEAP_LOG_ERROR << "URL: " << config.api_host << uri;
 
-            std::cerr << "RestClient Request: " << write_data << '\n';
+            GAMEAP_LOG_ERROR << "RestClient Request: " << write_data;
 
             if (!response.body.empty()) {
                 if (response.body.length() > 200) {
-                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 200) << " ..." << std::endl;
+                    GAMEAP_LOG_ERROR << "RestClient HTTP response: " << response.body.substr(0, 200) << " ...";
                 } else {
-                    std::cerr << "RestClient HTTP response: " << response.body << std::endl;
+                    GAMEAP_LOG_ERROR << "RestClient HTTP response: " << response.body;
                 }
             }
 
@@ -245,28 +261,32 @@ namespace Gameap {
         conn->AppendHeader("Accept", "application/json");
         conn->AppendHeader("Content-Type", "application/json");
 
+        conn->SetUserAgent("GameAP Daemon");
+        conn->FollowRedirects(true);
+        conn->FollowRedirects(true, 3);
+
         std::string write_data = jwriter.write(data);
         RestClient::Response response = conn->patch(uri, write_data);
 
         if (response.code == 200) {
-            std::cout << "API. Resource Updated" << std::endl;
+            GAMEAP_LOG_DEBUG << "API. Resource Updated";
         } else if (response.code == 201) {
-            std::cout << "API. Resource Created" << std::endl;
+            GAMEAP_LOG_DEBUG << "API. Resource Created";
         } else {
             if (response.code == 401) {
                 get_token();
             }
 
-            std::cerr << "RestClient HTTP response code (PATCH): " << response.code << std::endl;
-            std::cerr << "URL: " << config.api_host << uri << std::endl;
+            GAMEAP_LOG_ERROR << "RestClient HTTP response code (PATCH): " << response.code;
+            GAMEAP_LOG_ERROR << "URL: " << config.api_host << uri;
 
-            std::cerr << "RestClient Request: " << write_data << '\n';
+            GAMEAP_LOG_ERROR << "RestClient Request: " << write_data;
 
             if (!response.body.empty()) {
                 if (response.body.length() > 200) {
-                    std::cerr << "RestClient HTTP response: " << response.body.substr(0, 200) << " ..." << std::endl;
+                    GAMEAP_LOG_ERROR << "RestClient HTTP response: " << response.body.substr(0, 200) << " ...";
                 } else {
-                    std::cerr << "RestClient HTTP response: " << response.body << std::endl;
+                    GAMEAP_LOG_ERROR << "RestClient HTTP response: " << response.body;
                 }
             }
 

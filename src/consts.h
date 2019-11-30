@@ -17,3 +17,5 @@
 
 #define SUCCESS_STATUS_INT 			0
 #define ERROR_STATUS_INT	       -1
+
+#define GAMEAP_DAEMON_VERSION "2.1.0"

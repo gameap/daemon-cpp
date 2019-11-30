@@ -1,5 +1,6 @@
 #include <chrono>
 
+#include "log.h"
 #include "consts.h"
 
 #include "classes/task_list.h"
@@ -25,7 +26,7 @@ void DaemonServerSess::handle_handshake(const boost::system::error_code& error) 
     if (!error) {
         do_read();
     } else {
-        std::cerr << "Error: (" << error << ") " << error.message()  << std::endl;
+        GAMEAP_LOG_ERROR << "Error: (" << error << ") " << error.message();
     }
 }
 
@@ -66,7 +67,7 @@ void DaemonServerSess::do_read()
                             if (!binn_list_get_str(read_binn, 2, &login)
                                 || !binn_list_get_str(read_binn, 3, &password)
                             ) {
-                                std::cerr << "Incorrect binn data" << std::endl;
+                                GAMEAP_LOG_ERROR << "Incorrect binn data";
                                 binn_free(read_binn);
                                 return; 
                             }
@@ -77,12 +78,12 @@ void DaemonServerSess::do_read()
 
                                 if (!binn_list_get_uint16(read_binn, 4, &mode)) {
                                     mode = DAEMON_SERVER_MODE_NOAUTH;
-                                    std::cerr << "Incorrect binn data" << std::endl;
+                                    GAMEAP_LOG_ERROR << "Incorrect binn data";
                                     binn_free(read_binn);
                                     return; 
                                 }
 
-                                std::cout << "Auth success" << std::endl;
+                                GAMEAP_LOG_INFO << "Auth success";
                             }
                             else {
                                 binn_list_add_uint32(m_write_binn, 2);
@@ -96,23 +97,23 @@ void DaemonServerSess::do_read()
                         (*connection_->socket).shutdown();
                     }
                     else {
-                        std::cout << "ERROR: " << ec << std::endl;
+                        GAMEAP_LOG_ERROR << "ERROR: " << ec;
                     }
             });
             break;
         }
 
         case DAEMON_SERVER_MODE_AUTH:
-            std::cout << "AUTH" << std::endl;
+            GAMEAP_LOG_DEBUG << "AUTH";
             break;
 
         case DAEMON_SERVER_MODE_CMD:
-            std::cout << "DAEMON_SERVER_MODE_CMD" << std::endl;
+            GAMEAP_LOG_DEBUG << "DAEMON_SERVER_MODE_CMD";
             std::make_shared<CommandsSession>(std::move(connection_))->start();
             break;
 
         case DAEMON_SERVER_MODE_FILES:
-            std::cout << "DAEMON_SERVER_MODE_FILES" << std::endl;
+            GAMEAP_LOG_DEBUG << "DAEMON_SERVER_MODE_FILES";
             std::make_shared<FileServerSess>(std::move(connection_))->start();
             break;
     }
@@ -125,7 +126,7 @@ size_t DaemonServerSess::read_complete(size_t length)
     if (read_length <= 4) return 0;
 
     int found = 0;
-    for (int i = read_length; i > read_length-length && found < MSG_END_SYMBOLS_NUM; i--) {
+    for (auto i = read_length; i > read_length-length && found < MSG_END_SYMBOLS_NUM; i--) {
         if (read_buf[i-1] == '\xFF') found++;
     }
 
@@ -138,7 +139,7 @@ int DaemonServerSess::append_end_symbols(char * buf, size_t length)
 {
     if (length == 0) return -1;
 
-    for (int i = length; i < length + MSG_END_SYMBOLS_NUM; i++) {
+    for (auto i = length; i < length + MSG_END_SYMBOLS_NUM; i++) {
         buf[i] = '\xFF';
     }
 
@@ -193,11 +194,10 @@ void DaemonServer::handle_accept(std::shared_ptr<DaemonServerSess> session, cons
     if (!error) {
         session->start();
 
-        std::cout << "Client connected: "
+        GAMEAP_LOG_INFO << "Client connected: "
                   << session->socket().remote_endpoint().address().to_string()
                   << ":"
-                  << session->socket().remote_endpoint().port()
-                << std::endl;
+                  << session->socket().remote_endpoint().port();
 
         auto connection = std::make_shared<Connection>(io_service_, context_);
         session = std::make_shared<DaemonServerSess>(std::move(connection));
@@ -207,15 +207,15 @@ void DaemonServer::handle_accept(std::shared_ptr<DaemonServerSess> session, cons
                                            boost::asio::placeholders::error)
         );
     } else {
-        std::cerr << "Handle Accept error: (" << error << ") " << error.message() << std::endl;
+        GAMEAP_LOG_ERROR << "Handle Accept error: (" << error << ") " << error.message();
     }
 }
 // ---------------------------------------------------------------------
 
-int run_server(std::string ip, ushort port)
+int run_server(const std::string& ip, const ushort port)
 {
     try {
-        boost::asio::io_service io_service;
+        boost::asio::io_service io_service{DaemonServer::THREADS_NUM};
 
         boost::asio::ip::tcp::endpoint endpoint = ip.empty()
                                               ? boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), port)
@@ -228,13 +228,24 @@ int run_server(std::string ip, ushort port)
         // TODO: Replace tasks.stop to some status checker class or something else
         TaskList& tasks = TaskList::getInstance();
 
-        while(!tasks.stop) {
-            io_service.run_for(std::chrono::seconds(5));
+        std::vector<std::thread> v_services;
+        v_services.reserve(DaemonServer::THREADS_NUM);
+
+        auto run_closure = [&io_service, &tasks] {
+            while(!tasks.stop) {
+                io_service.run_for(std::chrono::seconds(5));
+            }
+        };
+
+        for (auto i = DaemonServer::THREADS_NUM - 1; i > 0; --i) {
+            v_services.emplace_back(run_closure);
         }
 
+        run_closure();
     }
     catch (std::exception& e) {
-        std::cerr << "Exception: " << e.what() << "\n";
+        GAMEAP_LOG_ERROR << "Daemon Server. Exception: " << e.what();
+        return 1;
     }
 
 

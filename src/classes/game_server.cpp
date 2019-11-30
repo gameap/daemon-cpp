@@ -2,7 +2,6 @@
 #include "consts.h"
 
 #include <boost/process.hpp>
-#include <boost/iostreams/stream.hpp>
 
 #include <json/json.h>
 
@@ -13,11 +12,11 @@
 #undef BOOST_NO_CXX11_SCOPED_ENUMS
 #include <boost/format.hpp>
 
+#include "log.h"
+
 #include "functions/restapi.h"
 #include "functions/gsystem.h"
 #include "functions/gstring.h"
-
-#include "classes/tasks.h"
 
 using namespace GameAP;
 using namespace boost::process;
@@ -48,7 +47,7 @@ GameServer::GameServer(ulong mserver_id)
     try {
         _update_vars(true);
     } catch (std::exception &e) {
-        std::cerr << "Server update vars error: " << e.what() << std::endl;
+        GAMEAP_LOG_ERROR << "Server update vars error: " << e.what();
     }
 }
 
@@ -79,7 +78,7 @@ void GameServer::_update_vars(bool force)
         jvalue = Gameap::Rest::get("/gdaemon_api/servers/" + std::to_string(m_server_id));
     } catch (Gameap::Rest::RestapiException &exception) {
         // Try later
-        std::cerr << exception.what() << std::endl;
+        GAMEAP_LOG_ERROR << exception.what();
         return;
     }
 
@@ -143,7 +142,7 @@ void GameServer::_update_vars(bool force)
 
         jaliases = jvalue["game_mod"]["vars"];
 
-        for( Json::ValueIterator itr = jaliases.begin() ; itr != jaliases.end() ; itr++ ) {
+        for(auto itr = jaliases.begin() ; itr != jaliases.end() ; itr++ ) {
 
             if ((*itr)["default"].isNull()) {
                 m_aliases.insert(std::pair<std::string, std::string>((*itr)["var"].asString(), ""));
@@ -155,11 +154,11 @@ void GameServer::_update_vars(bool force)
                 m_aliases.insert(std::pair<std::string, std::string>((*itr)["var"].asString(), std::to_string((*itr)["default"].asInt())));
             }
             else {
-                std::cerr << "Unknown alias type: " << (*itr)["default"] << std::endl;
+                GAMEAP_LOG_ERROR << "Unknown alias type: " << (*itr)["default"];
             }
         }
 
-        Json::Value server_vars = jvalue["vars"];;
+        Json::Value server_vars = jvalue["vars"];
 
         for( Json::ValueIterator itr = server_vars.begin() ; itr != server_vars.end() ; itr++ ) {
             if ((*itr).isString()) {
@@ -176,12 +175,12 @@ void GameServer::_update_vars(bool force)
                     m_aliases[itr.key().asString()] = std::to_string((*itr).asInt());
                 }
             } else {
-                std::cerr << "Unknown alias type: " << (*itr) << std::endl;
+                GAMEAP_LOG_ERROR << "Unknown alias type: " << (*itr);
             }
         }
     }
     catch (std::exception &e) {
-        std::cerr << "Aliases error: " << e.what() << std::endl;
+        GAMEAP_LOG_ERROR << "Aliases error: " << e.what();
     }
 
     m_last_update_vars = time(nullptr);
@@ -226,27 +225,27 @@ void GameServer::clear_cmd_output()
 
 // ---------------------------------------------------------------------
 
-void GameServer::replace_shortcodes(std::string &cmd)
+void GameServer::_replace_shortcodes(std::string &command)
 {
-    cmd = str_replace("{dir}", m_work_path.string(), cmd);
+    command = str_replace("{dir}", m_work_path.string(), command);
 
-    cmd = str_replace("{uuid}", m_uuid, cmd);
-    cmd = str_replace("{uuid_short}", m_uuid_short, cmd);
+    command = str_replace("{uuid}", m_uuid, command);
+    command = str_replace("{uuid_short}", m_uuid_short, command);
 
-    cmd = str_replace("{host}", m_ip, cmd);
-    cmd = str_replace("{ip}", m_ip, cmd);
-    cmd = str_replace("{game}", m_game_scode, cmd);
+    command = str_replace("{host}", m_ip, command);
+    command = str_replace("{ip}", m_ip, command);
+    command = str_replace("{game}", m_game_scode, command);
 
-    cmd = str_replace("{id}", std::to_string(m_server_id), cmd);
-    cmd = str_replace("{port}", std::to_string(m_server_port), cmd);
-    cmd = str_replace("{query_port}", std::to_string(m_query_port), cmd);
-    cmd = str_replace("{rcon_port}", std::to_string(m_rcon_port), cmd);
-    
-    cmd = str_replace("{user}", m_user, cmd);
+    command = str_replace("{id}", std::to_string(m_server_id), command);
+    command = str_replace("{port}", std::to_string(m_server_port), command);
+    command = str_replace("{query_port}", std::to_string(m_query_port), command);
+    command = str_replace("{rcon_port}", std::to_string(m_rcon_port), command);
+
+    command = str_replace("{user}", m_user, command);
 
     // Aliases
-    for (std::map<std::string, std::string>::iterator itr = m_aliases.begin(); itr != m_aliases.end(); ++itr) {
-        cmd = str_replace("{" + itr->first + "}", itr->second, cmd);
+    for (auto itr = m_aliases.begin(); itr != m_aliases.end(); ++itr) {
+        command = str_replace("{" + itr->first + "}", itr->second, command);
     }
 }
 
@@ -260,12 +259,12 @@ int GameServer::start_server()
     }
 
     DedicatedServer& deds = DedicatedServer::getInstance();
-    std::string cmd  = str_replace("{command}", m_start_command, deds.get_script_cmd(DS_SCRIPT_START));
-    replace_shortcodes(cmd);
+    std::string command  = str_replace("{command}", m_start_command, deds.get_script_cmd(DS_SCRIPT_START));
+    _replace_shortcodes(command);
 
     m_staft_crash_disabled = false;
 
-    int result = _exec(cmd);
+    int result = _exec(command);
 
     return (result == EXIT_SUCCESS_CODE) ? SUCCESS_STATUS_INT : ERROR_STATUS_INT;
 }
@@ -303,13 +302,12 @@ int GameServer::stop_server()
     }
 
     DedicatedServer& deds = DedicatedServer::getInstance();
-    // std::string cmd  = str_replace("{command}", "", deds.get_script_cmd(DS_SCRIPT_STOP));
-    std::string cmd  = deds.get_script_cmd(DS_SCRIPT_STOP);
-    replace_shortcodes(cmd);
+    std::string command  = deds.get_script_cmd(DS_SCRIPT_STOP);
+    _replace_shortcodes(command);
 
     m_staft_crash_disabled = true;
     
-    int result = _exec(cmd);
+    int result = _exec(command);
 
     return (result == EXIT_SUCCESS_CODE) ? SUCCESS_STATUS_INT : ERROR_STATUS_INT;
 }
@@ -331,10 +329,10 @@ int GameServer::_update_server()
     std::string update_cmd = deds.get_script_cmd(DS_SCRIPT_UPDATE);
     std::string steamcmd_path = deds.get_steamcmd_path();
 
-    std::cout << "Server update starting..." << std::endl;
+    GAMEAP_LOG_INFO << "Server update starting...";
 
     if (update_cmd.length() > 0) {
-        replace_shortcodes(update_cmd);
+        _replace_shortcodes(update_cmd);
         int result = _exec(update_cmd);
 
         if (result == EXIT_SUCCESS_CODE) {
@@ -346,7 +344,7 @@ int GameServer::_update_server()
         }
     }
 
-    ushort game_install_from =  INST_NO_SOURCE;
+    ushort game_install_from = INST_NO_SOURCE;
     ushort game_mod_install_from =    INST_NO_SOURCE;
 
     // Install game
@@ -431,6 +429,8 @@ int GameServer::_update_server()
         fs::create_directories(m_work_path);
     }
 
+    fs::current_path(m_work_path);
+
     if (game_install_from == INST_FROM_STEAM) {
         std::string steamcmd_fullpath = steamcmd_path + "/" + STEAMCMD;
 
@@ -452,9 +452,11 @@ int GameServer::_update_server()
         // SteamCMD installation fail without this command
 
         Config& config = Config::getInstance();
+        DedicatedServer& dedicatedServer = DedicatedServer::getInstance();
+        fs::path ds_work_path = dedicatedServer.get_work_path();
 
-        if (fs::exists(fs::current_path() / "daemon" / "runas.exe")) {
-            steamcmd_fullpath = fs::current_path().string() 
+        if (fs::exists(ds_work_path / "daemon" / "runas.exe")) {
+            steamcmd_fullpath = ds_work_path.string()
                 + "\\daemon\\runas.exe -w:"
                 + m_work_path.string() 
                 + " " 
@@ -528,7 +530,7 @@ int GameServer::_update_server()
         std::string archive = boost::str(boost::format("%1%/%2%") % m_work_path.string() % source_path.filename().string());
         
         if (_unpack_archive(archive) == ERROR_STATUS_INT) {
-            _error("Unable to unpack: " + source_path.string());
+            _error("Unable to unpack: " + archive);
 
             fs::remove(archive);
             return ERROR_STATUS_INT;
@@ -581,9 +583,9 @@ int GameServer::_update_server()
         }
     }
     else if (game_mod_install_from == INST_FROM_REMREP) {
-        std::string cmd = boost::str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % m_work_path.string());
+        std::string command = boost::str(boost::format("wget -N -c %1% -P %2% ") % source_path.string() % m_work_path.string());
 
-        if (_exec(cmd) != EXIT_SUCCESS_CODE) {
+        if (_exec(command) != EXIT_SUCCESS_CODE) {
             _set_installed(SERVER_NOT_INSTALLED);
             return ERROR_STATUS_INT;
         }
@@ -591,7 +593,7 @@ int GameServer::_update_server()
         std::string archive = boost::str(boost::format("%1%/%2%") % m_work_path.string() % source_path.filename().string());
 
         if (_unpack_archive(archive) == ERROR_STATUS_INT) {
-            _error("Unable to unpack: " + source_path.string());
+            _error("Unable to unpack: " + archive);
             fs::remove(archive);
             return ERROR_STATUS_INT;
         }
@@ -599,18 +601,10 @@ int GameServer::_update_server()
         fs::remove(archive);
     }
 
-    #ifdef __linux__
-        if (m_user != "") {
-            _exec(boost::str(boost::format("chown -R %1% %2%") % m_user % m_work_path.string()));
-            fs::permissions(m_work_path, fs::owner_all);
-        }
-    #endif
-
     // Run after install script if exist
     // After execution, the script will be deleted
     fs::path after_install_script = m_work_path / AFTER_INSTALL_SCRIPT;
-    if (fs::exists(after_install_script))
-    {
+    if (fs::exists(after_install_script)) {
         int result = _exec(after_install_script.string());
 
         if (result != EXIT_SUCCESS_CODE) {
@@ -620,6 +614,13 @@ int GameServer::_update_server()
 
         fs::remove(after_install_script);
     }
+
+    #ifdef __linux__
+        if (m_user != "" && getuid() == 0) {
+            _exec(boost::str(boost::format("chown -R %1% %2%") % m_user % m_work_path.string()));
+            fs::permissions(m_work_path, fs::owner_all);
+        }
+    #endif
 
     // Update installed = 1
     _set_installed(SERVER_INSTALLED);
@@ -646,10 +647,10 @@ int GameServer::update_server()
 
 // ---------------------------------------------------------------------
 
-void GameServer::_error(std::string msg)
+void GameServer::_error(const std::string msg)
 {
     _append_cmd_output(msg);
-    std::cerr << msg << '\n';
+    GAMEAP_LOG_ERROR << msg;
 }
 
 // ---------------------------------------------------------------------
@@ -665,7 +666,7 @@ void GameServer::_set_installed(unsigned int status)
         jdata["installed"] = m_installed;
         Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(m_server_id), jdata);
     } catch (Gameap::Rest::RestapiException &exception) {
-        std::cerr << exception.what() << '\n';
+        GAMEAP_LOG_ERROR << exception.what();
     }
 }
 
@@ -685,7 +686,7 @@ void GameServer::_try_unblock()
 
 int GameServer::_unpack_archive(fs::path const & archive)
 {
-    std::string cmd;
+    std::string unpack_cmd;
 
     if (archive.extension().string() == ".rar") {
         std::string errorMsg = "RAR archive not supported. Use 7z, zip, tar, xz, gz or bz2 archives";
@@ -694,32 +695,32 @@ int GameServer::_unpack_archive(fs::path const & archive)
     }
 
     #ifdef __linux__
-        if (archive.extension().string() == ".xz")           cmd = boost::str(boost::format("tar -xpvJf %1% -C %2%") % archive.string() % m_work_path.string());
-        else if (archive.extension().string() == ".gz")      cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive.string() % m_work_path.string());
-        else if (archive.extension().string() == ".bz2")     cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive.string() % m_work_path.string());
-        else if (archive.extension().string() == ".tar")     cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive.string() % m_work_path.string());
-        else if (archive.extension().string() == ".zip")     cmd = boost::str(boost::format("unzip -o %1% -d %2%") % archive.string() % m_work_path.string());
-        else cmd = boost::str(boost::format("7z x %1% -aoa -o%2%") % archive.string() % m_work_path.string());
+        if (archive.extension().string() == ".xz") unpack_cmd = boost::str(boost::format("tar -xpvJf %1% -C %2%") % archive.string() % m_work_path.string());
+        else if (archive.extension().string() == ".gz") unpack_cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive.string() % m_work_path.string());
+        else if (archive.extension().string() == ".bz2") unpack_cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive.string() % m_work_path.string());
+        else if (archive.extension().string() == ".tar") unpack_cmd = boost::str(boost::format("tar -xvf %1% -C %2%") % archive.string() % m_work_path.string());
+        else if (archive.extension().string() == ".zip") unpack_cmd = boost::str(boost::format("unzip -o %1% -d %2%") % archive.string() % m_work_path.string());
+        else unpack_cmd = boost::str(boost::format("7z x %1% -aoa -o%2%") % archive.string() % m_work_path.string());
     #elif _WIN32
         Config& config = Config::getInstance();
 
-        cmd = boost::str(boost::format("%1% x %2% -aoa -o%3%") % config.path_7zip % archive.string() % m_work_path.string());
+        unpack_cmd = boost::str(boost::format("%1% x %2% -aoa -o%3%") % config.path_7zip % archive.string() % m_work_path.string());
     #endif
 
-    if (_exec(cmd) != EXIT_SUCCESS_CODE) {
+    if (_exec(unpack_cmd) != EXIT_SUCCESS_CODE) {
         return ERROR_STATUS_INT;
     }
 }
 
 // ---------------------------------------------------------------------
 
-int GameServer::_exec(std::string cmd, bool not_append)
+int GameServer::_exec(std::string command, bool not_append)
 {
     if (!not_append) {
-        _append_cmd_output(fs::current_path().string() + "# " + cmd);
+        _append_cmd_output(fs::current_path().string() + "# " + command);
     }
 
-    int exit_code = exec(cmd, [this, not_append](std::string line) {
+    int exit_code = exec(command, [this, not_append](std::string line) {
         if (!not_append) {
             _append_cmd_output(line);
         }
@@ -734,9 +735,9 @@ int GameServer::_exec(std::string cmd, bool not_append)
 
 // ---------------------------------------------------------------------
 
-int GameServer::_exec(std::string cmd)
+int GameServer::_exec(std::string command)
 {
-    return _exec(cmd, false);
+    return _exec(command, false);
 }
 
 // ---------------------------------------------------------------------
@@ -817,7 +818,7 @@ int GameServer::delete_files()
     std::string delete_cmd  = deds.get_script_cmd(DS_SCRIPT_DELETE);
 
     if (delete_cmd.length() > 0) {
-        replace_shortcodes(delete_cmd);
+        _replace_shortcodes(delete_cmd);
         int result = _exec(delete_cmd);
 
         if (result != EXIT_SUCCESS_CODE) {
@@ -825,7 +826,7 @@ int GameServer::delete_files()
         }
     } else {
         try {
-            std::cout << "Remove path: " << m_work_path << std::endl;
+            GAMEAP_LOG_DEBUG << "Remove path: " << m_work_path;
             fs::remove_all(m_work_path);
         }
         catch (fs::filesystem_error &e) {
@@ -839,13 +840,15 @@ int GameServer::delete_files()
 
 // ---------------------------------------------------------------------
 
-int GameServer::cmd_exec(std::string cmd)
+int GameServer::cmd_exec(std::string command)
 {
     std::vector<std::string> split_lines;
-    boost::split(split_lines, cmd, boost::is_any_of("\n\r"));
+    boost::split(split_lines, command, boost::is_any_of("\n\r"));
 
-    for (std::vector<std::string>::iterator itl = split_lines.begin(); itl != split_lines.end(); ++itl) {
-        if (*itl == "") continue;
+    for (auto itl = split_lines.begin(); itl != split_lines.end(); ++itl) {
+        if (*itl == "") {
+            continue;
+        }
 
         if (_exec(*itl) != EXIT_SUCCESS_CODE) {
             return ERROR_STATUS_INT;
@@ -866,7 +869,7 @@ bool GameServer::_server_status_cmd()
 {
     DedicatedServer& deds = DedicatedServer::getInstance();
     std::string status_cmd  = deds.get_script_cmd(DS_SCRIPT_STATUS);
-    replace_shortcodes(status_cmd);
+    _replace_shortcodes(status_cmd);
 
     int result = _exec(status_cmd, true);
 
@@ -886,10 +889,14 @@ bool GameServer::status_server()
         return false;
     }
 
+    if (m_last_process_check > time(nullptr) - TIME_CACHE_STATUS) {
+        return m_active;
+    }
+
     try {
         _update_vars();
     } catch (std::exception &e) {
-        std::cerr << "Server update vars error: " << e.what() << std::endl;
+        GAMEAP_LOG_ERROR << "Server update vars error: " << e.what();
     }
 
     DedicatedServer& deds = DedicatedServer::getInstance();
@@ -927,18 +934,6 @@ bool GameServer::status_server()
     }
 
     m_last_process_check = std::time(nullptr);
-
-    Json::Value jdata;
-    jdata["process_active"] = (int)m_active;
-
-    std::time_t now = std::time(nullptr);
-    std::tm * ptm = std::localtime(&now);
-    char buffer[32];
-    std::strftime(buffer, 32, "%F %T", ptm);
-
-    jdata["last_process_check"] = buffer;
-
-    Gameap::Rest::put("/gdaemon_api/servers/" + std::to_string(m_server_id), jdata);
 
     return (bool)m_active;
 }

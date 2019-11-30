@@ -44,6 +44,8 @@ public:
     ushort stats_update_period;
     ushort stats_db_update_period;
 
+    std::string log_level;
+
 #ifdef _WIN32
     std::string path_7zip;
     std::string path_starter;

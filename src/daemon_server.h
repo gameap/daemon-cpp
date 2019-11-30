@@ -36,6 +36,7 @@ public:
     static constexpr ushort DAEMON_SERVER_MODE_AUTH       = 1;
     static constexpr ushort DAEMON_SERVER_MODE_CMD        = 2;
     static constexpr ushort DAEMON_SERVER_MODE_FILES      = 3;
+    static constexpr ushort DAEMON_SERVER_MODE_STATUS     = 4;
 
     DaemonServerSess(std::shared_ptr<Connection> connection)
             : connection_(std::move(connection))
@@ -52,7 +53,7 @@ public:
     void handle_handshake(const boost::system::error_code& error);
 
 private:
-    int append_end_symbols(char * buf, size_t length);
+    static int append_end_symbols(char * buf, size_t length);
     void do_write();
     void do_read();
     size_t read_complete(size_t length);
@@ -73,6 +74,9 @@ private:
 class DaemonServer
 {
 public:
+
+    static constexpr ushort THREADS_NUM = 4;
+
 DaemonServer(boost::asio::io_service& io_service, boost::asio::ip::tcp::endpoint endpoint)
         : acceptor_(io_service, endpoint),
           io_service_(io_service),
@@ -118,6 +122,6 @@ private:
 
 // ---------------------------------------------------------------------
 
-int run_server(std::string ip, ushort port);
+int run_server(const std::string& ip, ushort port);
 
 #endif
