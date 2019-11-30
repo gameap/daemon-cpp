@@ -63,7 +63,6 @@ namespace Gameap {
                 }
 
                 Rest::m_api_token = jvalue["token"].asString();
-
             } else {
                 throw Rest::RestapiException("JSON Parse error");
             }
