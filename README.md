@@ -23,6 +23,11 @@ master          |[![Build Status](https://travis-ci.org/gameap/GDaemon2.svg?bran
 * CURL Library
 * [Json C++ Library](https://github.com/open-source-parsers/jsoncpp)
 * Boost Libraries (>= 1.66.0): Boost System, Boost Filesystem, Boost Iostreams, Boost Thread, Boost Process
+* [PLog](https://github.com/SergiusTheBest/plog) >= 1.1.5
+
+#### Tests
+* [Google Tests](https://github.com/google/googletest)
+* [GMock Global](https://github.com/apriorit/gmock-global) >= 1.0.2
 
 ### Compiling on Linux
 

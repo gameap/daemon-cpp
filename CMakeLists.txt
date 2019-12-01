@@ -8,4 +8,4 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 endif()
 
 add_subdirectory(src)
-#add_subdirectory(tests)
+add_subdirectory(tests)

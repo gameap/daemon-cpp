@@ -1,7 +1,5 @@
 #include "game_server_installer.h"
 
-#include <string>
-
 #include "functions/gsystem.h"
 #include "consts.h"
 
@@ -19,6 +17,10 @@ using namespace GameAP;
 namespace fs = boost::filesystem;
 namespace bp = ::boost::process;
 
+/**
+ * Run game server installation
+ * @return int
+ */
 int GameServerInstaller::install_server()
 {
     if (_detect_sources() == ERROR_STATUS_INT) {
@@ -60,6 +62,20 @@ int GameServerInstaller::install_server()
     return SUCCESS_STATUS_INT;
 }
 
+/**
+ * Detect game and mod sources
+ *
+ * Available game sources:
+ *      SteamCMD
+ *      Local repository
+ *      Remote repository
+ *
+ * Available mod sources:
+ *      Local repository
+ *      Remote repository
+ *
+ * @return
+ */
 int GameServerInstaller::_detect_sources()
 {
     bool game_source_detected = false;

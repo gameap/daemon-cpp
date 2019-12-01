@@ -208,7 +208,7 @@ int DedicatedServer::stats_process()
                 for (std::vector<std::string>::iterator its = split_spaces.begin()+1; its != split_spaces.end(); ++its) {
                     if (*its == "") continue;
 
-                    ram_total = strtoull((*its).c_str(), NULL, 10);
+                    ram_total = strtoull((*its).c_str(), nullptr, 10);
                     itm_count++;
                     break;
                 }
@@ -218,7 +218,7 @@ int DedicatedServer::stats_process()
                 for (std::vector<std::string>::iterator its = split_spaces.begin()+1; its != split_spaces.end(); ++its) {
                     if (*its == "") continue;
 
-                    ram_free = strtoull((*its).c_str(), NULL, 10);
+                    ram_free = strtoull((*its).c_str(), nullptr, 10);
                     itm_count++;
                     break;
                 }
@@ -228,7 +228,7 @@ int DedicatedServer::stats_process()
                 for (std::vector<std::string>::iterator its = split_spaces.begin()+1; its != split_spaces.end(); ++its) {
                     if (*its == "") continue;
 
-                    cur_stats.ram_cache = strtoull((*its).c_str(), NULL, 10);
+                    cur_stats.ram_cache = strtoull((*its).c_str(), nullptr, 10);
                     itm_count++;
                     break;
                 }
