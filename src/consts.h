@@ -19,3 +19,7 @@
 #define ERROR_STATUS_INT	       -1
 
 #define GAMEAP_DAEMON_VERSION "2.1.0"
+
+// State keys
+
+#define STATE_PANEL_TIMEDIFF "gameap:timediff"

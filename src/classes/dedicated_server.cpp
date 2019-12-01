@@ -1,5 +1,6 @@
 #include "consts.h"
 
+#include "state.h"
 #include "config.h"
 #include "dedicated_server.h"
 
@@ -539,6 +540,9 @@ int DedicatedServer::update_db()
 
     Json::Value jupdate_data;
 
+    State& state = State::getInstance();
+    time_t time_diff = std::stoi(state.get(STATE_PANEL_TIMEDIFF));
+
     for (auto& item : stats) {
         ushort ping = 0;
 
@@ -589,7 +593,7 @@ int DedicatedServer::update_db()
         jstats["ping"] = ping;
         jstats["drvspace"] = drvspace;
 
-        std::time_t time = item.time;
+        std::time_t time = item.time - time_diff;
         std::tm * ptm = std::localtime(&time);
         char buffer[32];
         std::strftime(buffer, 32, "%F %T", ptm);

@@ -20,7 +20,7 @@ class State {
         }
 
         /**
-         * Get state value
+         * Set state value
          *
          * @param key
          * @param value

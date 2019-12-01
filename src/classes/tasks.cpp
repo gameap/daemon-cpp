@@ -1,12 +1,7 @@
-#include "tasks.h"
-#include "config.h"
 #include "consts.h"
+#include "tasks.h"
 
-#include <boost/process.hpp>
 #include <boost/iostreams/stream.hpp>
-#include <boost/format.hpp>
-
-#include <cstring>
 
 #include "functions/restapi.h"
 #include "functions/gsystem.h"
@@ -27,7 +22,6 @@ void Task::run()
         return;
     }
 
-    m_task_started = time(nullptr);
     m_status = working;
 
     std::string qstr;
@@ -35,7 +29,6 @@ void Task::run()
     try {
         Json::Value jdata;
         jdata["status"] = m_status;
-        jdata["time_stchange"] = (uint) m_task_started;
         Gameap::Rest::put("/gdaemon_api/tasks/" + std::to_string(m_task_id), jdata);
     } catch (Gameap::Rest::RestapiException &exception) {
         GAMEAP_LOG_ERROR << "Error updating task status [to status code " + std::to_string(m_status) + "]: "
@@ -195,7 +188,7 @@ int Task::_exec(std::string cmd)
     std::vector<std::string> split_lines;
     boost::split(split_lines, cmd, boost::is_any_of("\n\r"));
 
-    for (std::vector<std::string>::iterator itl = split_lines.begin(); itl != split_lines.end(); ++itl) {
+    for (auto itl = split_lines.begin(); itl != split_lines.end(); ++itl) {
         if (*itl == "") continue;
         _single_exec(*itl);
     }

@@ -1,7 +1,7 @@
 #include "state.h"
 
 /**
- * Get state value
+ * Set string state value
  *
  * @param key
  * @param value
@@ -24,6 +24,7 @@ std::string State::get(const std::string &key)
 {
     return m_state.at(key);
 }
+
 
 /**
  * Check the element existence
