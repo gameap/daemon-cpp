@@ -14,16 +14,18 @@ if (BUILD_STATIC)
         set(CMAKE_FIND_LIBRARY_SUFFIXES ".a;.so")
     endif()
 
+    if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+        set(CMAKE_CXX_FLAGS_RELEASE "/MT")
+        set(CMAKE_CXX_FLAGS_DEBUG "/MTd")
+    elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
+    endif()
+
     set(BUILD_SHARED_LIBS OFF)
-    set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
 endif()
 
 if( "${GDAEMON_LIBPATH}" STREQUAL "" )
     set(GDAEMON_LIBPATH /usr/lib/gameap-daemon)
-endif()
-
-if (WIN32)
-    set(BUILD_STATIC_BOOST ON)
 endif()
 
 if (BUILD_STATIC_BOOST)
@@ -52,8 +54,16 @@ else()
 endif()
 message( STATUS "Found boost: ${BOOST_LIBS}" )
 
+# Find JSONCPP Library
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(LIBJSON_NAMES libjsond libjsoncppd jsoncppd)
+endif()
+
+set(LIBJSON_NAMES ${LIBJSON_NAMES} libjson libjsoncpp jsoncpp)
+
 find_library(JSONCPP_LIBRARY
-        NAMES libjson libjsoncpp jsoncpp
+        NAMES ${LIBJSON_NAMES}
         HINTS "${CMAKE_PREFIX_PATH}"
         )
 
@@ -82,8 +92,16 @@ if (NOT ${BINN_INCLUDE_PATH} STREQUAL "BINN_INCLUDE_PATH-NOTFOUND")
     include_directories(${BINN_INCLUDE_PATH}/binn)
 endif()
 
+# Find RestClientCPP Library
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(RESTCLIENT_LIB_NAMES librestclient-cppd restclient-cppd)
+endif()
+
+set(RESTCLIENT_LIB_NAMES ${RESTCLIENT_LIB_NAMES} librestclient-cpp restclient-cpp)
+
 find_library(RESTCLIENT_LIBRARY
-        NAMES librestclient-cpp restclient-cpp
+        NAMES ${RESTCLIENT_LIB_NAMES}
         HINTS "${CMAKE_PREFIX_PATH}"
         )
 

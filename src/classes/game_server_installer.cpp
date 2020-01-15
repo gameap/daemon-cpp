@@ -2,6 +2,7 @@
 
 #include "functions/gsystem.h"
 #include "consts.h"
+#include "config.h"
 
 #include "log.h"
 #include "dedicated_server.h"
@@ -250,6 +251,8 @@ int GameServerInstaller::_install_mod()
     else {
         install_result = ERROR_STATUS_INT;
     }
+
+    return install_result;
 }
 
 int GameServerInstaller::_install_game_steam()
@@ -275,12 +278,12 @@ int GameServerInstaller::_install_game_steam()
         // SteamCMD installation fail without this command
 
         Config& config = Config::getInstance();
-        fs::path ds_work_path = dedicatedServer.get_work_path();
+        fs::path ds_work_path = deds.get_work_path();
 
         if (fs::exists(ds_work_path / "daemon" / "runas.exe")) {
             steamcmd_fullpath = ds_work_path.string()
                 + "\\daemon\\runas.exe -w:"
-                + m_work_path.string()
+                + m_server_absolute_path.string()
                 + " "
                 + steamcmd_fullpath;
         }
@@ -422,7 +425,7 @@ int GameServerInstaller::_unpack_archive(const fs::path &archive) {
     }
 #elif _WIN32
     Config& config = Config::getInstance();
-    unpack_cmd = boost::str(boost::format("%1% x %2% -aoa -o%3%") % config.path_7zip % archive.string() % m_work_path.string());
+    unpack_cmd = boost::str(boost::format("%1% x %2% -aoa -o%3%") % config.path_7zip % archive.string() % m_server_absolute_path.string());
 #endif
 
     if (_exec(unpack_cmd) != EXIT_SUCCESS_CODE) {

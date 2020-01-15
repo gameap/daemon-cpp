@@ -90,8 +90,14 @@ if (NOT ${BINN_INCLUDE_PATH} STREQUAL "BINN_INCLUDE_PATH-NOTFOUND")
     include_directories(${BINN_INCLUDE_PATH}/binn)
 endif()
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(RESTCLIENT_LIB_NAMES librestclient-cppd restclient-cppd)
+endif()
+
+set(RESTCLIENT_LIB_NAMES ${RESTCLIENT_LIB_NAMES} librestclient-cpp restclient-cpp)
+
 find_library(RESTCLIENT_LIBRARY
-        NAMES librestclient-cpp restclient-cpp
+        NAMES ${RESTCLIENT_LIB_NAMES}
         HINTS "${CMAKE_PREFIX_PATH}"
         )
 
@@ -178,4 +184,5 @@ target_link_libraries(run_tests
         gmock_main
 )
 
-add_test(NAME control_linux_test COMMAND run_tests)
+add_test(NAME state_test COMMAND run_tests)
+add_test(NAME cmd_output COMMAND run_tests)

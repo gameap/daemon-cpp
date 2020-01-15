@@ -1,0 +1,80 @@
+version: '2.1.0-{build}'
+
+image:
+  - Visual Studio 2017
+
+branches:
+  only:
+  - feature/appveyor
+
+environment:
+  APPVEYOR_SAVE_CACHE_ON_ERROR: true
+  VCPKG_DIR: c:\tools\vcpkg
+  matrix:
+    - platform: x86
+      configuration: Debug
+    - platform: x64
+      configuration: Debug
+
+    - platform: x86
+      configuration: Release
+    - platform: x64
+      configuration: Release
+build:
+  verbosity: minimal
+
+cache:
+  - c:\tools\vcpkg\installed
+
+init:
+  - set TARGET_PLATFORM=
+  - if "%platform%"=="x86" ( set TARGET_PLATFORM=Win32)
+  - if "%platform%"=="x64" ( set TARGET_PLATFORM=x64)
+  - if "%platform%"=="x86" ( set TARGET_ARCH=x86)
+  - if "%platform%"=="x64" ( set TARGET_ARCH=amd64)
+  - if "%configuration%"=="Debug" ( set CONFIGURATION_LC=debug)
+  - if "%configuration%"=="Release" ( set CONFIGURATION_LC=release)
+  - echo %TARGET_PLATFORM%
+  - echo %TARGET_ARCH%
+  - echo %CONFIGURATION_LC%
+
+install:
+  - cd %VCPKG_DIR%
+  - git pull https://github.com/et-nik/vcpkg master
+  - .\bootstrap-vcpkg.bat
+  - vcpkg version
+  
+  - vcpkg install curl:%platform%-windows
+                  restclient-cpp:%platform%-windows
+                  binn:%platform%-windows
+                  jsoncpp:%platform%-windows
+
+  # Boost libraries
+  - vcpkg install boost-system:%platform%-windows
+                  boost-filesystem:%platform%-windows
+                  boost-iostreams:%platform%-windows
+                  boost-thread:%platform%-windows
+                  boost-process:%platform%-windows
+                  boost-property-tree:%platform%-windows
+
+  - cd %APPVEYOR_BUILD_FOLDER%
+  - git submodule -q update --init
+  - call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\vsdevcmd.bat" -arch=%TARGET_ARCH% -host_arch=%TARGET_ARCH%
+
+build_script:
+  - mkdir build
+  - cd build
+  - cmake -G "Ninja"
+    -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%/scripts/buildsystems/vcpkg.cmake 
+    -DVCPKG_TARGET_TRIPLET=%platform%-windows
+    -DVCPKG_BUILD_TYPE=%CONFIGURATION_LC%
+    -DCMAKE_BUILD_TYPE=%configuration%
+    -DBUILD_TESTING=ON ..
+  - cmake --build . --config %configuration%
+  - ctest
+
+after_build:
+  - 7z a gameap-daemon-%platform%-%CONFIGURATION_LC%.zip %APPVEYOR_BUILD_FOLDER%\build\bin\*.exe %APPVEYOR_BUILD_FOLDER%\build\bin\*.dll
+
+artifacts:
+  - path: build/gameap-daemon-%platform%-%CONFIGURATION_LC%.zip

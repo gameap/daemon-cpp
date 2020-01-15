@@ -5,7 +5,7 @@
 #endif
 
 #if defined __UINT32_MAX__ or UINT32_MAX
-    #include <inttypes.h>
+#include <inttypes.h>
 #else
 	typedef unsigned char uint8;
 	typedef unsigned short uint16;

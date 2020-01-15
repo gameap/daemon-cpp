@@ -7,10 +7,6 @@
 
 #include <cstring>
 
-#include <sys/io.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-
 #include <execinfo.h>
 #include <unistd.h>
 #include <wait.h>
@@ -20,7 +16,6 @@
 #include <thread>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
-#include <ctime>
 
 #include "log.h"
 #include "config.h"

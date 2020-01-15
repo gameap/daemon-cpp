@@ -201,8 +201,8 @@ int _tmain (int argc, TCHAR *argv[])
         );
     }
 
-    plog::init<GameAP::DefaultLog>(plog::debug, config.output_log.c_str());
-    plog::init<GameAP::ErrorLog>(plog::debug, config.error_log.c_str());
+	plog::init<GameAP::MainLog>(plog::verbose, config.output_log.c_str());
+	plog::init<GameAP::ErrorLog>(plog::verbose, config.error_log.c_str());
 
 #ifndef NON_DAEMON
     freopen(config.output_log.c_str(), "w", stdout);

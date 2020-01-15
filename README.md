@@ -53,6 +53,16 @@ Add -DCMAKE_TOOLCHAIN_FILE to cmake arguments:
 
 Open GDaemon folder in your Visual Studio, run cmake and run build.
 
+### CMake options
+
+| Option                        | Info
+|-------------------------------|-----------------------
+| -DBUILD_STATIC_BOOST          | Build with static boost libraries
+| -DBUILD_STATIC                | Build with static libraries
+| -DSYSCTL_DAEMON               | 
+| -DNON_DAEMON                  |
+
+
 ## Configuration
 
 Configuration file: daemon.cfg
