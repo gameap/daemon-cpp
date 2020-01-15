@@ -5,7 +5,8 @@ image:
 
 branches:
   only:
-  - feature/appveyor
+  - develop
+  - master
 
 environment:
   APPVEYOR_SAVE_CACHE_ON_ERROR: true
