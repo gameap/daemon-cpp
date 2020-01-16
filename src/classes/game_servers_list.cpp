@@ -64,7 +64,7 @@ void GameServersList::stats_process()
 
         if (server.second->m_last_process_check > 0 && server.second->m_installed == SERVER_INSTALLED) {
             time_t last_process_check = server.second->m_last_process_check - time_diff;
-            std::tm * ptm = std::localtime(&last_process_check);
+            std::tm * ptm = std::gmtime(&last_process_check);
             char buffer[32];
             std::strftime(buffer, 32, "%F %T", ptm);
 

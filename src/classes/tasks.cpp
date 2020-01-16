@@ -92,10 +92,30 @@ void Task::run()
             
             m_gserver->clear_cmd_output();
             result_status = m_gserver->stop_server();
-            result_status = m_gserver->start_server();
 
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            m_gserver->status_server();
+            // Waiting stopping game server
+            unsigned short tries = 5;
+            while (true) {
+                if (!m_gserver->status_server()) {
+                    break;
+                }
+                else if (tries <= 0) {
+                    _append_cmd_output("The server did not stop for a long time");
+                    result_status = ERROR_STATUS_INT;
+                    break;
+                }
+
+                std::this_thread::sleep_for(std::chrono::seconds(5));
+                tries--;
+            }
+
+            if (result_status != ERROR_STATUS_INT) {
+                result_status = m_gserver->start_server();
+
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+                m_gserver->status_server();
+            }
+            
         } catch (std::exception &e) {
             result_status = ERROR_STATUS_INT;
             GAMEAP_LOG_ERROR << "gsstop error: " << e.what();

@@ -250,11 +250,6 @@ void GameServer::_replace_shortcodes(std::string &command)
 
 int GameServer::start_server()
 {
-    if (status_server()) {
-        // Server online
-        return SUCCESS_STATUS_INT;
-    }
-
     DedicatedServer& deds = DedicatedServer::getInstance();
     std::string command  = str_replace("{command}", m_start_command, deds.get_script_cmd(DS_SCRIPT_START));
     _replace_shortcodes(command);
@@ -294,11 +289,6 @@ void GameServer::start_if_need()
 
 int GameServer::stop_server()
 {
-    if (!status_server()) {
-        // Server offline
-        //return SUCCESS_STATUS_INT;
-    }
-
     DedicatedServer& deds = DedicatedServer::getInstance();
     std::string command  = deds.get_script_cmd(DS_SCRIPT_STOP);
     _replace_shortcodes(command);

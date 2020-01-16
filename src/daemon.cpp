@@ -190,6 +190,7 @@ int run_daemon()
             GAMEAP_LOG_INFO << "Running Daemon Server";
             server_exit_status = run_server(config.listen_ip, config.listen_port);
             GAMEAP_LOG_INFO << "Daemon Server stopped (Exit status: " << server_exit_status << ")";
+            std::this_thread::sleep_for(std::chrono::seconds(5));
         }
     });
 
@@ -223,7 +224,7 @@ int run_daemon()
                 GAMEAP_LOG_ERROR << "Game servers stats process error: " << e.what();
             }
 
-            std::this_thread::sleep_for(std::chrono::seconds(5));
+            std::this_thread::sleep_for(std::chrono::seconds(30));
         }
     }
 
