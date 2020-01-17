@@ -1,5 +1,6 @@
 #ifdef _WIN32
     #define SLH "\\"
+    #define _WIN32_WINNT 0x0601
 #else
     #define SLH "/"
 #endif

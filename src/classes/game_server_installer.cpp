@@ -115,6 +115,8 @@ int GameServerInstaller::_detect_sources()
             mod_source_detected = true;
         }
     }
+    
+    return SUCCESS_STATUS_INT;
 }
 
 void GameServerInstaller::_detect_game_source()
@@ -235,7 +237,9 @@ int GameServerInstaller::_install_game()
 
     if (install_result != SUCCESS_STATUS_INT) {
         return ERROR_STATUS_INT;
-    }
+    } else {
+		return SUCCESS_STATUS_INT
+	}
 }
 
 int GameServerInstaller::_install_mod()
@@ -430,7 +434,9 @@ int GameServerInstaller::_unpack_archive(const fs::path &archive) {
 
     if (_exec(unpack_cmd) != EXIT_SUCCESS_CODE) {
         return ERROR_STATUS_INT;
-    }
+    } else {
+		return SUCCESS_STATUS_INT;
+	}
 }
 
 int GameServerInstaller::_exec(const std::string &command, bool enable_append)
