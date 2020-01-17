@@ -238,7 +238,7 @@ int GameServerInstaller::_install_game()
     if (install_result != SUCCESS_STATUS_INT) {
         return ERROR_STATUS_INT;
     } else {
-		return SUCCESS_STATUS_INT
+		return SUCCESS_STATUS_INT;
 	}
 }
 
