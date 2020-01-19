@@ -49,6 +49,7 @@ install:
                   restclient-cpp:%platform%-windows
                   binn:%platform%-windows
                   jsoncpp:%platform%-windows
+                  cpp-httplib:%platform%-windows
 
   # Boost libraries
   - vcpkg install boost-system:%platform%-windows
