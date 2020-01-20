@@ -134,7 +134,7 @@ include_directories(../gmock-global/include)
 
 add_subdirectory(unit)
 
-check_include_file_cxx("httplib.h" HAVE_HTTPLIB)
+check_include_file("httplib.h" HAVE_HTTPLIB)
 if(HAVE_HTTPLIB)
 	add_subdirectory(functional)
 else()
