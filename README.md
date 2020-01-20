@@ -23,6 +23,11 @@ master          |[![Build Status](https://travis-ci.org/gameap/GDaemon2.svg?bran
 * CURL Library
 * [Json C++ Library](https://github.com/open-source-parsers/jsoncpp)
 * Boost Libraries (>= 1.66.0): Boost System, Boost Filesystem, Boost Iostreams, Boost Thread, Boost Process
+* [PLog](https://github.com/SergiusTheBest/plog) >= 1.1.5
+
+#### Tests
+* [Google Tests](https://github.com/google/googletest)
+* [GMock Global](https://github.com/apriorit/gmock-global) >= 1.0.2
 
 ### Compiling on Linux
 
@@ -47,6 +52,16 @@ Add -DCMAKE_TOOLCHAIN_FILE to cmake arguments:
 ```
 
 Open GDaemon folder in your Visual Studio, run cmake and run build.
+
+### CMake options
+
+| Option                        | Info
+|-------------------------------|-----------------------
+| -DBUILD_STATIC_BOOST          | Build with static boost libraries
+| -DBUILD_STATIC                | Build with static libraries
+| -DSYSCTL_DAEMON               | 
+| -DNON_DAEMON                  |
+
 
 ## Configuration
 

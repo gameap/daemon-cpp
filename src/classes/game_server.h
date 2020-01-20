@@ -9,17 +9,10 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
+#include "cmd_output.h"
 #include "log.h"
 #include "dedicated_server.h"
 #include "typedefs.h"
-
-#define INST_NO_SOURCE 0
-#define INST_FROM_LOCREP 1
-#define INST_FROM_REMREP 2
-#define INST_FROM_STEAM 3
-
-#define INST_FILE 1
-#define INST_DIR 2
 
 #define SERVER_NOT_INSTALLED        0
 #define SERVER_INSTALLED            1
@@ -30,126 +23,106 @@
 
 #define TIME_CACHE_STATUS 30
 
-#if defined(BOOST_POSIX_API)
-    #define AFTER_INSTALL_SCRIPT "gdaemon_after_install.sh"
-
-    #define PROC_SHELL "sh"
-    #define SHELL_PREF "-c"
-#elif defined(BOOST_WINDOWS_API)
-    #define AFTER_INSTALL_SCRIPT "gdaemon_after_install.bat"
-
-    #define PROC_SHELL "cmd"
-    #define SHELL_PREF "/c"
-#endif 
-
 namespace GameAP {
 
 namespace fs = boost::filesystem;
 
 class GameServer {
-public:
-    bool m_active;
-    std::time_t m_last_process_check;
-    bool m_install_process;
-    unsigned int m_installed;
+    public:
+        bool m_active;
+        std::time_t m_last_process_check;
+        bool m_install_process;
+        unsigned int m_installed;
 
-    GameServer(ulong mserver_id);
-    
-    ~GameServer() {
-        // TODO: Implement waiting until the operations (installation and other) finishing successfully
-        GAMEAP_LOG_VERBOSE << "Game Server Destruct";
-    }
-    
-    // int install_game_server(); // TODO: Implement
-    int update_server();
-    int delete_files();
-    // int move_game_server(); // TODO: Implement
-    int cmd_exec(std::string command);
+        GameServer(ulong mserver_id);
 
-    int start_server();
-    void start_if_need();
-    int stop_server();
-    bool status_server();
+        ~GameServer() {
+            // TODO: Implement waiting until the operations (installation and other) finishing successfully
+            GAMEAP_LOG_VERBOSE << "Game Server Destruct";
+        }
 
-    // int get_game_server_load(); // TODO: Implement
-    
-    // size_t get_cmd_output(std::string * output, size_t position);
-    int get_cmd_output(std::string * str_out);
-    std::string get_cmd_output();
-    void clear_cmd_output();
+        // int install_game_server(); // TODO: Implement
+        int update_server();
+        int delete_files();
+        // int move_game_server(); // TODO: Implement
+        int cmd_exec(std::string command);
 
-    void loop();
+        int start_server();
+        void start_if_need();
+        int stop_server();
+        bool status_server();
 
-    void update();
-    void update(bool force);
+        // int get_game_server_load(); // TODO: Implement
 
-    unsigned int get_id() {
-        return m_server_id;
-    }
+        // size_t get_cmd_output(std::string * output, size_t position);
+        int get_cmd_output(std::string * str_out);
+        std::string get_cmd_output();
+        void clear_cmd_output();
 
-private:
-    std::string m_uuid;
-    std::string m_uuid_short;
+        void loop();
 
-    ulong m_server_id;
-    std::string m_ip;
+        void update();
+        void update(bool force);
 
-    uint m_server_port;
-    uint m_query_port;
-    uint m_rcon_port;
+        unsigned int get_id() {
+            return m_server_id;
+        }
 
-    bool m_staft_crash_disabled;
-    bool m_staft_crash;
+    private:
+        std::string m_uuid;
+        std::string m_uuid_short;
 
-    std::string m_user;
-    std::map<std::string, std::string> m_aliases;
+        unsigned int m_server_id;
+        std::string m_ip;
 
-    std::string m_start_command;
-    std::string m_game_scode;
+        uint m_server_port;
+        uint m_query_port;
+        uint m_rcon_port;
 
-    std::string m_game_localrep;
-    std::string m_game_remrep;
-    std::string m_gt_localrep;
-    std::string m_gt_remrep;
+        bool m_staft_crash_disabled;
+        bool m_staft_crash;
 
-    std::string m_steam_app_id;
-    std::string m_steam_app_set_config;
+        std::string m_user;
+        std::map<std::string, std::string> m_aliases;
 
-    unsigned int m_install_status_changed;
+        std::string m_start_command;
+        std::string m_game_scode;
 
-    pid_t m_last_pid;
+        std::string m_game_localrep;
+        std::string m_game_remrep;
+        std::string m_mod_localrep;
+        std::string m_mod_remrep;
 
-    time_t m_last_update_vars;
+        std::string m_steam_app_id;
+        std::string m_steam_app_set_config;
 
-    fs::path m_work_path;
+        unsigned int m_install_status_changed;
 
-    std::mutex m_cmd_output_mutex;
-    std::shared_ptr<std::string> m_cmd_output;
+        pid_t m_last_pid;
 
-    void _replace_shortcodes(std::string &command);
+        time_t m_last_update_vars;
 
-    int _unpack_archive(fs::path const & archive);
+        fs::path m_work_path;
 
-    bool _copy_dir(
-        fs::path const & source,
-        fs::path const & destination
-    );
+        std::shared_ptr<CmdOutput> m_cmd_output;
 
-    int _exec(std::string command, bool not_append);
-    int _exec(std::string command);
+        void _replace_shortcodes(std::string &command);
 
-    bool _server_status_cmd();
+        int _exec(const std::string &command, bool not_append);
+        int _exec(const std::string &command);
 
-    void _update_vars();
-    void _update_vars(bool force);
-    void _append_cmd_output(std::string line);
+        bool _server_status_cmd();
 
-    int _update_server();
+        void _update_vars();
+        void _update_vars(bool force);
+        void _append_cmd_output(const std::string &line);
 
-    void _set_installed(unsigned int status);
-    void _try_unblock();
+        int _update_server();
 
-    void _error(const std::string msg);
+        void _set_installed(unsigned int status);
+        void _try_unblock();
+
+        void _error(const std::string &msg);
 };
 
 /* End namespace GameAP */

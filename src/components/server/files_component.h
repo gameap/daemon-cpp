@@ -125,7 +125,7 @@ private:
 
     boost::asio::streambuf request_buf;
     std::string m_filename;
-    size_t m_filesize;
+    uint64 m_filesize;
 
     unsigned char m_sendfile_mode;
     

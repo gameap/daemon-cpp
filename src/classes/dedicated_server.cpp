@@ -1,5 +1,6 @@
 #include "consts.h"
 
+#include "state.h"
 #include "config.h"
 #include "dedicated_server.h"
 
@@ -207,7 +208,7 @@ int DedicatedServer::stats_process()
                 for (std::vector<std::string>::iterator its = split_spaces.begin()+1; its != split_spaces.end(); ++its) {
                     if (*its == "") continue;
 
-                    ram_total = strtoull((*its).c_str(), NULL, 10);
+                    ram_total = strtoull((*its).c_str(), nullptr, 10);
                     itm_count++;
                     break;
                 }
@@ -217,7 +218,7 @@ int DedicatedServer::stats_process()
                 for (std::vector<std::string>::iterator its = split_spaces.begin()+1; its != split_spaces.end(); ++its) {
                     if (*its == "") continue;
 
-                    ram_free = strtoull((*its).c_str(), NULL, 10);
+                    ram_free = strtoull((*its).c_str(), nullptr, 10);
                     itm_count++;
                     break;
                 }
@@ -227,7 +228,7 @@ int DedicatedServer::stats_process()
                 for (std::vector<std::string>::iterator its = split_spaces.begin()+1; its != split_spaces.end(); ++its) {
                     if (*its == "") continue;
 
-                    cur_stats.ram_cache = strtoull((*its).c_str(), NULL, 10);
+                    cur_stats.ram_cache = strtoull((*its).c_str(), nullptr, 10);
                     itm_count++;
                     break;
                 }
@@ -374,7 +375,7 @@ int DedicatedServer::get_net_load(std::map<std::string, netstats> &ifstats)
 
     if (last_ifstat_time != 0 && current_time > last_ifstat_time) {
 
-        int time_diff = current_time - last_ifstat_time;
+        time_t time_diff = current_time - last_ifstat_time;
 
         for (auto it = interfaces.begin(); it != interfaces.end(); ++it) {
             if (current_ifstats.count(*it) > 0  && last_ifstats.count(*it) > 0) {
@@ -539,6 +540,9 @@ int DedicatedServer::update_db()
 
     Json::Value jupdate_data;
 
+    State& state = State::getInstance();
+    time_t time_diff = std::stoi(state.get(STATE_PANEL_TIMEDIFF));
+
     for (auto& item : stats) {
         ushort ping = 0;
 
@@ -589,8 +593,8 @@ int DedicatedServer::update_db()
         jstats["ping"] = ping;
         jstats["drvspace"] = drvspace;
 
-        std::time_t time = item.time;
-        std::tm * ptm = std::localtime(&time);
+        std::time_t time = item.time - time_diff;
+        std::tm * ptm = std::gmtime(&time);
         char buffer[32];
         std::strftime(buffer, 32, "%F %T", ptm);
 
@@ -662,6 +666,9 @@ std::string DedicatedServer::get_script_cmd(ushort script)
         case DS_SCRIPT_DELETE:
             return script_delete;
             break;
+        default:
+			return std::string("");
+			break;
     }
 }
 

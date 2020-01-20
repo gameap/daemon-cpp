@@ -90,4 +90,6 @@ unsigned int getJsonUInt(const Json::Value json)
     if (json.isString()) {
         return (unsigned int)strtoul(json.asString().c_str(), nullptr, 10);
     }
+    
+    return 0;
 }

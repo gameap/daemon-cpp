@@ -1,5 +1,6 @@
 #include "consts.h"
 #include "config.h"
+#include "state.h"
 
 #include "game_servers_list.h"
 
@@ -53,13 +54,17 @@ void GameServersList::stats_process()
 {
     Json::Value jupdate_data;
 
+    State& state = State::getInstance();
+    time_t time_diff = std::stoi(state.get(STATE_PANEL_TIMEDIFF));
+
     for (auto& server : servers_list) {
         Json::Value jserver_data;
 
         jserver_data["id"] = server.second->get_id();
 
         if (server.second->m_last_process_check > 0 && server.second->m_installed == SERVER_INSTALLED) {
-            std::tm * ptm = std::localtime(&server.second->m_last_process_check);
+            time_t last_process_check = server.second->m_last_process_check - time_diff;
+            std::tm * ptm = std::gmtime(&last_process_check);
             char buffer[32];
             std::strftime(buffer, 32, "%F %T", ptm);
 

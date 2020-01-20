@@ -1,12 +1,13 @@
 #include <memory>
 
 #include <restclient-cpp/restclient.h>
-
 #include <json/json.h>
 
+#include "consts.h"
 #include "log.h"
 #include "restapi.h"
 #include "config.h"
+#include "state.h"
 
 namespace Gameap {
     Rest::RestapiException::RestapiException(std::string const& msg) : msg_(msg) {}
@@ -64,6 +65,18 @@ namespace Gameap {
 
                 Rest::m_api_token = jvalue["token"].asString();
 
+                State& state = State::getInstance();
+
+                // Timediff
+
+                if (!jvalue["timestamp"].isNull()) {
+                    time_t panel_time = jvalue["timestamp"].isUInt()
+                                             ? jvalue["timestamp"].asUInt()
+                                             : time(nullptr);
+
+                    time_t diff = time(nullptr) - panel_time;
+                    state.set(STATE_PANEL_TIMEDIFF, std::to_string(diff));
+                }
             } else {
                 throw Rest::RestapiException("JSON Parse error");
             }

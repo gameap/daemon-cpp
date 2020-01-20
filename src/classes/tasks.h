@@ -36,7 +36,7 @@ public:
         m_ds_id = ds_id;
         m_server_id = server_id;
 
-        ushort mcsz = strlen(task);
+        size_t mcsz = strlen(task);
         if (mcsz > 8) {
             mcsz = 8;
         }

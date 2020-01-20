@@ -1,12 +1,7 @@
-#include "tasks.h"
-#include "config.h"
 #include "consts.h"
+#include "tasks.h"
 
-#include <boost/process.hpp>
 #include <boost/iostreams/stream.hpp>
-#include <boost/format.hpp>
-
-#include <cstring>
 
 #include "functions/restapi.h"
 #include "functions/gsystem.h"
@@ -27,7 +22,6 @@ void Task::run()
         return;
     }
 
-    m_task_started = time(nullptr);
     m_status = working;
 
     std::string qstr;
@@ -35,7 +29,6 @@ void Task::run()
     try {
         Json::Value jdata;
         jdata["status"] = m_status;
-        jdata["time_stchange"] = (uint) m_task_started;
         Gameap::Rest::put("/gdaemon_api/tasks/" + std::to_string(m_task_id), jdata);
     } catch (Gameap::Rest::RestapiException &exception) {
         GAMEAP_LOG_ERROR << "Error updating task status [to status code " + std::to_string(m_status) + "]: "
@@ -99,10 +92,30 @@ void Task::run()
             
             m_gserver->clear_cmd_output();
             result_status = m_gserver->stop_server();
-            result_status = m_gserver->start_server();
 
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            m_gserver->status_server();
+            // Waiting stopping game server
+            unsigned short tries = 5;
+            while (true) {
+                if (!m_gserver->status_server()) {
+                    break;
+                }
+                else if (tries <= 0) {
+                    _append_cmd_output("The server did not stop for a long time");
+                    result_status = ERROR_STATUS_INT;
+                    break;
+                }
+
+                std::this_thread::sleep_for(std::chrono::seconds(5));
+                tries--;
+            }
+
+            if (result_status != ERROR_STATUS_INT) {
+                result_status = m_gserver->start_server();
+
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+                m_gserver->status_server();
+            }
+            
         } catch (std::exception &e) {
             result_status = ERROR_STATUS_INT;
             GAMEAP_LOG_ERROR << "gsstop error: " << e.what();
@@ -195,7 +208,7 @@ int Task::_exec(std::string cmd)
     std::vector<std::string> split_lines;
     boost::split(split_lines, cmd, boost::is_any_of("\n\r"));
 
-    for (std::vector<std::string>::iterator itl = split_lines.begin(); itl != split_lines.end(); ++itl) {
+    for (auto itl = split_lines.begin(); itl != split_lines.end(); ++itl) {
         if (*itl == "") continue;
         _single_exec(*itl);
     }

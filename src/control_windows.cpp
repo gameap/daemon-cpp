@@ -201,19 +201,14 @@ int _tmain (int argc, TCHAR *argv[])
         );
     }
 
-    plog::init<GameAP::DefaultLog>(plog::debug, config.output_log.c_str());
-    plog::init<GameAP::ErrorLog>(plog::debug, config.error_log.c_str());
-
-#ifndef NON_DAEMON
-    freopen(config.output_log.c_str(), "w", stdout);
-    freopen(config.error_log.c_str(), "w", stderr);
-#endif
+	plog::init<GameAP::MainLog>(plog::verbose, config.output_log.c_str());
+	plog::init<GameAP::ErrorLog>(plog::verbose, config.error_log.c_str());
 
     // Info
-    std::cout << "CurrentPath: " << fs::current_path() << std::endl;
-    std::cout << "Config: " << config.cfg_file << std::endl;
-    std::cout << "OutputLog: " << config.output_log << std::endl;
-    std::cout << "ErrorLog: " << config.error_log << std::endl;
+	GAMEAP_LOG_INFO << "CurrentPath: " << fs::current_path();
+	GAMEAP_LOG_INFO << "Config: " << config.cfg_file;
+	GAMEAP_LOG_INFO << "OutputLog: " << config.output_log;
+	GAMEAP_LOG_INFO << "ErrorLog: " << config.error_log;
 
 #ifdef NON_DAEMON
     run_daemon();
@@ -231,19 +226,6 @@ int _tmain (int argc, TCHAR *argv[])
 #endif
 
 }
-
-/*
-int main(int argc, char** argv)
-{
-	fs::path exe_path( fs::initial_path<fs::path>() );
-    exe_path = fs::system_complete( fs::path( argv[0] ) );
-    fs::current_path(exe_path.parent_path());
-
-    // ServiceWorkerThread();
-    run_daemon();
-	
-}
-*/
 
 DWORD WINAPI ServiceWorkerThread(LPVOID lpParam)
 {
