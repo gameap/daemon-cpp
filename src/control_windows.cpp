@@ -180,7 +180,7 @@ int _tmain (int argc, TCHAR *argv[])
     config.error_log = fs::current_path().string() + "\\" + std::string(LOG_DIRECTORY) + std::string(LOG_ERROR_FILE);
 
     std::string path_env = getenv("PATH");
-    path_env += ";" + exe_path.string();
+    path_env += ";" + fs::current_path().string();
     std::string put_env = "PATH=" + path_env;
     putenv(put_env.c_str());
 

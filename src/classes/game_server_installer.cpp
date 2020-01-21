@@ -331,7 +331,7 @@ int GameServerInstaller::_install_game_steam()
         }
 
         // Exit code 8: Error! App 'xx' state is 0xE after update job.
-        if (result != EXIT_ERROR_CODE && result != 8) {
+        if (result != EXIT_ERROR_CODE && result != 7 && result != 8) {
             steamcmd_install_success = false;
             break;
         }
