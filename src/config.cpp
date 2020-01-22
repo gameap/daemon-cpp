@@ -49,6 +49,16 @@ int Config::parse()
 #ifdef _WIN32
         path_7zip = pt.get_optional<std::string>("7zip_path").get_value_or("C:\\gameap\\tools\\7zip\\7za.exe");
         path_starter = pt.get_optional<std::string>("starter_path").get_value_or("C:\\gameap\\daemon\\gameap-starter.exe");
+
+        if (path_7zip.empty()) {
+            // TODO: Replace to "7za.exe" after installator fix
+            path_7zip = "C:\\gameap\\tools\\7zip\\7za.exe";
+        }
+
+        if (path_starter.empty()) {
+            // TODO: Replace to "gameap-starter.exe" after installator fix
+            path_starter = "C:\\gameap\\daemon\\gameap-starter.exe";
+        }
 #endif
         std::string if_list_cfg = pt.get_optional<std::string>("if_list").get_value_or("");
         if (!if_list_cfg.empty()) {

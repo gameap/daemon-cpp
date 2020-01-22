@@ -28,15 +28,25 @@ int GameServerInstaller::install_server()
         return ERROR_STATUS_INT;
     }
 
-    // Create Directory
     if (!fs::exists(m_server_absolute_path)) {
         fs::create_directories(m_server_absolute_path);
     }
 
     fs::current_path(m_server_absolute_path);
 
-    _install_game();
-    _install_mod();
+    int install_result;
+
+    install_result = _install_game();
+
+    if (install_result != SUCCESS_STATUS_INT) {
+        return ERROR_STATUS_INT;
+    }
+
+    install_result = _install_mod();
+
+    if (install_result != SUCCESS_STATUS_INT) {
+        return ERROR_STATUS_INT;
+    }
 
     fs::path after_install_script = m_server_absolute_path / AFTER_INSTALL_SCRIPT;
 
@@ -321,7 +331,7 @@ int GameServerInstaller::_install_game_steam()
         }
 
         // Exit code 8: Error! App 'xx' state is 0xE after update job.
-        if (result != EXIT_ERROR_CODE && result != 8) {
+        if (result != EXIT_ERROR_CODE && result != 7 && result != 8) {
             steamcmd_install_success = false;
             break;
         }

@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <boost/filesystem.hpp>
 
 #include <Windows.h>
@@ -177,6 +178,11 @@ int _tmain (int argc, TCHAR *argv[])
     config.cfg_file = fs::current_path().string() + "\\daemon.cfg";
     config.output_log = fs::current_path().string() + "\\" + std::string(LOG_DIRECTORY) + std::string(LOG_MAIN_FILE);
     config.error_log = fs::current_path().string() + "\\" + std::string(LOG_DIRECTORY) + std::string(LOG_ERROR_FILE);
+
+    std::string path_env = getenv("PATH");
+    path_env += ";" + fs::current_path().string();
+    std::string put_env = "PATH=" + path_env;
+    putenv(put_env.c_str());
 
     if (!fs::exists(LOG_DIRECTORY)) {
         fs::create_directory(LOG_DIRECTORY);
