@@ -9,6 +9,7 @@
 #define EXIT_CRITICAL_ERROR_CODE    2
 
 namespace fs = boost::filesystem;
+namespace bp = boost::process;
 
 namespace GameAP {
     int exec(const std::string cmd, std::function<void (std::string)> callback);
@@ -16,6 +17,7 @@ namespace GameAP {
     boost::process::child exec(const std::string cmd, boost::process::pipe &out);
 
     void change_euid_egid(const std::string username);
+    bp::environment load_env();
 
     bool copy_dir(
         const fs::path &source,
