@@ -12,7 +12,7 @@ namespace {
         ASSERT_EQ("some-value", state.get("set_get:some-key"));
         ASSERT_EQ("some-value2", state.get("set_get:some-key2"));
 
-        ASSERT_THROW(state.get("set_get:invalid-key"), std::out_of_range);
+        ASSERT_EQ("", state.get("set_get:invalid-key"));
     }
 
     TEST(state_test, exists_test)
