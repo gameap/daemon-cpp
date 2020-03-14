@@ -129,7 +129,6 @@ void TaskList::insert(Task * task)
 {
     tasklist.push_back(task);
     taskids.push_back(task->get_id());
-    // it = tasklist.begin();
 }
 
 // ---------------------------------------------------------------------
