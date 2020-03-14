@@ -22,7 +22,7 @@ void State::set(const std::string &key, const std::string &value)
  */
 std::string State::get(const std::string &key)
 {
-    return this->exists(key) ? m_state.at(key) : '';
+    return this->exists(key) ? m_state.at(key) : "";
 }
 
 
