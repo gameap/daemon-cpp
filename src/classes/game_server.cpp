@@ -256,7 +256,6 @@ int GameServer::start_server()
 
     m_staft_crash_disabled = false;
 
-    change_euid_egid(m_user);
     int result = _exec(command);
 
     return (result == EXIT_SUCCESS_CODE) ? SUCCESS_STATUS_INT : ERROR_STATUS_INT;

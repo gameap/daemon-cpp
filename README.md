@@ -111,7 +111,8 @@ Configuration file: daemon.cfg
 
 | Parameter                 | Required              | Type      | Info
 |---------------------------|-----------------------|-----------|------------
-| 7zip_path                 | no                    | string    | Path to 7zip unarchiver. Example: "C:\Program Files\7-Zip\7z.exe"
+| 7zip_path                 | no                    | string    | Path to 7zip file archiver. Example: "C:\Program Files\7-Zip\7z.exe"
+| starter_path              | no                    | string    | Path to GameAP Starter. Example: "C:\gameap\gameap-starter.exe"
 
 ### Example daemon.cfg
 

@@ -4,6 +4,7 @@
 
 #include "log.h"
 #include "gsystem.h"
+#include "consts.h"
 
 #ifdef __linux__
 #include <pwd.h>
@@ -35,7 +36,13 @@ namespace GameAP {
         try {
             bp::ipstream out_stream;
             bp::ipstream err_stream;
-            bp::child child_proccess(bp::search_path(PROC_SHELL), args={SHELL_PREF, cmd}, (bp::std_out & bp::std_err) > out_stream);
+
+            bp::child child_proccess(
+                    bp::search_path(PROC_SHELL),
+                    args={SHELL_PREF, cmd},
+                    (bp::std_out & bp::std_err) > out_stream,
+                    load_env()
+            );
 
             std::string s;
 
@@ -60,7 +67,14 @@ namespace GameAP {
         try {
             bp::ipstream out_stream;
             bp::ipstream err_stream;
-            bp::child child_proccess(bp::search_path(PROC_SHELL), args={SHELL_PREF, cmd}, bp::std_out > out_stream, bp::std_err > err_stream);
+
+            bp::child child_proccess(
+                    bp::search_path(PROC_SHELL),
+                    args={SHELL_PREF, cmd},
+                    bp::std_out > out_stream,
+                    bp::std_err > err_stream,
+                    load_env()
+            );
 
             std::string s;
 
@@ -82,7 +96,13 @@ namespace GameAP {
     boost::process::child exec(const std::string cmd, boost::process::pipe &out)
     {
         try {
-            bp::child child_proccess(bp::search_path(PROC_SHELL), args={SHELL_PREF, cmd}, (bp::std_out & bp::std_err) > out);
+            bp::child child_proccess(
+                    bp::search_path(PROC_SHELL),
+                    args={SHELL_PREF, cmd},
+                    (bp::std_out & bp::std_err) > out,
+                    load_env()
+            );
+
             return child_proccess;
         } catch (boost::process::process_error &e) {
             GAMEAP_LOG_ERROR << "Execute error: " << e.what();
@@ -105,6 +125,22 @@ namespace GameAP {
             setegid(pwd->pw_gid);
         }
 #endif
+    }
+
+    bp::environment load_env()
+    {
+        bp::environment env = static_cast<bp::environment>(boost::this_process::environment());
+
+#ifdef __linux__
+        struct passwd *pw = getpwuid(getuid());
+
+        env["HOME"]                     = pw->pw_dir;
+        env["USER"]                     = pw->pw_name;
+#endif
+
+        env["GAMEAP_DAEMON_VERSION"]    = GAMEAP_DAEMON_VERSION;
+
+        return env;
     }
 
     bool copy_dir(

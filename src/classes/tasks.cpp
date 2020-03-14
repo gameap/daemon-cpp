@@ -61,7 +61,6 @@ void Task::run()
             std::this_thread::sleep_for(std::chrono::seconds(1));
             m_gserver->status_server();
         } catch (std::exception &e) {
-            m_gserver->start_server();
             result_status = ERROR_STATUS_INT;
             GAMEAP_LOG_ERROR << "gsstart error: " << e.what();
             _append_cmd_output(e.what());
