@@ -26,7 +26,8 @@ endif()
 
 add_executable(run_functional_tests
         ${SOURCES_CPP} ${GDAEMON_SOURCES_CPP}
-        functional.cpp
+        common.cpp
+        tasks.cpp
 )
 
 target_link_libraries(run_functional_tests

@@ -20,7 +20,7 @@ extern std::queue<std::function<void ()>> restapi_mock_put;
 extern std::queue<std::function<void ()>> restapi_mock_patch;
 
 namespace Gameap {
-	TEST(functional, get_token_error_test)
+	TEST(common, get_token_error_test)
 	{
 		static plog::ConsoleAppender<plog::TxtFormatter> consoleAppender;
 

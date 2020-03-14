@@ -1,33 +1,26 @@
 #include "tasks.h"
 #include "task_list.h"
-#include "config.h"
 #include "consts.h"
 
 #include <json/json.h>
 #include <boost/iostreams/stream.hpp>
 
-#include "log.h"
 #include "functions/restapi.h"
 
 using namespace GameAP;
 
-void TaskList::_clear_tasklist()
+void TaskList::insert(Task * task)
 {
-    size_t cur = 0;
-    while (tasklist.size() != 0) {
-        delete tasklist[cur];
-        tasklist.erase(tasklist.begin()+cur);
-        cur++;
-    }
+    tasklist.push_back(task);
+    taskids.push_back(task->get_id());
 }
 
-// ---------------------------------------------------------------------
 
 int TaskList::delete_task(std::vector<Task *>::iterator it)
 {
     ulong task_id = (*it)->get_id();
 
-    std::vector<ulong>::iterator idit = std::find(taskids.begin(), taskids.end(), task_id);
+    auto idit = std::find(taskids.begin(), taskids.end(), task_id);
     if (idit != taskids.end()) {
         taskids.erase(idit);
     }
@@ -38,7 +31,6 @@ int TaskList::delete_task(std::vector<Task *>::iterator it)
     return 0;
 }
 
-// ---------------------------------------------------------------------
 
 int TaskList::update_list()
 {
@@ -88,7 +80,6 @@ int TaskList::update_list()
     return SUCCESS_STATUS_INT;
 }
 
-// ---------------------------------------------------------------------
 
 void TaskList::check_working_errors()
 {
@@ -123,15 +114,12 @@ void TaskList::check_working_errors()
     }
 }
 
-// ---------------------------------------------------------------------
 
-void TaskList::insert(Task * task)
+unsigned long TaskList::count()
 {
-    tasklist.push_back(task);
-    taskids.push_back(task->get_id());
+    return this->tasklist.size();
 }
 
-// ---------------------------------------------------------------------
 
 std::vector<Task *>::iterator TaskList::begin()
 {
@@ -142,7 +130,6 @@ std::vector<Task *>::iterator TaskList::begin()
     }
 }
 
-// ---------------------------------------------------------------------
 
 std::vector<Task *>::iterator TaskList::next(std::vector<Task *>::iterator curit)
 {
@@ -153,7 +140,6 @@ std::vector<Task *>::iterator TaskList::next(std::vector<Task *>::iterator curit
     return ++curit;
 }
 
-// ---------------------------------------------------------------------
 
 bool TaskList::is_end(std::vector<Task *>::iterator curit)
 {
@@ -168,9 +154,19 @@ bool TaskList::is_end(std::vector<Task *>::iterator curit)
     return false;
 }
 
-// ---------------------------------------------------------------------
 
 std::vector<Task *>::iterator TaskList::end()
 {
     return tasklist.end();
+}
+
+
+void TaskList::_clear_tasklist()
+{
+    size_t cur = 0;
+    while (tasklist.size() != 0) {
+        delete tasklist[cur];
+        tasklist.erase(tasklist.begin()+cur);
+        cur++;
+    }
 }

@@ -15,8 +15,6 @@ using namespace GameAP;
 
 int GameServersList::update_list()
 {
-    Config& config = Config::getInstance();
-
     Json::Value jvalue;
 
     try {
