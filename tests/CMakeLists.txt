@@ -133,9 +133,4 @@ include_directories(../plog/include)
 
 add_subdirectory(unit)
 
-check_include_file("httplib.h" HAVE_HTTPLIB)
-if(HAVE_HTTPLIB)
-	add_subdirectory(functional)
-else()
-	message( STATUS "HttpLib not found. Skipping functional tests" )
-endif()
+add_subdirectory(functional)

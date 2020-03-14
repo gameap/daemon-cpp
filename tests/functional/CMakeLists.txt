@@ -12,7 +12,7 @@ set(SOURCES_CPP
         ${CMAKE_HOME_DIRECTORY}/src/classes/cmd_output.cpp
         ${CMAKE_HOME_DIRECTORY}/src/classes/task_list.cpp
         ${CMAKE_HOME_DIRECTORY}/src/classes/tasks.cpp
-        ${CMAKE_HOME_DIRECTORY}/src/functions/restapi.cpp
+        mocks/restapi_mock.cpp
         ${CMAKE_HOME_DIRECTORY}/src/functions/auth.cpp
         ${CMAKE_HOME_DIRECTORY}/src/components/server/commands_component.cpp
         ${CMAKE_HOME_DIRECTORY}/src/components/server/files_component.cpp
