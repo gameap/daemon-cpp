@@ -17,6 +17,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
+#include <plog/Appenders/ColorConsoleAppender.h>
+
 #include "log.h"
 #include "config.h"
 
@@ -196,44 +198,51 @@ int main(int argc, char** argv)
 	Config& config = Config::getInstance();
 	config.cfg_file = "daemon.cfg";
 
-    std::string log_directory = (getuid() == 0) ? std::string(LOG_DIRECTORY) : "logs/";
+    #ifdef CONSOLE_LOG
+        static plog::ColorConsoleAppender<plog::TxtFormatter> consoleAppender;
+        plog::init<GameAP::MainLog>(plog::verbose, &consoleAppender);
+        plog::init<GameAP::ErrorLog>(plog::verbose, &consoleAppender);
+    #else
 
-    config.output_log = log_directory + std::string(LOG_MAIN_FILE);
-    config.error_log = log_directory + std::string(LOG_ERROR_FILE);
+        std::string log_directory = (getuid() == 0) ? std::string(LOG_DIRECTORY) : "logs/";
 
-    if (!fs::exists(log_directory)) {
-        fs::create_directory(log_directory);
-    }
+        config.output_log = log_directory + std::string(LOG_MAIN_FILE);
+        config.error_log = log_directory + std::string(LOG_ERROR_FILE);
 
-    time_t now = time(nullptr);
-    tm *ltm = localtime(&now);
-    char buffer_time[256];
-    strftime(buffer_time, sizeof(buffer_time), "%Y%m%d_%H%M", ltm);
-
-    if (fs::exists(config.output_log) && fs::file_size(config.output_log) > 0) {
-        fs::rename(
-            config.output_log,
-            boost::str(boost::format("%1%main_%2%.log") % log_directory % buffer_time)
-        );
-    }
-
-    if (fs::exists(config.error_log) && fs::file_size(config.error_log) > 0) {
-        fs::rename(
-            config.error_log,
-            boost::str(boost::format("%1%error_%2%.log") % log_directory % buffer_time)
-        );
-    }
-
-    for (int i = 0; i < argc - 1; i++) {
-		if (std::string(argv[i]) == "-c") {
-			// Config file
-			config.cfg_file = std::string(argv[i + 1]);
-            i++;
+        if (!fs::exists(log_directory)) {
+            fs::create_directory(log_directory);
         }
-	}
 
-    plog::init<GameAP::MainLog>(plog::verbose, config.output_log.c_str());
-    plog::init<GameAP::ErrorLog>(plog::verbose, config.error_log.c_str());
+        time_t now = time(nullptr);
+        tm *ltm = localtime(&now);
+        char buffer_time[256];
+        strftime(buffer_time, sizeof(buffer_time), "%Y%m%d_%H%M", ltm);
+
+        if (fs::exists(config.output_log) && fs::file_size(config.output_log) > 0) {
+            fs::rename(
+                config.output_log,
+                boost::str(boost::format("%1%main_%2%.log") % log_directory % buffer_time)
+            );
+        }
+
+        if (fs::exists(config.error_log) && fs::file_size(config.error_log) > 0) {
+            fs::rename(
+                config.error_log,
+                boost::str(boost::format("%1%error_%2%.log") % log_directory % buffer_time)
+            );
+        }
+
+        for (int i = 0; i < argc - 1; i++) {
+            if (std::string(argv[i]) == "-c") {
+                // Config file
+                config.cfg_file = std::string(argv[i + 1]);
+                i++;
+            }
+        }
+
+        plog::init<GameAP::MainLog>(plog::verbose, config.output_log.c_str());
+        plog::init<GameAP::ErrorLog>(plog::verbose, config.error_log.c_str());
+    #endif
 
 	#ifdef SYSCTL_DAEMON
         close(STDIN_FILENO);

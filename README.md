@@ -61,6 +61,7 @@ Open GDaemon folder in your Visual Studio, run cmake and run build.
 | -DBUILD_STATIC                | Build with static libraries
 | -DSYSCTL_DAEMON               | 
 | -DNON_DAEMON                  |
+| -DCONSOLE_LOG                 | Output log into console
 
 
 ## Configuration

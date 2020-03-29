@@ -165,6 +165,10 @@ endif()
 
 add_executable(gameap-daemon ${SOURCES_CPP} ${GDAEMON_SOURCES_CPP})
 
+if (CONSOLE_LOG)
+    target_compile_definitions(gameap-daemon PRIVATE CONSOLE_LOG)
+endif()
+
 if (WIN32)
     target_link_libraries (gameap-daemon
             ${BINN_LIBRARY}
