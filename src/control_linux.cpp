@@ -198,6 +198,11 @@ int main(int argc, char** argv)
 	Config& config = Config::getInstance();
 	config.cfg_file = "daemon.cfg";
 
+    std::string path_env = getenv("PATH");
+    path_env += ";" + fs::current_path().string();
+    std::string put_env = "PATH=" + path_env;
+    putenv(&put_env[0]);
+
     #ifdef CONSOLE_LOG
         static plog::ColorConsoleAppender<plog::TxtFormatter> consoleAppender;
         plog::init<GameAP::MainLog>(plog::verbose, &consoleAppender);
