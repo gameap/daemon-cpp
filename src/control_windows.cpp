@@ -176,40 +176,47 @@ int _tmain (int argc, TCHAR *argv[])
 
     Config& config = Config::getInstance();
     config.cfg_file = fs::current_path().string() + "\\daemon.cfg";
-    config.output_log = fs::current_path().string() + "\\" + std::string(LOG_DIRECTORY) + std::string(LOG_MAIN_FILE);
-    config.error_log = fs::current_path().string() + "\\" + std::string(LOG_DIRECTORY) + std::string(LOG_ERROR_FILE);
 
-    std::string path_env = getenv("PATH");
-    path_env += ";" + fs::current_path().string();
-    std::string put_env = "PATH=" + path_env;
-    putenv(put_env.c_str());
+    #ifdef CONSOLE_LOG
+        static plog::ColorConsoleAppender<plog::TxtFormatter> consoleAppender;
+        plog::init<GameAP::MainLog>(plog::verbose, &consoleAppender);
+        plog::init<GameAP::ErrorLog>(plog::verbose, &consoleAppender);
+    #else
+        config.output_log = fs::current_path().string() + "\\" + std::string(LOG_DIRECTORY) + std::string(LOG_MAIN_FILE);
+        config.error_log = fs::current_path().string() + "\\" + std::string(LOG_DIRECTORY) + std::string(LOG_ERROR_FILE);
 
-    if (!fs::exists(LOG_DIRECTORY)) {
-        fs::create_directory(LOG_DIRECTORY);
-    }
+        std::string path_env = getenv("PATH");
+        path_env += ";" + fs::current_path().string();
+        std::string put_env = "PATH=" + path_env;
+        putenv(put_env.c_str());
 
-    time_t now = time(nullptr);
-    tm *ltm = localtime(&now);
-    char buffer_time[256];
-    strftime(buffer_time, sizeof(buffer_time), "%Y%m%d_%H%M", ltm);
+        if (!fs::exists(LOG_DIRECTORY)) {
+            fs::create_directory(LOG_DIRECTORY);
+        }
 
-    if (fs::exists(config.output_log) && fs::file_size(config.output_log) > 0) {
-        fs::rename(
-            config.output_log,
-            boost::str(boost::format("%1%main_%2%.log") % LOG_DIRECTORY % buffer_time)
-        );
-    }
+        time_t now = time(nullptr);
+        tm *ltm = localtime(&now);
+        char buffer_time[256];
+        strftime(buffer_time, sizeof(buffer_time), "%Y%m%d_%H%M", ltm);
 
-    if (fs::exists(config.error_log) && fs::file_size(config.error_log) > 0) {
-        fs::rename(
-            config.error_log,
-            boost::str(boost::format("%1%error_%2%.log") % LOG_DIRECTORY % buffer_time)
-        );
-    }
+        if (fs::exists(config.output_log) && fs::file_size(config.output_log) > 0) {
+            fs::rename(
+                config.output_log,
+                boost::str(boost::format("%1%main_%2%.log") % LOG_DIRECTORY % buffer_time)
+            );
+        }
 
-	plog::init<GameAP::MainLog>(plog::verbose, config.output_log.c_str());
-	plog::init<GameAP::ErrorLog>(plog::verbose, config.error_log.c_str());
+        if (fs::exists(config.error_log) && fs::file_size(config.error_log) > 0) {
+            fs::rename(
+                config.error_log,
+                boost::str(boost::format("%1%error_%2%.log") % LOG_DIRECTORY % buffer_time)
+            );
+        }
 
+        plog::init<GameAP::MainLog>(plog::verbose, config.output_log.c_str());
+        plog::init<GameAP::ErrorLog>(plog::verbose, config.error_log.c_str());
+    #endif
+        
     // Info
 	GAMEAP_LOG_INFO << "CurrentPath: " << fs::current_path();
 	GAMEAP_LOG_INFO << "Config: " << config.cfg_file;
