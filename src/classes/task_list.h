@@ -9,37 +9,47 @@
 namespace GameAP {
 
 class TaskList {
-public:
-    static TaskList& getInstance() {
-        static TaskList instance;
-        return instance;
-    }
+    public:
+        static TaskList& getInstance() {
+            static TaskList instance;
+            return instance;
+        }
 
-    int update_list();
-    int delete_task(std::vector<Task *>::iterator it);
+        bool stop;
 
-    void check_working_errors();
+        int update_list();
+        void check_working_errors();
 
-    void insert(Task * task);
-    std::vector<Task *>::iterator begin();
-    int run_task();
-    std::vector<Task *>::iterator end();
+        // Task management
+        void insert(Task * task);
+        int delete_task(std::vector<Task *>::iterator it);
 
-    std::vector<Task *>::iterator next(std::vector<Task *>::iterator curit);
-    bool is_end(std::vector<Task *>::iterator curit);
+        // Statistics
 
-    bool stop;
-private:
-    enum st {waiting = 1, working, error, success};
+        /**
+         * Get the number of all tasks
+         * @return
+         */
+        unsigned long count();
 
-    std::vector<Task *>tasklist;
-    std::vector<ulong>taskids;
+        // Iterator
+        std::vector<Task *>::iterator begin();
+        int run_task();
+        std::vector<Task *>::iterator end();
 
-    void _clear_tasklist();
+        std::vector<Task *>::iterator next(std::vector<Task *>::iterator curit);
+        bool is_end(std::vector<Task *>::iterator curit);
+    private:
+        enum st {waiting = 1, working, error, success};
 
-    TaskList() {}
-    TaskList( const TaskList&);
-    TaskList& operator=( TaskList& );
+        std::vector<Task *>tasklist;
+        std::vector<ulong>taskids;
+
+        void _clear_tasklist();
+
+        TaskList() {}
+        TaskList( const TaskList&);
+        TaskList& operator=( TaskList& );
 };
 
 /* End namespace GameAP */

@@ -126,7 +126,6 @@ find_package(ZLIB REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(../plog/include)
-include_directories(../gmock-global/include)
 
 #--------------------------------------------------------------------------------------------------------
 # Tests
@@ -134,9 +133,4 @@ include_directories(../gmock-global/include)
 
 add_subdirectory(unit)
 
-check_include_file("httplib.h" HAVE_HTTPLIB)
-if(HAVE_HTTPLIB)
-	add_subdirectory(functional)
-else()
-	message( STATUS "HttpLib not found. Skipping functional tests" )
-endif()
+add_subdirectory(functional)
