@@ -147,6 +147,7 @@ set(SOURCES_CPP
         classes/game_server_installer.cpp
         classes/cmd_output.cpp
         classes/task_list.cpp
+        classes/servers_tasks.cpp
         classes/tasks.cpp
         functions/restapi.cpp
         functions/auth.cpp

@@ -20,7 +20,7 @@ int TaskList::delete_task(std::vector<Task *>::iterator it)
 {
     ulong task_id = (*it)->get_id();
 
-    auto idit = std::find(taskids.begin(), taskids.end(), task_id);
+    std::vector<ulong>::iterator idit = std::find(taskids.begin(), taskids.end(), task_id);
     if (idit != taskids.end()) {
         taskids.erase(idit);
     }
@@ -114,12 +114,10 @@ void TaskList::check_working_errors()
     }
 }
 
-
-unsigned long TaskList::count()
+unsigned int TaskList::count()
 {
     return this->tasklist.size();
 }
-
 
 std::vector<Task *>::iterator TaskList::begin()
 {

@@ -3,6 +3,8 @@
 #include <cstring>
 #include <stdarg.h>  // For va_start, etc.
 #include <memory>    // For std::unique_ptr
+#include <iomanip>
+#include <sstream>
 
 #include <time.h>
 
@@ -92,4 +94,18 @@ unsigned int getJsonUInt(const Json::Value json)
     }
     
     return 0;
+}
+
+time_t human_to_timestamp(const std::string &str)
+{
+    std::tm t = {};
+    std::istringstream ss(str);
+
+    ss >> std::get_time(&t, "%Y-%m-%d %H:%M:%S");
+
+    if (ss.fail()) {
+        return 0;
+    }
+
+    return timegm(&t);
 }

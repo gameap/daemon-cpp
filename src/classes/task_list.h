@@ -30,7 +30,7 @@ class TaskList {
          * Get the number of all tasks
          * @return
          */
-        unsigned long count();
+        unsigned int count();
 
         // Iterator
         std::vector<Task *>::iterator begin();

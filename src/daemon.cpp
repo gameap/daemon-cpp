@@ -26,8 +26,6 @@
 
 using namespace GameAP;
 
-// ---------------------------------------------------------------------
-
 int check_tasks()
 {
     TaskList& tasks = TaskList::getInstance();
@@ -141,8 +139,6 @@ int check_tasks()
 
     return 0;
 }
-
-// ---------------------------------------------------------------------
 
 int run_daemon()
 {

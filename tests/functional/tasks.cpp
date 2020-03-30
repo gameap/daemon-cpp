@@ -23,11 +23,6 @@ extern std::queue<std::function<void ()>> restapi_mock_patch;
 namespace GameAP {
     TEST(tasks, run_task_test)
     {
-        static plog::ConsoleAppender<plog::TxtFormatter> consoleAppender;
-
-        plog::init<GameAP::MainLog>(plog::verbose, &consoleAppender);
-        plog::init<GameAP::ErrorLog>(plog::verbose, &consoleAppender);
-
         restapi_mock_get.push([&]() -> Json::Value
         {
             Json::Value task_json;
@@ -64,5 +59,45 @@ namespace GameAP {
         tasks.update_list();
 
         ASSERT_EQ(2, tasks.count());
+    }
+
+    TEST(tasks, insert_delete_test)
+    {
+        Task * task1 = new Task(
+            1,
+            1,
+            1,
+            TASK_GAME_SERVER_INSTALL,
+            "",
+            "",
+            TASK_WAITING
+        );
+
+        Task * task2 = new Task(
+                2,
+                2,
+                2,
+                TASK_GAME_SERVER_INSTALL,
+                "",
+                "",
+                TASK_WAITING
+        );
+
+        TaskList& tasks = TaskList::getInstance();
+
+        tasks.insert(task1);
+        ASSERT_EQ(1, tasks.count());
+
+        tasks.insert(task2);
+        ASSERT_EQ(2, tasks.count());
+
+//        tasks.delete_task(task2);
+//        ASSERT_EQ(1, tasks.count());
+//
+//        tasks.delete_task(task2);
+//        ASSERT_EQ(1, tasks.count());
+//
+//        tasks.delete_task(task1);
+//        ASSERT_EQ(0, tasks.count());
     }
 }
