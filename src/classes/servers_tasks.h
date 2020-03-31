@@ -6,25 +6,9 @@
 #include <memory>
 #include <unordered_set>
 
+#include "models/server_task.h"
+
 namespace GameAP {
-    struct ServerTask {
-        enum status {
-            WAITING,
-            WORKING,
-            SUCCESS,
-            FAIL,
-        } status;
-
-        unsigned int id;
-        std::string task;
-        unsigned int server_id;
-        unsigned short repeat;
-        unsigned int repeat_period;
-        unsigned int counter;
-        time_t execute_date;
-        std::string payload;
-    };
-
     struct CompareTask {
         bool operator()(std::shared_ptr<ServerTask> const& t1, std::shared_ptr<ServerTask> const& t2)
         {

@@ -145,6 +145,7 @@ set(SOURCES_CPP
         classes/game_servers_list.cpp
         classes/game_server.cpp
         classes/game_server_installer.cpp
+        classes/game_server_cmd.cpp
         classes/cmd_output.cpp
         classes/task_list.cpp
         classes/servers_tasks.cpp

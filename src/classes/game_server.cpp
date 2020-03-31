@@ -545,7 +545,7 @@ bool GameServer::status_server()
 #ifdef __linux__
                 m_active = (kill(pid, 0) == 0);
 #elif _WIN32
-                HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, pid);
+            HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, pid);
             DWORD ret = WaitForSingleObject(process, 0);
             CloseHandle(process);
             m_active = (ret == WAIT_TIMEOUT);
