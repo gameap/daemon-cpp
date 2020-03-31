@@ -2,7 +2,7 @@
 #define DEDICATED_SERVER_H
 
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <vector>
 #include <map>
@@ -15,26 +15,18 @@
 	#include <sys/socket.h>
 	#include <arpa/inet.h>
 	#include <sys/ioctl.h>
-	#include <sys/time.h>
+	#include <ctime>
 
 	#include <net/if.h>
 #endif
 
-#include <string.h>
-#include <errno.h>
-#include <stdio.h>
+#include <cstring>
+#include <cerrno>
+#include <cstdio>
 
 #ifdef __GNUC__
 #include <unistd.h>
 #include <thread>
-#endif
-
-#ifdef _WIN32
-    #define OS "windows"
-#elif __linux__
-    #define OS "linux"
-#else
-    #define OS "unknown"
 #endif
 
 #include <fstream>
@@ -44,6 +36,14 @@
 #include <boost/algorithm/string.hpp>
 
 #include "typedefs.h"
+
+#ifdef _WIN32
+    #define OS "windows"
+#elif __linux__
+    #define OS "linux"
+#else
+    #define OS "unknown"
+#endif
 
 #define DS_PREFER_INSTALL_METHOD_AUTO         0
 #define DS_PREFER_INSTALL_METHOD_COPY         1

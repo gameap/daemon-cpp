@@ -1,3 +1,6 @@
+#ifndef GDAEMON_GSTRING_H
+#define GDAEMON_GSTRING_H
+
 #include <string>
 
 #include <json/json.h>
@@ -11,3 +14,5 @@ std::string random(size_t size);
 unsigned int getJsonUInt(Json::Value json);
 
 time_t human_to_timestamp(const std::string &str);
+
+#endif //GDAEMON_GSTRING_H
