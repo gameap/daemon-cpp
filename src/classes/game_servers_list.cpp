@@ -11,8 +11,6 @@
 
 using namespace GameAP;
 
-// ---------------------------------------------------------------------
-
 int GameServersList::update_list()
 {
     Json::Value jvalue;
@@ -25,8 +23,8 @@ int GameServersList::update_list()
         return ERROR_STATUS_INT;
     }
 
-    for (Json::ValueIterator itr = jvalue.begin(); itr != jvalue.end(); ++itr) {
-        ulong server_id = getJsonUInt((*itr)["id"]);
+    for (auto jserver: jvalue) {
+        ulong server_id = getJsonUInt(jserver["id"]);
 
         if (servers_list.find(server_id) == servers_list.end()) {
 
@@ -34,7 +32,6 @@ int GameServersList::update_list()
 
             try {
                 servers_list.insert(
-                        servers_list.end(),
                         std::pair<ulong, std::shared_ptr<GameServer>>(server_id, gserver)
                 );
             } catch (std::exception &e) {
@@ -45,8 +42,6 @@ int GameServersList::update_list()
 
     return SUCCESS_STATUS_INT;
 }
-
-// ---------------------------------------------------------------------
 
 void GameServersList::stats_process()
 {
@@ -79,8 +74,6 @@ void GameServersList::stats_process()
     }
 }
 
-// ---------------------------------------------------------------------
-
 void GameServersList::loop()
 {
     for (auto& server : servers_list) {
@@ -90,16 +83,12 @@ void GameServersList::loop()
     stats_process();
 }
 
-// ---------------------------------------------------------------------
-
 void GameServersList::update_all(bool force)
 {
     for (auto& server : servers_list) {
         server.second->update(true);
     }
 }
-
-// ---------------------------------------------------------------------
 
 GameServer * GameServersList::get_server(ulong server_id)
 {
@@ -120,11 +109,9 @@ GameServer * GameServersList::get_server(ulong server_id)
     return servers_list[server_id].get();
 }
 
-// ---------------------------------------------------------------------
-
 void GameServersList::delete_server(ulong server_id)
 {
-    std::map<ulong, std::shared_ptr<GameServer>>::iterator it = servers_list.find(server_id);
+    auto it = servers_list.find(server_id);
 
     if (it != servers_list.end()) {
         servers_list.erase(it);

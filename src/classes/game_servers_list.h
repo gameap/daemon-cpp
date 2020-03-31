@@ -7,7 +7,7 @@ namespace GameAP {
 
 class GameServersList {
 private:
-    std::map<ulong, std::shared_ptr<GameServer>> servers_list;
+    std::unordered_map<ulong, std::shared_ptr<GameServer>> servers_list;
 
     GameServersList() {
         update_list();
