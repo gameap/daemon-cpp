@@ -10,7 +10,7 @@
 namespace GameAP {
     class GameServerCmd {
         public:
-            GameServerCmd(unsigned short command, unsigned int server_id) :
+            GameServerCmd(unsigned char command, unsigned int server_id) :
                 m_command(command),
                 m_server_id(server_id) {
 
@@ -40,7 +40,7 @@ namespace GameAP {
 
 
         protected:
-            unsigned short m_command;
+            unsigned char m_command;
             unsigned int m_server_id;
             Server m_server;
             bool m_complete;

@@ -11,7 +11,7 @@ namespace GameAP {
         } status;
 
         unsigned int id;
-        std::string task;
+        unsigned char command;
         unsigned int server_id;
         unsigned short repeat;
         unsigned int repeat_period;

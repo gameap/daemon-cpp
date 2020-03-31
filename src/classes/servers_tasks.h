@@ -5,8 +5,10 @@
 #include <string>
 #include <memory>
 #include <unordered_set>
+#include <unordered_map>
 
 #include "models/server_task.h"
+#include "game_server_cmd.h"
 
 namespace GameAP {
     struct CompareTask {
@@ -47,9 +49,12 @@ namespace GameAP {
         private:
             std::priority_queue<std::shared_ptr<ServerTask>, std::vector<std::shared_ptr<ServerTask>>, CompareTask> tasks;
             std::unordered_set<unsigned int> exists_tasks;
+            std::unordered_map<unsigned int, std::shared_ptr<GameServerCmd>> active_cmds;
 
             void start(std::shared_ptr<ServerTask> &task);
             void proceed(std::shared_ptr<ServerTask> &task);
+
+            unsigned char convert_command(const std::string& command);
 
             ServersTasks() {}
             ServersTasks( const ServersTasks&);

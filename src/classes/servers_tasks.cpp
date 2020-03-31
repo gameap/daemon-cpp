@@ -8,6 +8,9 @@
 #include "functions/gstring.h"
 #include "log.h"
 
+#include "models/server.h"
+#include "game_server_cmd.h"
+
 using namespace GameAP;
 
 void ServersTasks::run_next()
@@ -36,16 +39,38 @@ void ServersTasks::start(std::shared_ptr<ServerTask> &task)
 {
     task->status = ServerTask::WORKING;
 
-    GameServersList& gslist = GameServersList::getInstance();
+    std::shared_ptr<GameServerCmd> game_server_cmd = std::make_shared<GameServerCmd>(task->command, task->server_id);
 
-    if (task->task == TASK_START) {
-        return;
-    }
+    this->active_cmds.insert(
+        std::pair<unsigned int, std::shared_ptr<GameServerCmd>>(task->id, game_server_cmd)
+    );
+
+    std::thread server_cmd_thread([&]() {
+        game_server_cmd->execute();
+    });
 }
 
 void ServersTasks::proceed(std::shared_ptr<ServerTask> &task)
 {
-    task->status = ServerTask::SUCCESS;
+    if (this->active_cmds.find(task->id) == this->active_cmds.end()) {
+        task->status = ServerTask::FAIL;
+        return;
+    }
+
+    std::shared_ptr<GameServerCmd> game_server_cmd = this->active_cmds[task->id];
+
+    if (game_server_cmd->is_complete()) {
+        task->status = game_server_cmd->result()
+                ? ServerTask::SUCCESS
+                : ServerTask::FAIL;
+
+        std::string output;
+        game_server_cmd->output(&output);
+
+        // TODO: Update api
+
+        return;
+    }
 }
 
 bool ServersTasks::empty()
@@ -75,7 +100,7 @@ void ServersTasks::update()
         auto task = std::make_shared<ServerTask>(ServerTask{
             ServerTask::WAITING,
             jtask["id"].asUInt(),
-            jtask["task"].asString(),
+            this->convert_command(jtask["command"].asString()),
             jtask["server_id"].asUInt(),
             static_cast<unsigned short>(jtask["repeat"].asUInt()),
             jtask["repeat_period"].asUInt(),
@@ -85,5 +110,22 @@ void ServersTasks::update()
         });
 
         this->tasks.push(task);
+    }
+}
+
+unsigned char ServersTasks::convert_command(const std::string& command)
+{
+    if (command == "restart") {
+        return GameServerCmd::RESTART;
+    } else if (command == "start") {
+        return GameServerCmd::START;
+    } else if (command == "stop") {
+        return GameServerCmd::STOP;
+    } else if (command == "update") {
+        return GameServerCmd::UPDATE;
+    } else if (command == "reinstall") {
+        return GameServerCmd::REINSTALL;
+    } else {
+        return 0;
     }
 }
