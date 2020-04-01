@@ -7,7 +7,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
-#include "cmd_output.h"
+#include "classes/cmd_output.h"
 
 #define INST_NO_SOURCE      0
 #define INST_FROM_LOCREP    1
@@ -50,7 +50,7 @@ namespace GameAP {
             std::string m_mod_localrep;
             std::string m_mod_remrep;
 
-            std::string m_steam_app_id;
+            unsigned int m_steam_app_id;
             std::string m_steam_app_set_config;
 
             /**

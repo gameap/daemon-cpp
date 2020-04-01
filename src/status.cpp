@@ -4,9 +4,11 @@
 
 #include "log.h"
 
-#include "classes/task_list.h"
+#include "status.h"
 #include "classes/game_servers_list.h"
 #include "config.h"
+
+bool status_active;
 
 using namespace GameAP;
 
@@ -34,12 +36,10 @@ void sighandler(int signum)
         gslist.update_all(true);
 
         GAMEAP_LOG_INFO << "Servers updated";
-
     } else if (signum == SIGQUIT || signum == SIGTERM || signum == SIGINT) {
         GAMEAP_LOG_INFO << "Handle quit signal";
         GAMEAP_LOG_INFO << "Stopping tasks";
 
-        TaskList& tasks = TaskList::getInstance();
-        tasks.stop = true;
+        status_active = false;
     }
 }

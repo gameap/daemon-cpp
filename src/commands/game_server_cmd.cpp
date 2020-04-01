@@ -1,9 +1,9 @@
-#include "classes/game_server_cmd.h"
+#include "game_server_cmd.h"
 
 #include "functions/gstring.h"
 #include "functions/gsystem.h"
 
-#include "classes/game_server_installer.h"
+#include "game_server_installer.h"
 #include "classes/dedicated_server.h"
 
 #include "log.h"
@@ -38,6 +38,15 @@ void GameServerCmd::execute()
         case DELETE:
             this->m_result = this->remove();
             break;
+
+        case STATUS:
+            this->m_result = this->status();
+            break;
+
+        default:
+            this->m_output->append("Invalid game_server_cmd command");
+            this->m_result = false;
+            break;
     }
 
     this->m_complete = true;
@@ -55,7 +64,8 @@ bool GameServerCmd::result() const
 
 void GameServerCmd::output(std::string *str_out)
 {
-    return this->m_output->get(str_out);
+    this->m_output->get(str_out);
+    this->m_output->clear();
 }
 
 bool GameServerCmd::start()
@@ -141,7 +151,7 @@ bool GameServerCmd::restart()
 bool GameServerCmd::update()
 {
     if (this->status() && ! this->stop()) {
-        // TODO: Info
+        this->m_output->append("Unable to stop server");
         return false;
     }
 
@@ -154,7 +164,7 @@ bool GameServerCmd::update()
     installer.m_mod_localrep         = this->m_server.game_mod.local_repository;
     installer.m_mod_remrep           = this->m_server.game_mod.remote_repository;
 
-    installer.m_steam_app_id         = std::to_string(this->m_server.game.steam_app_id);
+    installer.m_steam_app_id         = this->m_server.game.steam_app_id;
     installer.m_steam_app_set_config = this->m_server.game.steam_app_set_config;
 
     fs::path work_path = ds.get_work_path();
@@ -164,7 +174,13 @@ bool GameServerCmd::update()
     installer.m_user                 = this->m_server.user;
 
     int result = installer.install_server();
-    return (result == EXIT_SUCCESS_CODE);
+
+    if (result != EXIT_SUCCESS_CODE) {
+        this->m_output->append(installer.get_errors());
+        return false;
+    }
+
+    return true;
 }
 
 bool GameServerCmd::remove()
@@ -186,10 +202,11 @@ bool GameServerCmd::remove()
 
         try {
             GAMEAP_LOG_DEBUG << "Remove path: " << work_path;
+            this->m_output->append("Removing " + work_path.string());
             fs::remove_all(work_path);
         }
         catch (fs::filesystem_error &e) {
-            // _error("Unable to remove: " + std::string(e.what()));
+            this->m_output->append("Unable to remove: " + std::string(e.what()));
             return false;
         }
     }
@@ -201,9 +218,12 @@ int GameServerCmd::cmd_exec(const std::string &command)
 {
     this->m_output->append(fs::current_path().string() + "# " + command);
 
+    // TODO: Coroutines here
     int exit_code = exec(command, [this](std::string line) {
         this->m_output->append(line);
     });
+
+    this->m_output->append(boost::str(boost::format("\nExited with %1%\n") % exit_code));
 
     return exit_code;
 }

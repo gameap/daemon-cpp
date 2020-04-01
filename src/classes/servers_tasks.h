@@ -7,8 +7,10 @@
 #include <unordered_set>
 #include <unordered_map>
 
+#include <boost/thread.hpp>
+
 #include "models/server_task.h"
-#include "game_server_cmd.h"
+#include "commands/game_server_cmd.h"
 
 namespace GameAP {
     struct CompareTask {
@@ -51,12 +53,25 @@ namespace GameAP {
             std::unordered_set<unsigned int> exists_tasks;
             std::unordered_map<unsigned int, std::shared_ptr<GameServerCmd>> active_cmds;
 
+            unsigned int cache_ttl;
+            std::unordered_map<unsigned int, time_t> last_sync;
+
+            // TODO: Remove after replace to coroutines
+            boost::thread_group cmds_threads;
+
             void start(std::shared_ptr<ServerTask> &task);
             void proceed(std::shared_ptr<ServerTask> &task);
 
             unsigned char convert_command(const std::string& command);
+            void sync_from_api(std::shared_ptr<ServerTask> &task);
+            void sync_to_api(std::shared_ptr<ServerTask> &task);
 
-            ServersTasks() {}
+            void save_fail_to_api(std::shared_ptr<ServerTask> &task, const std::string& output);
+
+            ServersTasks() {
+                this->cache_ttl = 300; // 5 minutes
+            }
+
             ServersTasks( const ServersTasks&);
             ServersTasks& operator=( ServersTasks& );
     };

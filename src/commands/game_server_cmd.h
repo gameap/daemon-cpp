@@ -3,7 +3,7 @@
 
 #include <boost/filesystem.hpp>
 
-#include "cmd_output.h"
+#include "classes/cmd_output.h"
 #include "models/server.h"
 #include "classes/game_servers_list.h"
 
@@ -15,22 +15,24 @@ namespace GameAP {
                 m_server_id(server_id) {
 
                 GameServersList& gslist = GameServersList::getInstance();
-                // m_gserver = gslist.get_server(server_id);
+                m_server = *gslist.get_server(server_id);
+
+                m_output = std::make_shared<CmdOutput>();
 
                 m_complete = false;
             };
 
-            static constexpr auto START     = 1;
-            static constexpr auto PAUSE     = 2;
-            static constexpr auto UNPAUSE   = 3;
-            static constexpr auto STATUS    = 4;
-            static constexpr auto STOP      = 5;
-            static constexpr auto KILL      = 6;
-            static constexpr auto RESTART   = 7;
-            static constexpr auto UPDATE    = 8;
-            static constexpr auto INSTALL   = 9;
-            static constexpr auto REINSTALL = 10;
-            static constexpr auto DELETE    = 11;
+            static constexpr unsigned char START     = 1;
+            static constexpr unsigned char PAUSE     = 2;
+            static constexpr unsigned char UNPAUSE   = 3;
+            static constexpr unsigned char STATUS    = 4;
+            static constexpr unsigned char STOP      = 5;
+            static constexpr unsigned char KILL      = 6;
+            static constexpr unsigned char RESTART   = 7;
+            static constexpr unsigned char UPDATE    = 8;
+            static constexpr unsigned char INSTALL   = 9;
+            static constexpr unsigned char REINSTALL = 10;
+            static constexpr unsigned char DELETE    = 11;
 
             void execute();
 

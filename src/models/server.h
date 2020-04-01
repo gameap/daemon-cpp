@@ -2,13 +2,18 @@
 #define GDAEMON_SERVER_H
 
 #include <map>
+#include <ctime>
 
 #include "models/game.h"
 #include "models/game_mod.h"
 
+#define SERVER_NOT_INSTALLED        0
+#define SERVER_INSTALLED            1
+#define SERVER_INSTALL_IN_PROCESS   2
+
 namespace GameAP {
     struct Server {
-        unsigned int id;
+        unsigned long id;
         bool enabled;
         bool installed;
         bool blocked;

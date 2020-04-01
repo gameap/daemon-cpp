@@ -5,7 +5,7 @@
 #include "config.h"
 
 #include "log.h"
-#include "dedicated_server.h"
+#include "classes/dedicated_server.h"
 
 #ifdef __linux__
 #define STEAMCMD "steamcmd.sh"
@@ -144,7 +144,7 @@ void GameServerInstaller::_detect_game_source()
                && m_ignored_game_source.find(INST_FROM_REMREP) == m_ignored_game_source.end()
     ) {
         m_game_source_type = INST_FROM_REMREP;
-    } else if (!m_steam_app_id.empty()
+    } else if (m_steam_app_id > 0
                && !steamcmd_path.empty()
                && m_ignored_game_source.find(INST_FROM_STEAM) == m_ignored_game_source.end()
     ) {

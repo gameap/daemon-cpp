@@ -3,13 +3,13 @@
 #include "log.h"
 #include "consts.h"
 
-#include "classes/task_list.h"
-
 #include "components/server/files_component.h"
 #include "components/server/commands_component.h"
 #include "daemon_server.h"
 #include "classes/dedicated_server.h"
 #include "functions/auth.h"
+
+#include "status.h"
 
 using namespace GameAP;
 
@@ -225,20 +225,21 @@ int run_server(const std::string& ip, const ushort port)
 
         DaemonServer s(io_service, endpoint);
 
-        // TODO: Replace tasks.stop to some status checker class or something else
-        TaskList& tasks = TaskList::getInstance();
-
         std::vector<std::thread> v_services;
         v_services.reserve(DaemonServer::THREADS_NUM);
 
-        auto run_closure = [&io_service, &tasks] {
-            while(!tasks.stop) {
+        auto run_closure = [&io_service] {
+            while(status_active) {
                 io_service.run_for(std::chrono::seconds(5));
             }
         };
 
         for (auto i = DaemonServer::THREADS_NUM - 1; i > 0; --i) {
             v_services.emplace_back(run_closure);
+        }
+
+        for (std::thread & v_service: v_services) {
+            v_service.detach();
         }
 
         run_closure();
