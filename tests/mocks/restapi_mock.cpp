@@ -19,7 +19,7 @@ std::queue<std::function<void ()>> restapi_mock_post;
 std::queue<std::function<void ()>> restapi_mock_put;
 std::queue<std::function<void ()>> restapi_mock_patch;
 
-namespace Gameap {
+namespace GameAP {
     Rest::RestapiException::RestapiException(std::string const& msg) : msg_(msg) {}
     Rest::RestapiException::~RestapiException() {}
     char const* Rest::RestapiException::what() const throw() { return msg_.c_str(); }

@@ -119,8 +119,8 @@ void ServersTasks::update()
     Json::Value jvalue;
 
     try {
-        jvalue = Gameap::Rest::get("/gdaemon_api/servers_tasks");
-    } catch (Gameap::Rest::RestapiException &exception) {
+        jvalue = Rest::get("/gdaemon_api/servers_tasks");
+    } catch (Rest::RestapiException &exception) {
         // Try later
         GAMEAP_LOG_ERROR << exception.what();
         return;
@@ -154,8 +154,8 @@ void ServersTasks::sync_from_api(std::shared_ptr<ServerTask> &task)
     Json::Value jtask;
 
     try {
-        jtask = Gameap::Rest::get("/gdaemon_api/servers_tasks/" + std::to_string(task->id));
-    } catch (Gameap::Rest::RestapiException &exception) {
+        jtask = Rest::get("/gdaemon_api/servers_tasks/" + std::to_string(task->id));
+    } catch (Rest::RestapiException &exception) {
         // Try later
         GAMEAP_LOG_ERROR << exception.what();
         return;
@@ -187,8 +187,8 @@ void ServersTasks::sync_to_api(std::shared_ptr<ServerTask> &task) {
     jtask["execute_date"] = buffer;
 
     try {
-        Gameap::Rest::put("/gdaemon_api/servers_tasks/" + std::to_string(task->id), jtask);
-    } catch (Gameap::Rest::RestapiException &exception) {
+        Rest::put("/gdaemon_api/servers_tasks/" + std::to_string(task->id), jtask);
+    } catch (Rest::RestapiException &exception) {
         GAMEAP_LOG_ERROR << "Error sync server tasks: " << exception.what();
     }
 }
@@ -199,8 +199,8 @@ void ServersTasks::save_fail_to_api(std::shared_ptr<ServerTask> &task, const std
     jfail["output"] = output;
 
     try {
-        Gameap::Rest::put("/gdaemon_api/servers_tasks/" + std::to_string(task->id) + "/fail", jfail);
-    } catch (Gameap::Rest::RestapiException &exception) {
+        Rest::put("/gdaemon_api/servers_tasks/" + std::to_string(task->id) + "/fail", jfail);
+    } catch (Rest::RestapiException &exception) {
         GAMEAP_LOG_ERROR << "Error sync server tasks: " << exception.what();
     }
 }

@@ -85,8 +85,8 @@ int run_daemon()
     );
 
     try {
-        Gameap::Rest::get_token();
-    } catch (Gameap::Rest::RestapiException &exception) {
+        Rest::get_token();
+    } catch (Rest::RestapiException &exception) {
         GAMEAP_LOG_ERROR << exception.what();
         return -1;
     }

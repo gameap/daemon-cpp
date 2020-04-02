@@ -96,7 +96,7 @@ DedicatedServer::DedicatedServer()
     GAMEAP_LOG_DEBUG << "Getting Dedicated server init data";
 
     try {
-        Json::Value jvalue = Gameap::Rest::get("/gdaemon_api/dedicated_servers/get_init_data/" + std::to_string(ds_id));
+        Json::Value jvalue = Rest::get("/gdaemon_api/dedicated_servers/get_init_data/" + std::to_string(ds_id));
 
         // TODO: Check work path!
 
@@ -142,7 +142,7 @@ DedicatedServer::DedicatedServer()
         //}
 
 
-    } catch (Gameap::Rest::RestapiException &exception) {
+    } catch (Rest::RestapiException &exception) {
         // Try later
         GAMEAP_LOG_ERROR << exception.what();
     }
@@ -604,10 +604,10 @@ int DedicatedServer::update_db()
     }
 
     try {
-        Gameap::Rest::post("/gdaemon_api/ds_stats", jupdate_data);
+        Rest::post("/gdaemon_api/ds_stats", jupdate_data);
         stats.clear();
         last_db_update = time(nullptr);
-    } catch (Gameap::Rest::RestapiException &exception) {
+    } catch (Rest::RestapiException &exception) {
         GAMEAP_LOG_ERROR << "Output updating error: " << exception.what();
     }
 }

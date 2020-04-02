@@ -1,5 +1,5 @@
 set(SOURCES_CPP
-        mocks/config_mock.cpp
+        ../mocks/config_mock.cpp
         ${CMAKE_HOME_DIRECTORY}/src/state.cpp
         ${CMAKE_HOME_DIRECTORY}/src/daemon.cpp
         ${CMAKE_HOME_DIRECTORY}/src/daemon_server.cpp
@@ -12,7 +12,7 @@ set(SOURCES_CPP
         ${CMAKE_HOME_DIRECTORY}/src/classes/cmd_output.cpp
         ${CMAKE_HOME_DIRECTORY}/src/classes/servers_tasks.cpp
         ${CMAKE_HOME_DIRECTORY}/src/classes/gdaemon_tasks.cpp
-        mocks/restapi_mock.cpp
+        ../mocks/restapi_mock.cpp
         ${CMAKE_HOME_DIRECTORY}/src/functions/auth.cpp
         ${CMAKE_HOME_DIRECTORY}/src/components/server/commands_component.cpp
         ${CMAKE_HOME_DIRECTORY}/src/components/server/files_component.cpp

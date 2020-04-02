@@ -18,8 +18,8 @@ int GameServersList::update_list()
     Json::Value jvalue;
 
     try {
-        jvalue = Gameap::Rest::get("/gdaemon_api/servers?fields[servers]=id");
-    } catch (Gameap::Rest::RestapiException &exception) {
+        jvalue = Rest::get("/gdaemon_api/servers?fields[servers]=id");
+    } catch (Rest::RestapiException &exception) {
         // Try later
         GAMEAP_LOG_ERROR << exception.what();
         return ERROR_STATUS_INT;
@@ -116,8 +116,8 @@ void GameServersList::stats_process()
     }
 
     try {
-        Gameap::Rest::patch("/gdaemon_api/servers", jupdate_data);
-    } catch (Gameap::Rest::RestapiException &exception) {
+        Rest::patch("/gdaemon_api/servers", jupdate_data);
+    } catch (Rest::RestapiException &exception) {
         GAMEAP_LOG_ERROR << exception.what() << '\n';
     }
 }
@@ -168,8 +168,8 @@ void GameServersList::sync_from_api(ulong server_id)
     Json::Value jserver;
 
     try {
-        jserver = Gameap::Rest::get("/gdaemon_api/servers/" + std::to_string(server_id));
-    } catch (Gameap::Rest::RestapiException &exception) {
+        jserver = Rest::get("/gdaemon_api/servers/" + std::to_string(server_id));
+    } catch (Rest::RestapiException &exception) {
         // Try later
         GAMEAP_LOG_ERROR << exception.what();
         return;

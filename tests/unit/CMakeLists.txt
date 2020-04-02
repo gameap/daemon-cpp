@@ -16,7 +16,7 @@ set(SOURCES_CPP
         ${CMAKE_HOME_DIRECTORY}/src/classes/cmd_output.cpp
         ${CMAKE_HOME_DIRECTORY}/src/classes/servers_tasks.cpp
         ${CMAKE_HOME_DIRECTORY}/src/classes/gdaemon_tasks.cpp
-        ${CMAKE_HOME_DIRECTORY}/src/functions/restapi.cpp
+        ../mocks/restapi_mock.cpp
         ${CMAKE_HOME_DIRECTORY}/src/functions/auth.cpp
         ${CMAKE_HOME_DIRECTORY}/src/components/server/commands_component.cpp
         ${CMAKE_HOME_DIRECTORY}/src/components/server/files_component.cpp
@@ -31,8 +31,9 @@ endif()
 add_executable(run_unit_tests
         ${SOURCES_CPP} ${GDAEMON_SOURCES_CPP}
         state_test.cpp
-        classes/game_server_installer_test.cpp
+        commands/game_server_installer_test.cpp
         classes/cmd_output_test.cpp
+        classes/game_servers_list_test.cpp
 )
 
 target_link_libraries(run_unit_tests
@@ -52,3 +53,4 @@ target_link_libraries(run_unit_tests
 
 add_test(NAME state_test COMMAND run_unit_tests)
 add_test(NAME cmd_output COMMAND run_unit_tests)
+add_test(NAME game_servers_list COMMAND run_unit_tests)
