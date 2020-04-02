@@ -9,32 +9,32 @@
 namespace GameAP {
 
 class GameServersList {
-private:
-    std::unordered_map<ulong, std::shared_ptr<Server>> servers_list;
+    public:
+        static GameServersList& getInstance() {
+            static GameServersList instance;
+            return instance;
+        }
 
-    GameServersList() {
-        update_list();
-    }
+        Server * get_server(ulong server_id);
+        void delete_server(ulong server_id);
+        void loop();
 
-    GameServersList( const GameServersList&);
-    GameServersList& operator=( GameServersList& );
+        void update_all();
+        void update_all(bool force);
+    private:
+        std::unordered_map<ulong, std::shared_ptr<Server>> servers_list;
 
-    int update_list();
-    void stats_process();
-public:
-    static GameServersList& getInstance() {
-        static GameServersList instance;
-        return instance;
-    }
+        void sync_from_api(ulong server_id);
 
-    Server * get_server(ulong server_id);
-    void delete_server(ulong server_id);
-    void loop();
+        int update_list();
+        void stats_process();
 
-    void update_all();
-    void update_all(bool force);
+        GameServersList() {
+            update_list();
+        }
 
-    void sync_from_api(ulong server_id);
+        GameServersList( const GameServersList&);
+        GameServersList& operator=( GameServersList& );
 };
 
 /* End namespace GameAP */

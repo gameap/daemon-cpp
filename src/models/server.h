@@ -7,15 +7,15 @@
 #include "models/game.h"
 #include "models/game_mod.h"
 
-#define SERVER_NOT_INSTALLED        0
-#define SERVER_INSTALLED            1
-#define SERVER_INSTALL_IN_PROCESS   2
-
 namespace GameAP {
     struct Server {
         unsigned long id;
         bool enabled;
-        bool installed;
+        enum install_status {
+            SERVER_NOT_INSTALLED        = 0,
+            SERVER_INSTALLED            = 1,
+            SERVER_INSTALL_IN_PROCESS   = 2,
+        } installed;
         bool blocked;
         std::string name;
         std::string uuid;

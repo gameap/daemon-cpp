@@ -34,7 +34,7 @@ int GameServersList::update_list()
             std::shared_ptr<Server> server = std::make_shared<Server>(Server{
                 jserver["id"].asUInt(),
                 jserver["enabled"].asBool(),
-                jserver["installed"].asBool(),
+                static_cast<Server::install_status>(jserver["installed"].asUInt()),
                 jserver["blocked"].asBool(),
                 jserver["name"].asString(),
                 jserver["uuid"].asString(),
@@ -103,7 +103,7 @@ void GameServersList::stats_process()
         Json::Value jserver;
         jserver["id"] = static_cast<unsigned long long>(server.second->id);
 
-        if (server.second->last_process_check > 0 && server.second->installed == SERVER_INSTALLED) {
+        if (server.second->last_process_check > 0 && server.second->installed == Server::SERVER_INSTALLED) {
             time_t last_process_check = server.second->last_process_check - time_diff;
             std::tm * ptm = std::gmtime(&last_process_check);
             char buffer[32];
@@ -182,7 +182,7 @@ void GameServersList::sync_from_api(ulong server_id)
     Server *server = servers_list[server_id].get();
 
     server->enabled     = jserver["enabled"].asBool();
-    server->installed   = jserver["installed"].asBool();
+    server->installed   = static_cast<Server::install_status>(jserver["installed"].asUInt());
     server->blocked     = jserver["blocked"].asBool();
     server->name        = jserver["name"].asString();
     server->uuid        = jserver["uuid"].asString();
