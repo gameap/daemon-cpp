@@ -56,7 +56,7 @@ namespace GameAP {
         private:
             std::queue<std::shared_ptr<GdaemonTask>> tasks;
             std::unordered_set<unsigned int> exists_tasks;
-            std::unordered_map<unsigned int, std::shared_ptr<GameServerCmd>> active_cmds;
+            std::unordered_map<unsigned int, std::shared_ptr<Cmd>> active_cmds;
 
             // TODO: Remove after replace to coroutines
             boost::thread_group cmds_threads;

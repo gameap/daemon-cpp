@@ -3,6 +3,7 @@
 #include "log.h"
 #include "functions/restapi.h"
 
+#include <functional>
 #include <queue>
 
 #include <plog/Appenders/ConsoleAppender.h>
@@ -19,7 +20,7 @@ extern std::queue<std::function<void (const std::string& uri, Json::Value data)>
 extern std::queue<std::function<void (const std::string& uri, Json::Value data)>> restapi_mock_put;
 extern std::queue<std::function<void (const std::string& uri, Json::Value data)>> restapi_mock_patch;
 
-namespace Gameap {
+namespace GameAP {
 	TEST(common, get_token_error_test)
 	{
 		static plog::ConsoleAppender<plog::TxtFormatter> consoleAppender;

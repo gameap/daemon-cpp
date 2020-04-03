@@ -20,11 +20,13 @@ void DedicatedServerCmd::execute()
 
 bool DedicatedServerCmd::cmd_execute()
 {
-    if (this->shell_command.empty()) {
+    std::string shell_command = this->get_option(OPTION_SHELL_COMMAND);
+
+    if (shell_command.empty()) {
         this->m_output->append("Empty shell command");
         return false;
     }
 
-    int result = this->cmd_exec(this->shell_command);
+    int result = this->cmd_exec(shell_command);
     return result == EXIT_SUCCESS_CODE;
 }

@@ -9,6 +9,7 @@ set(SOURCES_CPP
         ${CMAKE_HOME_DIRECTORY}/src/classes/game_servers_list.cpp
         ${CMAKE_HOME_DIRECTORY}/src/commands/game_server_installer.cpp
         ${CMAKE_HOME_DIRECTORY}/src/commands/game_server_cmd.cpp
+        ${CMAKE_HOME_DIRECTORY}/src/commands/dedicated_server_cmd.cpp
         ${CMAKE_HOME_DIRECTORY}/src/classes/cmd_output.cpp
         ${CMAKE_HOME_DIRECTORY}/src/classes/servers_tasks.cpp
         ${CMAKE_HOME_DIRECTORY}/src/classes/gdaemon_tasks.cpp

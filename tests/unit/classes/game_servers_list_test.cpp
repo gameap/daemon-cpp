@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <queue>
+#include <functional>
 
 #include <boost/filesystem.hpp>
 

@@ -3,6 +3,7 @@
 #include <thread>
 
 #include <json/json.h>
+#include <commands/dedicated_server_cmd.h>
 
 #include "functions/restapi.h"
 #include "log.h"
@@ -111,30 +112,29 @@ void GdaemonTasks::api_append_output(std::shared_ptr<GdaemonTask> &task, std::st
 
 void GdaemonTasks::start(std::shared_ptr<GdaemonTask> &task)
 {
-    std::shared_ptr<GameServerCmd> game_server_cmd;
+    std::shared_ptr<Cmd> cmd;
 
     if (! strcmp(task->task.c_str(), GAME_SERVER_START)) {
-        game_server_cmd = std::make_shared<GameServerCmd>(GameServerCmd{GameServerCmd::START, task->server_id});
+        cmd = std::make_shared<GameServerCmd>(GameServerCmd{GameServerCmd::START, task->server_id});
     }
     else if (! strcmp(task->task.c_str(), GAME_SERVER_STOP)) {
-        game_server_cmd = std::make_shared<GameServerCmd>(GameServerCmd{GameServerCmd::STOP, task->server_id});
+        cmd = std::make_shared<GameServerCmd>(GameServerCmd{GameServerCmd::STOP, task->server_id});
     }
     else if (! strcmp(task->task.c_str(), GAME_SERVER_RESTART)) {
-        game_server_cmd = std::make_shared<GameServerCmd>(GameServerCmd{GameServerCmd::RESTART, task->server_id});
+        cmd = std::make_shared<GameServerCmd>(GameServerCmd{GameServerCmd::RESTART, task->server_id});
     }
     else if (! strcmp(task->task.c_str(), GAME_SERVER_INSTALL)) {
-        game_server_cmd = std::make_shared<GameServerCmd>(GameServerCmd{GameServerCmd::INSTALL, task->server_id});
+        cmd = std::make_shared<GameServerCmd>(GameServerCmd{GameServerCmd::INSTALL, task->server_id});
     }
     else if (! strcmp(task->task.c_str(), GAME_SERVER_UPDATE) || ! strcmp(task->task.c_str(), GAME_SERVER_INSTALL)) {
-        game_server_cmd = std::make_shared<GameServerCmd>(GameServerCmd{GameServerCmd::UPDATE, task->server_id});
+        cmd = std::make_shared<GameServerCmd>(GameServerCmd{GameServerCmd::UPDATE, task->server_id});
     }
     else if (! strcmp(task->task.c_str(), GAME_SERVER_DELETE)) {
-        game_server_cmd = std::make_shared<GameServerCmd>(GameServerCmd{GameServerCmd::DELETE, task->server_id});
+        cmd = std::make_shared<GameServerCmd>(GameServerCmd{GameServerCmd::DELETE, task->server_id});
     }
     else if (! strcmp(task->task.c_str(), GAME_SERVER_EXECUTE)) {
-        // TODO: Implement
-        std::string output = "GAME_SERVER_EXECUTE is not implemented yet";
-        this->api_append_output(task, output);
+        cmd = std::make_shared<DedicatedServerCmd>(DedicatedServerCmd{DedicatedServerCmd::CMD_EXECUTE});
+        cmd->set_option(DedicatedServerCmd::OPTION_SHELL_COMMAND, task->cmd);
     }
     else {
         // Unknown task
@@ -142,14 +142,14 @@ void GdaemonTasks::start(std::shared_ptr<GdaemonTask> &task)
         this->api_append_output(task, output);
     }
 
-    if (game_server_cmd != nullptr) {
+    if (cmd != nullptr) {
         this->active_cmds.insert(
-            std::pair<unsigned int, std::shared_ptr<GameServerCmd>>(task->id, game_server_cmd)
+            std::pair<unsigned int, std::shared_ptr<Cmd>>(task->id, cmd)
         );
 
         // TODO: Couroutines here
         this->cmds_threads.create_thread([=]() {
-            game_server_cmd->execute();
+            cmd->execute();
         });
 
         task->status = GdaemonTask::WORKING;
@@ -157,7 +157,7 @@ void GdaemonTasks::start(std::shared_ptr<GdaemonTask> &task)
     } else {
         task->status = GdaemonTask::ERROR;
 
-        std::string output = "Empty game_server_cmd";
+        std::string output = "Empty cmd";
         this->api_append_output(task, output);
         this->api_update_status(task);
     }
@@ -170,7 +170,7 @@ void GdaemonTasks::proceed(std::shared_ptr<GdaemonTask> &task)
         return;
     }
 
-    std::shared_ptr<GameServerCmd> game_server_cmd = this->active_cmds[task->id];
+    std::shared_ptr<Cmd> game_server_cmd = this->active_cmds[task->id];
 
     if (game_server_cmd->is_complete()) {
         task->status = game_server_cmd->result()

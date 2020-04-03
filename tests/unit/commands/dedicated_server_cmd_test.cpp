@@ -5,7 +5,7 @@ namespace GameAP {
     TEST(dedicated_server_cmd, success)
     {
         DedicatedServerCmd cmd = DedicatedServerCmd(DedicatedServerCmd::CMD_EXECUTE);
-        cmd.set_shell_command("./unit test");
+        cmd.set_option(DedicatedServerCmd::OPTION_SHELL_COMMAND, "./unit test");
 
         cmd.execute();
 
@@ -36,6 +36,7 @@ namespace GameAP {
     TEST(dedicated_server_cmd, invalid_command)
     {
         DedicatedServerCmd cmd = DedicatedServerCmd(255);
+        cmd.set_option(DedicatedServerCmd::OPTION_SHELL_COMMAND, "./unit test");
 
         cmd.execute();
 

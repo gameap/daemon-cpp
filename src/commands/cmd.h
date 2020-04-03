@@ -46,11 +46,23 @@ namespace GameAP {
                 this->m_output->clear();
             }
 
+            /**
+             * Set command option
+             * @param name
+             * @param value
+             */
+            void set_option(char name, const std::string & value)
+            {
+                this->m_options.insert(std::pair<char, std::string>(name, value));
+            }
+
         protected:
             /**
              * Current command
              */
             unsigned char m_command;
+
+            std::map<char, std::string>m_options;
 
             bool m_complete;
             bool m_result;
@@ -73,6 +85,20 @@ namespace GameAP {
                 this->m_output->append(boost::str(boost::format("\nExited with %1%\n") % exit_code));
 
                 return exit_code;
+            }
+
+            /**
+             * Get command option
+             * @param name
+             * @return
+             */
+            std::string get_option(char option)
+            {
+                if (this->m_options.find(option) == this->m_options.end()) {
+                    return "";
+                }
+
+                return this->m_options[option];
             }
     };
 }

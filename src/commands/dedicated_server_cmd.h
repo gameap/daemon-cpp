@@ -14,21 +14,17 @@ namespace GameAP {
                 m_complete = false;
             };
 
+            // Commands
             static constexpr unsigned char CMD_EXECUTE = 1;
 
-            void execute();
+            // Command Options
+            static constexpr unsigned char OPTION_SHELL_COMMAND = 1;
 
-            // CMD_EXECUTE option
-            void set_shell_command(const std::string &cmd) {
-                this->shell_command = cmd;
-            }
+            void execute();
 
         protected:
             // Commands
             bool cmd_execute();
-
-        private:
-            std::string shell_command;
     };
 
 }
