@@ -33,7 +33,7 @@ void sighandler(int signum)
         GAMEAP_LOG_INFO << "Config reloaded";
 
         GameServersList &gslist = GameServersList::getInstance();
-        gslist.update_all(true);
+        gslist.sync_all();
 
         GAMEAP_LOG_INFO << "Servers updated";
     } else if (signum == SIGQUIT || signum == SIGTERM || signum == SIGINT) {

@@ -15,9 +15,9 @@
 
 std::queue<std::function<int ()>> restapi_mock_get_token;
 std::queue<std::function<Json::Value ()>> restapi_mock_get;
-std::queue<std::function<void ()>> restapi_mock_post;
-std::queue<std::function<void ()>> restapi_mock_put;
-std::queue<std::function<void ()>> restapi_mock_patch;
+std::queue<std::function<void (const std::string& uri, Json::Value data)>> restapi_mock_post;
+std::queue<std::function<void (const std::string& uri, Json::Value data)>> restapi_mock_put;
+std::queue<std::function<void (const std::string& uri, Json::Value data)>> restapi_mock_patch;
 
 namespace GameAP {
     Rest::RestapiException::RestapiException(std::string const& msg) : msg_(msg) {}
@@ -74,7 +74,7 @@ namespace GameAP {
             auto f = restapi_mock_post.front();
             restapi_mock_post.pop();
 
-            f();
+            f(uri, data);
         }
     }
 
@@ -89,7 +89,7 @@ namespace GameAP {
             auto f = restapi_mock_put.front();
             restapi_mock_put.pop();
 
-            f();
+            f(uri, data);
         }
     }
 
@@ -104,7 +104,7 @@ namespace GameAP {
             auto f = restapi_mock_patch.front();
             restapi_mock_patch.pop();
 
-            f();
+            f(uri, data);
         }
     }
 }

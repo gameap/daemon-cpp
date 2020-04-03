@@ -15,9 +15,9 @@ int run_daemon();
 
 extern std::queue<std::function<int ()>> restapi_mock_get_token;
 extern std::queue<std::function<Json::Value ()>> restapi_mock_get;
-extern std::queue<std::function<void ()>> restapi_mock_post;
-extern std::queue<std::function<void ()>> restapi_mock_put;
-extern std::queue<std::function<void ()>> restapi_mock_patch;
+extern std::queue<std::function<void (const std::string& uri, Json::Value data)>> restapi_mock_post;
+extern std::queue<std::function<void (const std::string& uri, Json::Value data)>> restapi_mock_put;
+extern std::queue<std::function<void (const std::string& uri, Json::Value data)>> restapi_mock_patch;
 
 namespace Gameap {
 	TEST(common, get_token_error_test)

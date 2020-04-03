@@ -8,12 +8,14 @@
 
 #include "classes/game_servers_list.h"
 #include "functions/restapi.h"
+#include "consts.h"
+#include "state.h"
 
 extern std::queue<std::function<int ()>> restapi_mock_get_token;
 extern std::queue<std::function<Json::Value ()>> restapi_mock_get;
-extern std::queue<std::function<void ()>> restapi_mock_post;
-extern std::queue<std::function<void ()>> restapi_mock_put;
-extern std::queue<std::function<void ()>> restapi_mock_patch;
+extern std::queue<std::function<void (const std::string& uri, Json::Value data)>> restapi_mock_post;
+extern std::queue<std::function<void (const std::string& uri, Json::Value data)>> restapi_mock_put;
+extern std::queue<std::function<void (const std::string& uri, Json::Value data)>> restapi_mock_patch;
 
 namespace fs = boost::filesystem;
 
@@ -184,5 +186,109 @@ namespace GameAP {
 
         GameServersList &gslist = GameServersList::getInstance();
         ASSERT_EQ(nullptr, gslist.get_server(99999));
+    }
+
+    TEST(game_servers_list, stats_process)
+    {
+        bool restCalled = false;
+        Json::Value jpatch_value;
+
+        restapi_mock_patch.push([&](const std::string& uri, Json::Value jvalue) -> void
+        {
+            restCalled = true;
+            jpatch_value = jvalue;
+        });
+
+        restapi_mock_get_token.push([&]() -> int
+        {
+            // Json::Value jval;
+            // jval["token"] = "8iLs5Wdr0F06TpHKn33IVoPIMWrY8fL3RgRd826UVGeROEhBBX84m013IVFQWTBU";
+            // jval["timestamp"] = time(nullptr);
+
+            State& state = State::getInstance();
+            state.set(STATE_PANEL_TIMEDIFF, "0");
+
+            return 0;
+        });
+
+        // Initia ds
+        restapi_mock_get.push([&]() -> Json::Value
+        {
+          std::ifstream json_file;
+          std::string json_file_path = std::string(TESTS_ROOT_DIR) + std::string("/rest_responses/ds_initial.json");
+          json_file.open(json_file_path, std::ios::in);
+
+          std::string path = fs::current_path().string();
+
+          std::stringstream str_stream;
+          str_stream << json_file.rdbuf();
+          std::string json = str_stream.str();
+
+          Json::Value jvalue;
+          Json::Reader jreader(Json::Features::strictMode());
+
+          if (jreader.parse(json, jvalue, false)) {
+              return jvalue;
+          }
+
+          return Json::Value();
+        });
+
+        // Servers
+        restapi_mock_get.push([&]() -> Json::Value
+        {
+          restCalled = true;
+          std::ifstream json_file;
+          std::string json_file_path = std::string(TESTS_ROOT_DIR) + std::string("/rest_responses/server1.json");
+          json_file.open(json_file_path, std::ios::in);
+
+          std::string path = fs::current_path().string();
+
+          std::stringstream str_stream;
+          str_stream << json_file.rdbuf();
+          std::string json = str_stream.str();
+
+          Json::Value jvalue;
+          Json::Reader jreader(Json::Features::strictMode());
+
+          if (jreader.parse(json, jvalue, false)) {
+              return jvalue;
+          }
+
+          return Json::Value();
+        });
+
+        restapi_mock_get.push([&]() -> Json::Value
+        {
+          restCalled = true;
+          std::ifstream json_file;
+          std::string json_file_path = std::string(TESTS_ROOT_DIR) + std::string("/rest_responses/server2.json");
+          json_file.open(json_file_path, std::ios::in);
+
+          std::string path = fs::current_path().string();
+
+          std::stringstream str_stream;
+          str_stream << json_file.rdbuf();
+          std::string json = str_stream.str();
+
+          Json::Value jvalue;
+          Json::Reader jreader(Json::Features::strictMode());
+
+          if (jreader.parse(json, jvalue, false)) {
+              return jvalue;
+          }
+
+          return Json::Value();
+        });
+
+        GameServersList &gslist = GameServersList::getInstance();
+        gslist.loop();
+
+        ASSERT_EQ(2, jpatch_value.size());
+        ASSERT_EQ(2, jpatch_value[0]["id"].asInt());
+        ASSERT_EQ(1, jpatch_value[0]["installed"].asInt());
+
+        ASSERT_EQ(1, jpatch_value[1]["id"].asInt());
+        ASSERT_EQ(2, jpatch_value[1]["installed"].asInt());
     }
 }

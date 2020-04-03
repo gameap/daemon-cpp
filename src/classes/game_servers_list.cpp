@@ -98,19 +98,23 @@ void GameServersList::stats_process()
     Json::Value jupdate_data;
 
     State& state = State::getInstance();
-    time_t time_diff = std::stoi(state.get(STATE_PANEL_TIMEDIFF));
+    std::string str_timediff = state.get(STATE_PANEL_TIMEDIFF);
+
+    time_t time_diff = str_timediff.empty()
+            ? 0
+            : std::stol(str_timediff, 0, 10);
 
     for (auto& server : servers_list) {
-        GameServerCmd game_server_cmd = GameServerCmd(GameServerCmd::STATUS, server.second->id);
-        game_server_cmd.execute();
-
-        server.second->process_active = game_server_cmd.result();
-        server.second->last_process_check = time(nullptr);
-
         Json::Value jserver;
         jserver["id"] = static_cast<unsigned long long>(server.second->id);
 
-        if (server.second->last_process_check > 0 && server.second->installed == Server::SERVER_INSTALLED) {
+        if (server.second->installed == Server::SERVER_INSTALLED) {
+            GameServerCmd game_server_cmd = GameServerCmd(GameServerCmd::STATUS, server.second->id);
+            game_server_cmd.execute();
+
+            server.second->process_active = game_server_cmd.result();
+            server.second->last_process_check = time(nullptr);
+
             time_t last_process_check = server.second->last_process_check - time_diff;
             std::tm * ptm = std::gmtime(&last_process_check);
             char buffer[32];
@@ -118,8 +122,10 @@ void GameServersList::stats_process()
 
             jserver["last_process_check"]   = buffer;
             jserver["process_active"]       = server.second->process_active ? 1 : 0;
-            jupdate_data.append(jserver);
         }
+
+        jserver["installed"]            = server.second->installed;
+        jupdate_data.append(jserver);
     }
 
     try {
@@ -134,9 +140,9 @@ void GameServersList::loop()
     stats_process();
 }
 
-void GameServersList::update_all(bool force)
+void GameServersList::sync_all()
 {
-    for (auto& server : servers_list) {
+    for (auto& server : this->servers_list) {
         this->sync_from_api(server.second->id);
     }
 }

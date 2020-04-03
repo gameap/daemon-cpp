@@ -19,8 +19,7 @@ class GameServersList {
         void delete_server(ulong server_id);
         void loop();
 
-        void update_all();
-        void update_all(bool force);
+        void sync_all();
     private:
         std::unordered_map<ulong, std::shared_ptr<Server>> servers_list;
 
