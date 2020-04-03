@@ -36,6 +36,8 @@ add_executable(run_unit_tests
         classes/game_servers_list_test.cpp
 )
 
+add_compile_definitions(TESTS_ROOT_DIR="${CMAKE_HOME_DIRECTORY}/tests")
+
 target_link_libraries(run_unit_tests
         ${BINN_LIBRARY}
         ${BOOST_LIBS}

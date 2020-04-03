@@ -153,10 +153,6 @@ Server * GameServersList::get_server(ulong server_id)
         }
     }
 
-    if (servers_list[server_id] == nullptr) {
-        return nullptr;
-    }
-
     this->sync_from_api(server_id);
     return servers_list[server_id].get();
 }
