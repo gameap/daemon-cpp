@@ -52,22 +52,6 @@ void GameServerCmd::execute()
     this->m_complete = true;
 }
 
-bool GameServerCmd::is_complete() const
-{
-    return this->m_complete;
-}
-
-bool GameServerCmd::result() const
-{
-    return this->m_result;
-}
-
-void GameServerCmd::output(std::string *str_out)
-{
-    this->m_output->get(str_out);
-    this->m_output->clear();
-}
-
 bool GameServerCmd::start()
 {
     DedicatedServer& ds = DedicatedServer::getInstance();
@@ -212,20 +196,6 @@ bool GameServerCmd::remove()
     }
 
     return true;
-}
-
-int GameServerCmd::cmd_exec(const std::string &command)
-{
-    this->m_output->append(fs::current_path().string() + "# " + command);
-
-    // TODO: Coroutines here
-    int exit_code = exec(command, [this](std::string line) {
-        this->m_output->append(line);
-    });
-
-    this->m_output->append(boost::str(boost::format("\nExited with %1%\n") % exit_code));
-
-    return exit_code;
 }
 
 void GameServerCmd::replace_shortcodes(std::string &command)

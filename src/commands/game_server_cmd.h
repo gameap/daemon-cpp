@@ -6,13 +6,15 @@
 #include "classes/cmd_output.h"
 #include "models/server.h"
 #include "classes/game_servers_list.h"
+#include "cmd.h"
 
 namespace GameAP {
-    class GameServerCmd {
+    class GameServerCmd: public Cmd {
         public:
-            GameServerCmd(unsigned char command, unsigned int server_id) :
-                m_command(command),
-                m_server_id(server_id) {
+            GameServerCmd(unsigned char command, unsigned int server_id)
+            {
+                m_server_id = server_id;
+                m_command = command;
 
                 GameServersList& gslist = GameServersList::getInstance();
                 m_server = *gslist.get_server(server_id);
@@ -36,18 +38,9 @@ namespace GameAP {
 
             void execute();
 
-            bool is_complete() const;
-            bool result() const;
-            void output(std::string *str_out);
-
-
         protected:
-            unsigned char m_command;
             unsigned int m_server_id;
             Server m_server;
-            bool m_complete;
-            bool m_result;
-            std::shared_ptr<CmdOutput> m_output;
 
             // Commands
             bool start();
@@ -63,7 +56,6 @@ namespace GameAP {
             bool remove();
 
         private:
-            int cmd_exec(const std::string &command);
             void replace_shortcodes(std::string &command);
     };
 }

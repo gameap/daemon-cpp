@@ -8,11 +8,12 @@ set(SOURCES_CPP
         ${CMAKE_HOME_DIRECTORY}/src/daemon.cpp
         ${CMAKE_HOME_DIRECTORY}/src/daemon_server.cpp
         ${CMAKE_HOME_DIRECTORY}/src/functions/gstring.cpp
-        ${CMAKE_HOME_DIRECTORY}/src/functions/gsystem.cpp
+        ../mocks/functions/gsystem.cpp
         ${CMAKE_HOME_DIRECTORY}/src/classes/dedicated_server.cpp
         ${CMAKE_HOME_DIRECTORY}/src/classes/game_servers_list.cpp
         ${CMAKE_HOME_DIRECTORY}/src/commands/game_server_installer.cpp
         ${CMAKE_HOME_DIRECTORY}/src/commands/game_server_cmd.cpp
+        ${CMAKE_HOME_DIRECTORY}/src/commands/dedicated_server_cmd.cpp
         ${CMAKE_HOME_DIRECTORY}/src/classes/cmd_output.cpp
         ${CMAKE_HOME_DIRECTORY}/src/classes/servers_tasks.cpp
         ${CMAKE_HOME_DIRECTORY}/src/classes/gdaemon_tasks.cpp
@@ -34,6 +35,7 @@ add_executable(run_unit_tests
         commands/game_server_installer_test.cpp
         classes/cmd_output_test.cpp
         classes/game_servers_list_test.cpp
+        commands/dedicated_server_cmd_test.cpp
 )
 
 add_compile_definitions(TESTS_ROOT_DIR="${CMAKE_HOME_DIRECTORY}/tests")
@@ -56,3 +58,4 @@ target_link_libraries(run_unit_tests
 add_test(NAME state_test COMMAND run_unit_tests)
 add_test(NAME cmd_output COMMAND run_unit_tests)
 add_test(NAME game_servers_list COMMAND run_unit_tests)
+add_test(NAME dedicated_server_cmd COMMAND run_unit_tests)

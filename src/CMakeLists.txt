@@ -145,6 +145,7 @@ set(SOURCES_CPP
         classes/game_servers_list.cpp
         commands/game_server_installer.cpp
         commands/game_server_cmd.cpp
+        commands/dedicated_server_cmd.cpp
         classes/cmd_output.cpp
         classes/servers_tasks.cpp
         classes/gdaemon_tasks.cpp
