@@ -15,6 +15,11 @@ using namespace GameAP;
 
 int GameServersList::update_list()
 {
+    if (this->last_updated > (time(nullptr) - this->cache_ttl)) {
+        // Cached
+        return SUCCESS_STATUS_INT;
+    }
+
     Json::Value jvalue;
 
     try {
@@ -82,6 +87,8 @@ int GameServersList::update_list()
             }
         }
     }
+
+    this->last_updated = time(nullptr);
 
     return SUCCESS_STATUS_INT;
 }

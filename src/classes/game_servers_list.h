@@ -24,12 +24,18 @@ class GameServersList {
     private:
         std::unordered_map<ulong, std::shared_ptr<Server>> servers_list;
 
+        unsigned int cache_ttl;
+        time_t last_updated;
+
         void sync_from_api(ulong server_id);
 
         int update_list();
         void stats_process();
 
         GameServersList() {
+            this->cache_ttl = 60;
+            this->last_updated = 0;
+
             update_list();
         }
 
