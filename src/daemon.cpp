@@ -124,7 +124,7 @@ int run_daemon()
             deds.stats_process();
             deds.update_db();
 
-            try {daemon_server.join();
+            try {
                 gslist.loop();
             } catch (std::exception &e) {
                 GAMEAP_LOG_ERROR << "Game servers stats process error: " << e.what();

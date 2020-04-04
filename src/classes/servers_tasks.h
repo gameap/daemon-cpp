@@ -16,7 +16,9 @@ namespace GameAP {
     struct CompareTask {
         bool operator()(std::shared_ptr<ServerTask> const& t1, std::shared_ptr<ServerTask> const& t2)
         {
-            return t1->execute_date > t2->execute_date;
+            return (t1->status == t2->status)
+                   ? t1->execute_date > t2->execute_date
+                   : t1->status > t2->status;
         }
     };
 

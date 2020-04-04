@@ -20,7 +20,6 @@ void ServersTasks::run_next()
     if (this->last_sync.find(task->id) == this->last_sync.end()
         || this->last_sync[task->id] < (current_time - this->cache_ttl)
     ) {
-
         this->sync_from_api(task);
         this->last_sync.insert(
                 std::pair<unsigned int, time_t>(task->id, current_time)
@@ -43,7 +42,7 @@ void ServersTasks::run_next()
         this->proceed(task);
     }
 
-    if (task->status == ServerTask::SUCCESS && task->status == ServerTask::FAIL) {
+    if (task->status == ServerTask::SUCCESS || task->status == ServerTask::FAIL) {
         // The task is completed
 
         if (task->repeat == 0 || task->counter < task->repeat) {
@@ -61,6 +60,7 @@ void ServersTasks::run_next()
     }
 
     // The task is not completed yet
+    task->execute_date = current_time;
     this->tasks.push(task);
 }
 
