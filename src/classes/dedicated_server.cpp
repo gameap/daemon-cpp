@@ -594,7 +594,7 @@ int DedicatedServer::update_db()
         jstats["drvspace"] = drvspace;
 
         std::time_t time = item.time - time_diff;
-        std::tm * ptm = std::gmtime(&time);
+        std::tm * ptm = std::localtime(&time);
         char buffer[32];
         std::strftime(buffer, 32, "%F %T", ptm);
 
