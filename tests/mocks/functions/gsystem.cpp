@@ -43,7 +43,12 @@ namespace GameAP {
         // TODO: Implement
     }
 
-    void change_euid_egid(const std::string username)
+    void privileges_down(const std::string username)
+    {
+
+    }
+
+    void privileges_retrieve()
     {
 
     }

@@ -64,7 +64,7 @@ bool GameServerCmd::start()
 
     this->replace_shortcodes(command);
 
-    int result = this->cmd_exec(command);
+    int result = this->unprivileged_exec(command);
     return (result == EXIT_SUCCESS_CODE);
 }
 
@@ -77,7 +77,7 @@ bool GameServerCmd::status()
     bool is_active = false;
 
     if (command.length() > 0) {
-        int result = this->cmd_exec(command);
+        int result = this->unprivileged_exec(command);
         is_active = (result == EXIT_SUCCESS_CODE);
     } else {
         fs::path work_path = ds.get_work_path();
@@ -122,7 +122,7 @@ bool GameServerCmd::stop()
 
     this->replace_shortcodes(command);
 
-    int result = this->cmd_exec(command);
+    int result = this->unprivileged_exec(command);
     return result == EXIT_SUCCESS_CODE;
 }
 
@@ -155,7 +155,8 @@ bool GameServerCmd::update()
     work_path /= this->m_server.dir;
 
     installer.m_server_absolute_path = work_path;
-    installer.m_user                 = this->m_server.user;
+
+    installer.set_user(this->m_server.user);
 
     int result = installer.install_server();
 
@@ -178,7 +179,7 @@ bool GameServerCmd::remove()
 
     if (command.length() > 0) {
         this->replace_shortcodes(command);
-        int result = this->cmd_exec(command);
+        int result = this->unprivileged_exec(command);
         return (result == EXIT_SUCCESS_CODE);
     } else {
         fs::path work_path = ds.get_work_path();
@@ -224,4 +225,13 @@ void GameServerCmd::replace_shortcodes(std::string &command)
     for (const auto& var: this->m_server.vars) {
         command = str_replace("{" + var.first + "}", var.second, command);
     }
+}
+
+int GameServerCmd::unprivileged_exec(std::string &command)
+{
+    privileges_down(this->m_server.user);
+    int result = this->cmd_exec(command);
+    privileges_retrieve();
+
+    return result;
 }

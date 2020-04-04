@@ -51,7 +51,11 @@ int GameServerInstaller::install_server()
     fs::path after_install_script = m_server_absolute_path / AFTER_INSTALL_SCRIPT;
 
     if (fs::exists(after_install_script)) {
+
+        // Need a retrieve privileges
+        privileges_retrieve();
         int result = _exec(after_install_script.string());
+        privileges_down(this->m_user);
 
         if (result != EXIT_SUCCESS_CODE) {
             return ERROR_STATUS_INT;
@@ -466,6 +470,12 @@ int GameServerInstaller::_exec(const std::string &command, bool enable_append)
     }
 
     return exit_code;
+}
+
+void GameServerInstaller::set_user(const std::string &user)
+{
+    this->m_user = user;
+    privileges_down(user);
 }
 
 int GameServerInstaller::_exec(const std::string &command)

@@ -64,6 +64,12 @@ namespace GameAP {
             std::string m_user;
 
             /**
+             * Set user and down privileges
+             * @param username
+             */
+            void set_user(const std::string & user);
+
+            /**
              * Run installation of server
              * @return int
              */

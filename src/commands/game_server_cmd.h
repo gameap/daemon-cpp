@@ -57,6 +57,7 @@ namespace GameAP {
 
         private:
             void replace_shortcodes(std::string &command);
+            int unprivileged_exec(std::string &command);
     };
 }
 #endif //GDAEMON_GAME_SERVER_CMD_H

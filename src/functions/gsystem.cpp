@@ -109,24 +109,6 @@ namespace GameAP {
         }
     }
 
-    void change_euid_egid(const std::string username)
-    {
-#ifdef __linux__
-        if (!username.empty()) {
-            passwd * pwd;
-            pwd = getpwnam(&username[0]);
-
-            if (pwd == nullptr) {
-                GAMEAP_LOG_ERROR << "Invalid user: " << username;
-                return;
-            }
-
-            seteuid(pwd->pw_uid);
-            setegid(pwd->pw_gid);
-        }
-#endif
-    }
-
     bp::environment load_env()
     {
         bp::environment env = static_cast<bp::environment>(boost::this_process::environment());
@@ -201,6 +183,38 @@ namespace GameAP {
         }
 
         return true;
+    }
+
+    void privileges_down(const std::string & username)
+    {
+        #ifdef __linux__
+                if (!username.empty()) {
+                    passwd * pwd;
+                    pwd = getpwnam(&username[0]);
+
+                    if (pwd == nullptr) {
+                        GAMEAP_LOG_ERROR << "Invalid user: " << username;
+                        return;
+                    }
+
+                    if (seteuid(pwd->pw_uid) == -1)
+                        GAMEAP_LOG_ERROR << "Failed to set Effective uid (" << pwd->pw_uid << "). Username: " << username;
+
+                    if (setegid(pwd->pw_gid) == -1)
+                        GAMEAP_LOG_ERROR << "Failed to set Effective gid (" << pwd->pw_gid << "). Username: " << username;
+                }
+        #endif
+    }
+
+    void privileges_retrieve()
+    {
+        #ifdef __linux__
+            if (seteuid(getuid()) == -1)
+                GAMEAP_LOG_ERROR << "Failed to set Effective uid (" << getuid() << ").";
+
+            if (setegid(getgid()) == -1)
+                GAMEAP_LOG_ERROR << "Failed to set Effective gid (" << getgid() << ").";
+        #endif
     }
 
     // End GameAP namespace

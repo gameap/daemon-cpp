@@ -19,7 +19,9 @@ namespace GameAP {
     int exec(const std::string cmd, std::string &out);
     boost::process::child exec(const std::string cmd, boost::process::pipe &out);
 
-    void change_euid_egid(const std::string username);
+    void privileges_down(const std::string & username);
+    void privileges_retrieve();
+
     bp::environment load_env();
 
     bool copy_dir(
