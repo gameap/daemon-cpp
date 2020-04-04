@@ -71,6 +71,11 @@ namespace GameAP {
 
             ServersTasks() {
                 this->cache_ttl = 300; // 5 minutes
+
+                this->tasks = {};
+                this->exists_tasks = {};
+                this->last_sync = {};
+                this->active_cmds = {};
             }
 
             ServersTasks( const ServersTasks&);

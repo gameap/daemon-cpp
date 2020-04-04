@@ -68,7 +68,12 @@ namespace GameAP {
             void api_update_status(std::shared_ptr<GdaemonTask> &task);
             void api_append_output(std::shared_ptr<GdaemonTask> &task, std::string &output);
 
-            GdaemonTasks() {}
+            GdaemonTasks() {
+                this->tasks = {};
+                this->exists_tasks = {};
+                this->active_cmds = {};
+            }
+
             GdaemonTasks( const GdaemonTasks&);
             GdaemonTasks& operator=( GdaemonTasks& );
     };

@@ -44,6 +44,7 @@ void check_tasks()
 
         while (!gdaemon_tasks.empty()) {
             gdaemon_tasks.run_next();
+            std::this_thread::sleep_for(std::chrono::seconds(5));
         }
 
         std::this_thread::sleep_for(std::chrono::seconds(5));

@@ -15,6 +15,11 @@ void GdaemonTasks::run_next()
     auto task = this->tasks.front();
     this->tasks.pop();
 
+    if (task->run_aft_id > 0 && this->exists_tasks.find(task->run_aft_id) != this->exists_tasks.end()) {
+        // Waiting for another task to complete
+        return;
+    }
+
     if (task->status == GdaemonTask::WAITING) {
         this->start(task);
     } else if (task->status == GdaemonTask::WORKING) {

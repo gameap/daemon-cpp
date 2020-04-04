@@ -60,7 +60,8 @@ void ServersTasks::run_next()
     }
 
     // The task is not completed yet
-    task->execute_date = current_time;
+    // Next proceed task in 30 seconds
+    task->execute_date = time(nullptr) + 30;
     this->tasks.push(task);
 }
 
