@@ -109,9 +109,16 @@ void ServersTasks::proceed(std::shared_ptr<ServerTask> &task)
     }
 }
 
+/**
+ * @return true if there are no tasks to run. Otherwise false
+ */
 bool ServersTasks::empty()
 {
-    return this->tasks.empty();
+    if (this->tasks.empty()) {
+        return true;
+    }
+
+    return (this->tasks.top()->execute_date > time(nullptr));
 }
 
 void ServersTasks::update()

@@ -39,8 +39,7 @@ namespace GameAP {
             void run_next();
 
             /**
-             * Return if queue empty
-             * @return bool
+             * @return true if there are no tasks for running. Otherwise false
              */
             bool empty();
 
