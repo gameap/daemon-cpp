@@ -1,0 +1,94 @@
+{
+  "id": 2,
+  "uuid": "9033c214-e08b-49fb-bf7c-6557f8c3633d",
+  "uuid_short": "9033c214",
+  "enabled": true,
+  "installed": 1,
+  "blocked": false,
+  "name": "test",
+  "game_id": "valve",
+  "ds_id": 2,
+  "game_mod_id": 3,
+  "expires": null,
+  "server_ip": "1.3.3.7",
+  "server_port": 27015,
+  "query_port": 27015,
+  "rcon_port": 27015,
+  "rcon": "rBye8oUBdS",
+  "dir": "servers/test",
+  "su_user": "gameap",
+  "cpu_limit": null,
+  "ram_limit": null,
+  "net_limit": null,
+  "start_command": "./hlds_run -game cstrike +ip {ip} +port {port} +map {default_map} +maxplayers {maxplayers} +sys_ticrate {fps}",
+  "stop_command": null,
+  "force_stop_command": null,
+  "restart_command": null,
+  "process_active": false,
+  "last_process_check": "2020-04-01 17:05:50",
+  "vars": {
+    "default_map": "rapidcore",
+    "fps": "500",
+    "maxplayers": "16"
+  },
+  "created_at": "2020-03-29 22:08:58",
+  "updated_at": "2020-03-29 22:34:31",
+  "deleted_at": null,
+  "game": {
+    "code": "valve",
+    "start_code": "valve",
+    "name": "Half-Life 1",
+    "engine": "GoldSource",
+    "engine_version": "1",
+    "steam_app_id": 90,
+    "steam_app_set_config": null,
+    "remote_repository": null,
+    "local_repository": null
+  },
+  "game_mod": {
+    "id": 3,
+    "game_code": "valve",
+    "name": "ReHLDS",
+    "fast_rcon": [
+      {
+        "info": "Status",
+        "command": "status"
+      },
+      {
+        "info": "Stats",
+        "command": "stats"
+      }
+    ],
+    "vars": [
+      {
+        "var": "default_map",
+        "default": "crossfire",
+        "info": "Default Map",
+        "admin_var": false
+      },
+      {
+        "var": "fps",
+        "default": 500,
+        "info": "Server FPS (tickrate)",
+        "admin_var": true
+      },
+      {
+        "var": "maxplayers",
+        "default": 32,
+        "info": "Maximum players on server",
+        "admin_var": false
+      }
+    ],
+    "remote_repository": "http://files.gameap.ru/half-life/rehlds-amxx-reunion.tar.xz",
+    "local_repository": "",
+    "default_start_cmd_linux": "./hlds_run -game cstrike +ip {ip} +port {port} +map {default_map} +maxplayers {maxplayers} +sys_ticrate {fps}",
+    "default_start_cmd_windows": "hlds.exe -console -game cstrike +ip {ip} +port {port} +map {default_map} +maxplayers {maxplayers} +sys_ticrate {fps}",
+    "kick_cmd": "kick #{id}",
+    "ban_cmd": "",
+    "chname_cmd": "",
+    "srestart_cmd": "restart",
+    "chmap_cmd": "changelevel {map}",
+    "sendmsg_cmd": "say \"{msg}\"",
+    "passwd_cmd": "password {password}"
+  }
+}

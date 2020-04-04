@@ -216,7 +216,7 @@ int _tmain (int argc, TCHAR *argv[])
         plog::init<GameAP::MainLog>(plog::verbose, config.output_log.c_str());
         plog::init<GameAP::ErrorLog>(plog::verbose, config.error_log.c_str());
     #endif
-        
+
     // Info
 	GAMEAP_LOG_INFO << "CurrentPath: " << fs::current_path();
 	GAMEAP_LOG_INFO << "Config: " << config.cfg_file;

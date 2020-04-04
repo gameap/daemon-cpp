@@ -1,35 +1,45 @@
 #ifndef GDAEMON_GAME_SERVERS_LIST_H
 #define GDAEMON_GAME_SERVERS_LIST_H
 
-#include "classes/game_server.h"
+#include <memory>
+#include <unordered_map>
+
+#include "models/server.h"
 
 namespace GameAP {
 
 class GameServersList {
-private:
-    std::map<ulong, std::shared_ptr<GameServer>> servers_list;
+    public:
+        static GameServersList& getInstance() {
+            static GameServersList instance;
+            return instance;
+        }
 
-    GameServersList() {
-        update_list();
-    }
+        Server * get_server(ulong server_id);
+        void delete_server(ulong server_id);
+        void loop();
 
-    GameServersList( const GameServersList&);
-    GameServersList& operator=( GameServersList& );
+        void sync_all();
+    private:
+        std::unordered_map<ulong, std::shared_ptr<Server>> servers_list;
 
-    int update_list();
-    void stats_process();
-public:
-    static GameServersList& getInstance() {
-        static GameServersList instance;
-        return instance;
-    }
+        unsigned int cache_ttl;
+        time_t last_updated;
 
-    GameServer * get_server(ulong server_id);
-    void delete_server(ulong server_id);
-    void loop();
+        void sync_from_api(ulong server_id);
 
-    void update_all();
-    void update_all(bool force);
+        int update_list();
+        void stats_process();
+
+        GameServersList() {
+            this->cache_ttl = 60;
+            this->last_updated = 0;
+
+            update_list();
+        }
+
+        GameServersList( const GameServersList&);
+        GameServersList& operator=( GameServersList& );
 };
 
 /* End namespace GameAP */

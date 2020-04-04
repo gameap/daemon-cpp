@@ -1,3 +1,6 @@
+#ifndef GDAEMON_CONSTS_H
+#define GDAEMON_CONSTS_H
+
 #ifdef _WIN32
     #define SLH "\\"
 #else
@@ -23,3 +26,5 @@
 // State keys
 
 #define STATE_PANEL_TIMEDIFF "gameap:timediff"
+
+#endif //GDAEMON_CONSTS_H

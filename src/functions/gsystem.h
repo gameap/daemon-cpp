@@ -1,3 +1,6 @@
+#ifndef GDAEMON_GSYSTEM_H
+#define GDAEMON_GSYSTEM_H
+
 #include <string>
 
 #include <boost/process.hpp>
@@ -8,10 +11,10 @@
 #define EXIT_ERROR_CODE             1
 #define EXIT_CRITICAL_ERROR_CODE    2
 
-namespace fs = boost::filesystem;
-namespace bp = boost::process;
-
 namespace GameAP {
+    namespace fs = boost::filesystem;
+    namespace bp = boost::process;
+
     int exec(const std::string cmd, std::function<void (std::string)> callback);
     int exec(const std::string cmd, std::string &out);
     boost::process::child exec(const std::string cmd, boost::process::pipe &out);
@@ -24,3 +27,4 @@ namespace GameAP {
         const fs::path &destination
     );
 }
+#endif //GDAEMON_GSYSTEM_H

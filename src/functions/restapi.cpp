@@ -9,7 +9,7 @@
 #include "config.h"
 #include "state.h"
 
-namespace Gameap {
+namespace GameAP {
     Rest::RestapiException::RestapiException(std::string const& msg) : msg_(msg) {}
     Rest::RestapiException::~RestapiException() {}
     char const* Rest::RestapiException::what() const throw() { return msg_.c_str(); }
