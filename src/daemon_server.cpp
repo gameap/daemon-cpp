@@ -5,6 +5,7 @@
 
 #include "components/server/files_component.h"
 #include "components/server/commands_component.h"
+#include "components/server/status_component.h"
 #include "daemon_server.h"
 #include "classes/dedicated_server.h"
 #include "functions/auth.h"
@@ -116,6 +117,15 @@ void DaemonServerSess::do_read()
             GAMEAP_LOG_DEBUG << "DAEMON_SERVER_MODE_FILES";
             std::make_shared<FileServerSess>(std::move(connection_))->start();
             break;
+
+        case DAEMON_SERVER_MODE_STATUS:
+            GAMEAP_LOG_DEBUG << "DAEMON_SERVER_MODE_STATUS";
+            std::make_shared<StatusSession>(std::move(connection_))->start();
+            break;
+
+        default:
+            GAMEAP_LOG_WARNING << "Unknown server mode: " << mode;
+            break
     }
 }
 

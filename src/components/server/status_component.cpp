@@ -115,8 +115,11 @@ void StatusSession::cmd_process()
             GameServersList &gslist = GameServersList::getInstance();
             GameServersListStats gslist_stats = gslist.stats();
 
+            time_t uptime = time(nullptr) - status_started_time;
+
             binn *write_binn = binn_list();
-            binn_list_add_uint32(write_binn, status_started_time);                      // Uptime
+            binn_list_add_uint32(write_binn, STATUS_OK);
+            binn_list_add_uint32(write_binn, uptime);                      // Uptime
             binn_list_add_uint32(write_binn, gdaemon_tasks_stats.working_tasks_count);  // Working tasks count
             binn_list_add_uint32(write_binn, gdaemon_tasks_stats.waiting_tasks_count);  // Waiting tasks count
             binn_list_add_uint32(write_binn, gslist_stats.active_servers_count);        // Active servers count
@@ -137,7 +140,10 @@ void StatusSession::cmd_process()
 
             binn *write_binn = binn_list();
 
-            binn_list_add_uint32(write_binn, status_started_time);            // Uptime
+            time_t uptime = time(nullptr) - status_started_time;
+
+            binn_list_add_uint32(write_binn, STATUS_OK);
+            binn_list_add_uint32(write_binn, uptime);                         // Uptime
             binn_list_add_list(write_binn, binn_list());                      // List of working tasks id
             binn_list_add_list(write_binn, binn_list());                      // List of waiting tasks id
             binn_list_add_list(write_binn, binn_list());                      // List of active servers id
