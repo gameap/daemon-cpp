@@ -147,22 +147,23 @@ void GameServersList::loop()
 void GameServersList::start_down_servers()
 {
     for (auto& server : this->servers_list) {
-        if (! server.second->autostart() || server.second->installed != Server::SERVER_INSTALLED) {
+        if (! server.second->autostart()
+            || server.second->process_active
+            || server.second->installed != Server::SERVER_INSTALLED
+        ) {
             continue;
         }
 
-        if (! server.second->process_active) {
-            GAMEAP_LOG_DEBUG << "Starting crashed server";
-            GameServerCmd start_cmd = GameServerCmd(GameServerCmd::START, server.second->id);
-            start_cmd.execute();
+        GAMEAP_LOG_DEBUG << "Starting crashed server";
+        GameServerCmd start_cmd = GameServerCmd(GameServerCmd::START, server.second->id);
+        start_cmd.execute();
 
-            if (! start_cmd.result()) {
-                GAMEAP_LOG_ERROR << "Unable to autostart server";
+        if (! start_cmd.result()) {
+            GAMEAP_LOG_ERROR << "Unable to autostart server";
 
-                std::string output;
-                start_cmd.output(&output);
-                GAMEAP_LOG_VERBOSE_ERROR << output;
-            }
+            std::string output;
+            start_cmd.output(&output);
+            GAMEAP_LOG_VERBOSE_ERROR << output;
         }
     }
 }
@@ -294,4 +295,18 @@ void GameServersList::sync_from_api(ulong server_id)
     for (auto const& jsetting: jserver["settings"]) {
         server->set_setting(jsetting["name"].asString(), jsetting["value"].asString());
     }
+}
+
+GameServersListStats GameServersList::stats()
+{
+    unsigned int active_servers_count = 0;
+    for(auto const & server: this->servers_list) {
+        if (server.second->process_active) {
+            active_servers_count++;
+        }
+    }
+
+    return GameServersListStats{
+            active_servers_count
+    };
 }

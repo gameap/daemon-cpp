@@ -9,6 +9,7 @@
 #include "config.h"
 
 bool status_active;
+time_t status_started_time;
 
 using namespace GameAP;
 

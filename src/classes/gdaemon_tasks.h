@@ -18,6 +18,11 @@
 #define TASK_CANCELED   5
 
 namespace GameAP {
+    struct GdaemonTasksStats {
+        unsigned int working_tasks_count;
+        unsigned int waiting_tasks_count;
+    };
+
     class GdaemonTasks {
         public:
             static constexpr auto GAME_SERVER_START         = "gsstart";
@@ -52,6 +57,8 @@ namespace GameAP {
              * Update tasks list from api
              */
             void update();
+
+            GdaemonTasksStats stats();
 
         private:
             std::queue<std::shared_ptr<GdaemonTask>> tasks;

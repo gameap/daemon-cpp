@@ -8,40 +8,92 @@
 
 namespace GameAP {
 
-class GameServersList {
-    public:
-        static GameServersList& getInstance() {
-            static GameServersList instance;
-            return instance;
-        }
+    struct GameServersListStats {
+        unsigned int active_servers_count;
+    };
 
-        Server * get_server(ulong server_id);
-        void delete_server(ulong server_id);
-        void loop();
+    class GameServersList {
+        public:
+            static GameServersList& getInstance() {
+                static GameServersList instance;
+                return instance;
+            }
 
-        void sync_all();
-    private:
-        std::unordered_map<ulong, std::shared_ptr<Server>> servers_list;
+            /**
+             * Get Server model by server ID
+             * @param server_id
+             * @return  Server model
+             */
+            Server * get_server(ulong server_id);
 
-        unsigned int cache_ttl;
-        time_t last_updated;
+            /**
+             * Delete server from list
+             * @param server_id
+             */
+            void delete_server(ulong server_id);
 
-        void sync_from_api(ulong server_id);
+            /**
+             * Some actions in loop (start crashed, update stats, etc.)
+             */
+            void loop();
 
-        int update_list();
-        void stats_process();
-        void start_down_servers();
+            /**
+             * Synchronization all details servers data from API
+             */
+            void sync_all();
 
-        GameServersList() {
-            this->cache_ttl = 60;
-            this->last_updated = 0;
+            /**
+             * Get game servers list stats (not server stats)
+             * @return
+             */
+            GameServersListStats stats();
+        private:
+            std::unordered_map<ulong, std::shared_ptr<Server>> servers_list;
 
-            update_list();
-        }
+            /**
+             * Time to live cache (seconds)
+             */
+            unsigned int cache_ttl;
 
-        GameServersList( const GameServersList&);
-        GameServersList& operator=( GameServersList& );
-};
+            /**
+             * Last updated servers list. Calling update_all method
+             */
+            time_t last_updated;
+
+            /**
+             * Synchronization server details data from API
+             * @param server_id
+             */
+            void sync_from_api(ulong server_id);
+
+            /**
+             * Update, get servers from API. Cached (see cache_ttl and last_updated)
+             */
+            int update_list();
+
+            /**
+             * Update server stats and update servers data on api
+             */
+            void stats_process();
+
+            /**
+             * Check crashed servers and start them
+             */
+            void start_down_servers();
+
+            /**
+             * Singleton class. Private constructor.
+             */
+            GameServersList() {
+                this->cache_ttl = 60;
+                this->last_updated = 0;
+
+                update_list();
+            }
+
+            GameServersList( const GameServersList&);
+            GameServersList& operator=( GameServersList& );
+    };
 
 /* End namespace GameAP */
 }

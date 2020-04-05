@@ -198,3 +198,11 @@ void GdaemonTasks::proceed(std::shared_ptr<GdaemonTask> &task)
         this->api_append_output(task, output);
     }
 }
+
+GdaemonTasksStats GdaemonTasks::stats()
+{
+    return GdaemonTasksStats{
+            static_cast<unsigned int>(this->active_cmds.size()),
+            static_cast<unsigned int>(this->tasks.size()),
+    };
+}

@@ -61,6 +61,7 @@ int run_daemon()
 {
     GAMEAP_LOG_INFO << "Starting...";
     status_active = true;
+    status_started_time = time(nullptr);
 
     #ifdef __linux__
         std::signal(SIGHUP, sighandler);
