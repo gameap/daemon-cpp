@@ -20,4 +20,7 @@ namespace GameAP {
 #define GAMEAP_LOG_FATAL                       LOG_FATAL_(GameAP::ErrorLog)
 #define GAMEAP_LOG_NONE                        LOG_NONE
 
+#define GAMEAP_LOG_VERBOSE_ERROR               LOG_VERBOSE_(GameAP::ErrorLog)
+#define GAMEAP_LOG_DEBUG_ERROR                 LOG_DEBUG_(GameAP::ErrorLog)
+
 #endif

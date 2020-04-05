@@ -43,9 +43,9 @@ namespace GameAP {
 
             if (!response.body.empty()) {
                 if (response.body.length() > 200) {
-                    GAMEAP_LOG_ERROR << "RestClient HTTP response: " << response.body.substr(0, 200) << " ...";
+                    GAMEAP_LOG_DEBUG_ERROR << "RestClient HTTP response: " << response.body.substr(0, 200) << " ...";
                 } else {
-                    GAMEAP_LOG_ERROR << "RestClient HTTP response: " << response.body;
+                    GAMEAP_LOG_DEBUG_ERROR << "RestClient HTTP response: " << response.body;
                 }
             }
 
@@ -118,9 +118,9 @@ namespace GameAP {
 
             if (!response.body.empty()) {
                 if (response.body.length() > 200) {
-                    GAMEAP_LOG_ERROR << "RestClient HTTP response: " << response.body.substr(0, 200) << " ...";
+                    GAMEAP_LOG_DEBUG_ERROR << "RestClient HTTP response: " << response.body.substr(0, 200) << " ...";
                 } else {
-                    GAMEAP_LOG_ERROR << "RestClient HTTP response: " << response.body;
+                    GAMEAP_LOG_DEBUG_ERROR << "RestClient HTTP response: " << response.body;
                 }
             }
 
@@ -176,9 +176,9 @@ namespace GameAP {
             GAMEAP_LOG_ERROR << "RestClient Request: " << write_data;
 
             if (jreader.parse(response.body, jvalue, false)) {
-                GAMEAP_LOG_ERROR << "Error: " << jvalue["message"].asString();
+                GAMEAP_LOG_DEBUG_ERROR << "Error: " << jvalue["message"].asString();
             } else {
-                GAMEAP_LOG_ERROR << "Error: " << response.body;
+                GAMEAP_LOG_DEBUG_ERROR << "Error: " << response.body;
             }
 
         } else {
@@ -193,9 +193,9 @@ namespace GameAP {
 
             if (!response.body.empty()) {
                 if (response.body.length() > 200) {
-                    GAMEAP_LOG_ERROR << "RestClient HTTP response: " << response.body.substr(0, 200) << " ...";
+                    GAMEAP_LOG_DEBUG_ERROR << "RestClient HTTP response: " << response.body.substr(0, 200) << " ...";
                 } else {
-                    GAMEAP_LOG_ERROR << "RestClient HTTP response: " << response.body;
+                    GAMEAP_LOG_DEBUG_ERROR << "RestClient HTTP response: " << response.body;
                 }
             }
 
@@ -243,13 +243,13 @@ namespace GameAP {
             GAMEAP_LOG_ERROR << "RestClient HTTP response code (PUT): " << response.code;
             GAMEAP_LOG_ERROR << "URL: " << config.api_host << uri;
 
-            GAMEAP_LOG_ERROR << "RestClient Request: " << write_data;
+            GAMEAP_LOG_DEBUG_ERROR << "RestClient Request: " << write_data;
 
             if (!response.body.empty()) {
                 if (response.body.length() > 200) {
-                    GAMEAP_LOG_ERROR << "RestClient HTTP response: " << response.body.substr(0, 200) << " ...";
+                    GAMEAP_LOG_DEBUG_ERROR << "RestClient HTTP response: " << response.body.substr(0, 200) << " ...";
                 } else {
-                    GAMEAP_LOG_ERROR << "RestClient HTTP response: " << response.body;
+                    GAMEAP_LOG_DEBUG_ERROR << "RestClient HTTP response: " << response.body;
                 }
             }
 
@@ -293,13 +293,13 @@ namespace GameAP {
             GAMEAP_LOG_ERROR << "RestClient HTTP response code (PATCH): " << response.code;
             GAMEAP_LOG_ERROR << "URL: " << config.api_host << uri;
 
-            GAMEAP_LOG_ERROR << "RestClient Request: " << write_data;
+            GAMEAP_LOG_DEBUG_ERROR << "RestClient Request: " << write_data;
 
             if (!response.body.empty()) {
                 if (response.body.length() > 200) {
-                    GAMEAP_LOG_ERROR << "RestClient HTTP response: " << response.body.substr(0, 200) << " ...";
+                    GAMEAP_LOG_DEBUG_ERROR << "RestClient HTTP response: " << response.body.substr(0, 200) << " ...";
                 } else {
-                    GAMEAP_LOG_ERROR << "RestClient HTTP response: " << response.body;
+                    GAMEAP_LOG_DEBUG_ERROR << "RestClient HTTP response: " << response.body;
                 }
             }
 

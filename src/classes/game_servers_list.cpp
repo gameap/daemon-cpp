@@ -23,6 +23,7 @@ int GameServersList::update_list()
     Json::Value jvalue;
 
     try {
+        GAMEAP_LOG_VERBOSE << "Updating game servers list...";
         jvalue = Rest::get("/gdaemon_api/servers?fields[servers]=id");
     } catch (Rest::RestapiException &exception) {
         // Try later
@@ -130,6 +131,7 @@ void GameServersList::stats_process()
     }
 
     try {
+        GAMEAP_LOG_VERBOSE << "Insert servers information...";
         Rest::patch("/gdaemon_api/servers", jupdate_data);
     } catch (Rest::RestapiException &exception) {
         GAMEAP_LOG_ERROR << exception.what() << '\n';
@@ -150,11 +152,16 @@ void GameServersList::start_down_servers()
         }
 
         if (! server.second->process_active) {
+            GAMEAP_LOG_DEBUG << "Starting crashed server";
             GameServerCmd start_cmd = GameServerCmd(GameServerCmd::START, server.second->id);
             start_cmd.execute();
 
             if (! start_cmd.result()) {
                 GAMEAP_LOG_ERROR << "Unable to autostart server";
+
+                std::string output;
+                start_cmd.output(&output);
+                GAMEAP_LOG_VERBOSE_ERROR << output;
             }
         }
     }
@@ -197,6 +204,7 @@ void GameServersList::sync_from_api(ulong server_id)
     Json::Value jserver;
 
     try {
+        GAMEAP_LOG_VERBOSE << "Sync game server [" << server_id << "]";
         jserver = Rest::get("/gdaemon_api/servers/" + std::to_string(server_id));
     } catch (Rest::RestapiException &exception) {
         // Try later

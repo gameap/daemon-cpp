@@ -49,6 +49,7 @@ void GdaemonTasks::update()
     Json::Value jvalue;
 
     try {
+        GAMEAP_LOG_VERBOSE << "Sync gdaemon tasks list from API...";
         jvalue = Rest::get("/gdaemon_api/tasks?filter[status]=waiting&append=status_num");
     } catch (Rest::RestapiException &exception) {
         // Try later
@@ -93,6 +94,7 @@ void GdaemonTasks::api_update_status(std::shared_ptr<GdaemonTask> &task)
     try {
         Json::Value jdata;
         jdata["status"] = task->status;
+        GAMEAP_LOG_VERBOSE << "Updating tasks status...";
         Rest::put("/gdaemon_api/tasks/" + std::to_string(task->id), jdata);
     } catch (Rest::RestapiException &exception) {
         GAMEAP_LOG_ERROR << "Error updating task status [to status code " + std::to_string(task->status) + "]: "
@@ -107,6 +109,8 @@ void GdaemonTasks::api_append_output(std::shared_ptr<GdaemonTask> &task, std::st
     try {
         Json::Value jdata;
         jdata["output"] = output;
+
+        GAMEAP_LOG_VERBOSE << "Appending gdaemon task output...";
         Rest::put("/gdaemon_api/tasks/" + std::to_string(task->id) + "/output", jdata);
     } catch (Rest::RestapiException &exception) {
         GAMEAP_LOG_ERROR << "Output updating error: " << exception.what();

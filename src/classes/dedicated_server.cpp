@@ -96,6 +96,7 @@ DedicatedServer::DedicatedServer()
     GAMEAP_LOG_DEBUG << "Getting Dedicated server init data";
 
     try {
+        GAMEAP_LOG_VERBOSE << "Getting initial dedicated server data from API...";
         Json::Value jvalue = Rest::get("/gdaemon_api/dedicated_servers/get_init_data/" + std::to_string(ds_id));
 
         // TODO: Check work path!
@@ -604,6 +605,7 @@ int DedicatedServer::update_db()
     }
 
     try {
+        GAMEAP_LOG_VERBOSE << "Saving dedicated server statistics on API...";
         Rest::post("/gdaemon_api/ds_stats", jupdate_data);
         stats.clear();
         last_db_update = time(nullptr);
