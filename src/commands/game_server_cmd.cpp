@@ -64,6 +64,11 @@ bool GameServerCmd::start()
 
     this->replace_shortcodes(command);
 
+    // TODO: Replace value to std::variant type after C++17 changing
+    if (this->m_server.get_setting("autostart") == "1" || this->m_server.get_setting("autostart") == "true") {
+        this->m_server.set_setting("autostart_current", "1");
+    }
+
     int result = this->unprivileged_exec(command);
     return (result == EXIT_SUCCESS_CODE);
 }
@@ -122,14 +127,25 @@ bool GameServerCmd::stop()
 
     this->replace_shortcodes(command);
 
+    if (this->m_server.autostart()) {
+        // TODO: Replace value to std::variant type after C++17 changing
+        this->m_server.set_setting("autostart_current", "0");
+    }
+
     int result = this->unprivileged_exec(command);
     return result == EXIT_SUCCESS_CODE;
 }
 
 bool GameServerCmd::restart()
 {
+    bool stop_result = true;
+
+    if (this->status()) {
+        stop_result = this->stop();
+    }
+
     return
-        this->stop() && this->start();
+        stop_result && this->start();
 }
 
 bool GameServerCmd::update()

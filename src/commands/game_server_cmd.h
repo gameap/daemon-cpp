@@ -11,7 +11,7 @@
 namespace GameAP {
     class GameServerCmd: public Cmd {
         public:
-            GameServerCmd(unsigned char command, unsigned int server_id)
+            GameServerCmd(unsigned char command, unsigned long server_id)
             {
                 m_server_id = server_id;
                 m_command = command;
@@ -39,7 +39,7 @@ namespace GameAP {
             void execute();
 
         protected:
-            unsigned int m_server_id;
+            unsigned long m_server_id;
             Server m_server;
 
             // Commands

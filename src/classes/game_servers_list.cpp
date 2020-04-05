@@ -30,7 +30,7 @@ int GameServersList::update_list()
         return ERROR_STATUS_INT;
     }
 
-    for (auto jserver: jvalue) {
+    for (auto const& jserver: jvalue) {
         ulong server_id = getJsonUInt(jserver["id"]);
 
         if (servers_list.find(server_id) == servers_list.end()) {
@@ -75,7 +75,8 @@ int GameServersList::update_list()
                 jserver["restart_command"].asString(),
                 jserver["process_active"].asBool(),
                 0, // jserver["last_process_check"].asUInt(),
-                std::map<std::string, std::string>()
+                std::unordered_map<std::string, std::string>(),
+                std::unordered_map<std::string, std::string>(),
             });
 
             try {
@@ -104,7 +105,7 @@ void GameServersList::stats_process()
             ? 0
             : std::stol(str_timediff, 0, 10);
 
-    for (auto& server : servers_list) {
+    for (auto const& server : servers_list) {
         Json::Value jserver;
         jserver["id"] = static_cast<unsigned long long>(server.second->id);
 
@@ -138,6 +139,25 @@ void GameServersList::stats_process()
 void GameServersList::loop()
 {
     stats_process();
+    start_down_servers();
+}
+
+void GameServersList::start_down_servers()
+{
+    for (auto& server : this->servers_list) {
+        if (! server.second->autostart() || server.second->installed != Server::SERVER_INSTALLED) {
+            continue;
+        }
+
+        if (! server.second->process_active) {
+            GameServerCmd start_cmd = GameServerCmd(GameServerCmd::START, server.second->id);
+            start_cmd.execute();
+
+            if (! start_cmd.result()) {
+                GAMEAP_LOG_ERROR << "Unable to autostart server";
+            }
+        }
+    }
 }
 
 void GameServersList::sync_all()
@@ -209,10 +229,19 @@ void GameServersList::sync_from_api(ulong server_id)
         jserver["game"]["local_repository"].asString()
     };
 
-    Json::Value jvars = jserver["game_mod"]["vars"];
-    std::map<std::string, std::string> vars;
+    server->game_mod = GameMod{
+        jserver["game_mod"]["id"].asUInt(),
+        jserver["game_mod"]["name"].asString(),
+        jserver["game_mod"]["remote_repository"].asString(),
+        jserver["game_mod"]["local_repository"].asString(),
+        jserver["game_mod"]["default_start_cmd_linux"].asString(),
+        jserver["game_mod"]["default_start_cmd_windows"].asString()
+    };
 
-    for (auto jvar: jvars) {
+    Json::Value jvars = jserver["game_mod"]["vars"];
+    std::unordered_map<std::string, std::string> vars;
+
+    for (auto const& jvar: jvars) {
         if (jvar["default"].isNull()) {
             vars.insert(std::pair<std::string, std::string>(jvar["var"].asString(), ""));
         }
@@ -251,12 +280,10 @@ void GameServersList::sync_from_api(ulong server_id)
 
     server->vars = vars;
 
-    server->game_mod = GameMod{
-        jserver["game_mod"]["id"].asUInt(),
-        jserver["game_mod"]["name"].asString(),
-        jserver["game_mod"]["remote_repository"].asString(),
-        jserver["game_mod"]["local_repository"].asString(),
-        jserver["game_mod"]["default_start_cmd_linux"].asString(),
-        jserver["game_mod"]["default_start_cmd_windows"].asString()
-    };
+    std::unordered_map<std::string, std::string> settings;
+
+    // Settings
+    for (auto const& jsetting: jserver["settings"]) {
+        server->set_setting(jsetting["name"].asString(), jsetting["value"].asString());
+    }
 }

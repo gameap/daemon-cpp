@@ -30,6 +30,7 @@ class GameServersList {
 
         int update_list();
         void stats_process();
+        void start_down_servers();
 
         GameServersList() {
             this->cache_ttl = 60;
