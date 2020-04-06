@@ -40,6 +40,7 @@ add_executable(run_unit_tests
         classes/cmd_output_test.cpp
         classes/game_servers_list_test.cpp
         commands/dedicated_server_cmd_test.cpp
+        functions/gstring_test.cpp
 )
 
 add_compile_definitions(TESTS_ROOT_DIR="${CMAKE_HOME_DIRECTORY}/tests")
@@ -63,3 +64,4 @@ add_test(NAME state_test COMMAND run_unit_tests)
 add_test(NAME cmd_output COMMAND run_unit_tests)
 add_test(NAME game_servers_list COMMAND run_unit_tests)
 add_test(NAME dedicated_server_cmd COMMAND run_unit_tests)
+add_test(NAME gstring COMMAND run_unit_tests)

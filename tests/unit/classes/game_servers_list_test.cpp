@@ -286,10 +286,11 @@ namespace GameAP {
         gslist.loop();
 
         ASSERT_EQ(2, jpatch_value.size());
-        ASSERT_EQ(2, jpatch_value[0]["id"].asInt());
-        ASSERT_EQ(1, jpatch_value[0]["installed"].asInt());
 
-        ASSERT_EQ(1, jpatch_value[1]["id"].asInt());
-        ASSERT_EQ(2, jpatch_value[1]["installed"].asInt());
+        ASSERT_EQ(1, jpatch_value[0]["id"].asInt());
+        ASSERT_EQ(2, jpatch_value[0]["installed"].asInt());
+
+        ASSERT_EQ(2, jpatch_value[1]["id"].asInt());
+        ASSERT_EQ(1, jpatch_value[1]["installed"].asInt());
     }
 }
