@@ -126,7 +126,7 @@ void GameServersList::stats_process()
             jserver["process_active"]       = server.second->process_active ? 1 : 0;
         }
 
-        jserver["installed"]            = server.second->installed;
+        jserver["installed"]                = server.second->installed;
         jupdate_data.append(jserver);
     }
 

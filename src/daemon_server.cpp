@@ -125,7 +125,7 @@ void DaemonServerSess::do_read()
 
         default:
             GAMEAP_LOG_WARNING << "Unknown server mode: " << mode;
-            break
+            break;
     }
 }
 

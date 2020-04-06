@@ -58,12 +58,18 @@ namespace GameAP {
         // TODO: Replace value to std::variant type after C++17 changing
         void set_setting(const std::string & name, const std::string & value)
         {
-            settings.insert(
-                std::make_pair(
-                    name,
-                    value
-                )
-            );
+            auto it = settings.find(name);
+
+            if (it != settings.end()) {
+                it->second = value;
+            } else {
+                settings.insert(
+                        std::make_pair(
+                                name,
+                                value
+                        )
+                );
+            }
         }
 
         // Autostart setting
