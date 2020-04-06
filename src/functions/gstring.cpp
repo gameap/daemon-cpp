@@ -107,5 +107,5 @@ time_t human_to_timestamp(const std::string &str)
         return 0;
     }
 
-    return timelocal(&t);
+    return std::mktime(&t);
 }

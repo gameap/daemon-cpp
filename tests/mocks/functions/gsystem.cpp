@@ -38,12 +38,19 @@ namespace GameAP {
         return exit_code;
     }
 
-    boost::process::child exec(const std::string cmd, boost::process::pipe &out)
+    boost::process::child exec(const std::string cmd, boost::process::pipe& out)
     {
-        // TODO: Implement
+        bp::child child_proccess(
+            bp::search_path(PROC_SHELL),
+            args = { SHELL_PREF, cmd },
+            (bp::std_out & bp::std_err) > out,
+            load_env()
+        );
+
+        return child_proccess;
     }
 
-    void privileges_down(const std::string username)
+    void privileges_down(const std::string& username)
     {
 
     }

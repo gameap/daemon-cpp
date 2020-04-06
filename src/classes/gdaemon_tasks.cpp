@@ -75,8 +75,8 @@ void GdaemonTasks::update()
 
         auto task = std::make_shared<GdaemonTask>(GdaemonTask{
                 jtask["id"].asUInt(),
-                jtask["run_aft_id"].asLargestUInt(),
-                jtask["server_id"].asLargestUInt(),
+                static_cast<unsigned int>(jtask["run_aft_id"].asLargestUInt()),
+                static_cast<unsigned int>(jtask["server_id"].asLargestUInt()),
                 server,
                 jtask["task"].asString(),
                 jtask["cmd"].isNull() ? "" : jtask["cmd"].asCString(),

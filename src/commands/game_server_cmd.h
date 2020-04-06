@@ -8,6 +8,12 @@
 #include "classes/game_servers_list.h"
 #include "cmd.h"
 
+// TODO: Add COMMAND_ prefixes to status enum names
+#if _MSC_VER
+#undef ERROR
+#undef DELETE
+#endif
+
 namespace GameAP {
     class GameServerCmd: public Cmd {
         public:

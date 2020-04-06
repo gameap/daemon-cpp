@@ -24,13 +24,13 @@ namespace GameAP {
              * @param server_id
              * @return  Server model
              */
-            Server * get_server(ulong server_id);
+            Server * get_server(unsigned long server_id);
 
             /**
              * Delete server from list
              * @param server_id
              */
-            void delete_server(ulong server_id);
+            void delete_server(unsigned long server_id);
 
             /**
              * Some actions in loop (start crashed, update stats, etc.)
@@ -48,7 +48,7 @@ namespace GameAP {
              */
             GameServersListStats stats();
         private:
-            std::unordered_map<ulong, std::shared_ptr<Server>> servers_list;
+            std::unordered_map<unsigned long, std::shared_ptr<Server>> servers_list;
 
             /**
              * Time to live cache (seconds)
@@ -64,7 +64,7 @@ namespace GameAP {
              * Synchronization server details data from API
              * @param server_id
              */
-            void sync_from_api(ulong server_id);
+            void sync_from_api(unsigned long server_id);
 
             /**
              * Update, get servers from API. Cached (see cache_ttl and last_updated)

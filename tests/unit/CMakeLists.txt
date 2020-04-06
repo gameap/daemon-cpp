@@ -4,6 +4,7 @@ endif()
 
 set(SOURCES_CPP
         ${CMAKE_HOME_DIRECTORY}/src/config.cpp
+        ${CMAKE_HOME_DIRECTORY}/src/config.cpp
         ${CMAKE_HOME_DIRECTORY}/src/state.cpp
         ${CMAKE_HOME_DIRECTORY}/src/daemon.cpp
         ${CMAKE_HOME_DIRECTORY}/src/daemon_server.cpp
@@ -27,7 +28,10 @@ set(SOURCES_CPP
 if(UNIX)
     link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs)
     set(SOURCES_CPP ${SOURCES_CPP} ${CMAKE_HOME_DIRECTORY}/src/status.cpp)
+else()
+    set(SOURCES_CPP ${SOURCES_CPP} ../status_vars.cpp)
 endif()
+
 
 add_executable(run_unit_tests
         ${SOURCES_CPP} ${GDAEMON_SOURCES_CPP}

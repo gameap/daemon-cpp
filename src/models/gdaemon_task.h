@@ -3,6 +3,11 @@
 
 #include "server.h"
 
+// TODO: Add STATUS_ prefixes to status enum names
+#if _MSC_VER
+#undef ERROR
+#endif
+
 namespace GameAP {
     struct GdaemonTask {
         unsigned int id;

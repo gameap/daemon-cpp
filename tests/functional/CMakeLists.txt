@@ -23,6 +23,8 @@ set(SOURCES_CPP
 if(UNIX)
     link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs)
     set(SOURCES_CPP ${SOURCES_CPP} ${CMAKE_HOME_DIRECTORY}/src/status.cpp)
+else()
+    set(SOURCES_CPP ${SOURCES_CPP} ../status_vars.cpp)
 endif()
 
 add_executable(run_functional_tests

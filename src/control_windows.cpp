@@ -14,6 +14,10 @@
 #define LOG_MAIN_FILE "main.log"
 #define LOG_ERROR_FILE "error.log"
 
+// Status vars
+bool status_active;
+time_t status_started_time;
+
 namespace fs = boost::filesystem;
 
 SERVICE_STATUS        g_ServiceStatus = { 0 };
