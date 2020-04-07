@@ -22,7 +22,7 @@ namespace GameAP {
             /**
              * Get Server model by server ID
              * @param server_id
-             * @return  Server model
+             * @return  Server model or nullptr if server not exists
              */
             Server * get_server(unsigned long server_id);
 

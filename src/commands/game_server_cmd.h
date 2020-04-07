@@ -23,7 +23,7 @@ namespace GameAP {
                 m_command = command;
 
                 GameServersList& gslist = GameServersList::getInstance();
-                m_server = *gslist.get_server(server_id);
+                m_server = gslist.get_server(server_id);
 
                 m_output = std::make_shared<CmdOutput>();
 
@@ -46,7 +46,7 @@ namespace GameAP {
 
         protected:
             unsigned long m_server_id;
-            Server m_server;
+            Server * m_server;
 
             // Commands
             bool start();

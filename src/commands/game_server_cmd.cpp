@@ -12,6 +12,19 @@ using namespace GameAP;
 
 void GameServerCmd::execute()
 {
+    if (this->m_complete) {
+        // Do nothing. Cmd is already complete
+        return;
+    }
+
+    if (this->m_server == nullptr) {
+        this->m_output->append("Invalid server");
+
+        this->m_complete = true;
+        this->m_result = false;
+        return;
+    }
+
     switch (this->m_command) {
         case START:
             this->m_result = this->start();
@@ -58,15 +71,15 @@ bool GameServerCmd::start()
 
     std::string command = str_replace(
             "{command}",
-            this->m_server.start_command,
+            this->m_server->start_command,
             ds.get_script_cmd(DS_SCRIPT_START)
     );
 
     this->replace_shortcodes(command);
 
     // TODO: Replace value to std::variant type after C++17 changing
-    if (this->m_server.get_setting("autostart") == "1" || this->m_server.get_setting("autostart") == "true") {
-        this->m_server.set_setting("autostart_current", "1");
+    if (this->m_server->get_setting("autostart") == "1" || this->m_server->get_setting("autostart") == "true") {
+        this->m_server->set_setting("autostart_current", "1");
     }
 
     int result = this->unprivileged_exec(command);
@@ -86,7 +99,7 @@ bool GameServerCmd::status()
         is_active = (result == EXIT_SUCCESS_CODE);
     } else {
         fs::path work_path = ds.get_work_path();
-        work_path /= this->m_server.dir;
+        work_path /= this->m_server->dir;
 
         fs::path p(work_path);
         p /= "pid.txt";
@@ -127,9 +140,9 @@ bool GameServerCmd::stop()
 
     this->replace_shortcodes(command);
 
-    if (this->m_server.autostart()) {
+    if (this->m_server->autostart()) {
         // TODO: Replace value to std::variant type after C++17 changing
-        this->m_server.set_setting("autostart_current", "0");
+        this->m_server->set_setting("autostart_current", "0");
     }
 
     int result = this->unprivileged_exec(command);
@@ -158,21 +171,21 @@ bool GameServerCmd::update()
     DedicatedServer& ds = DedicatedServer::getInstance();
     GameServerInstaller installer(this->m_output);
 
-    installer.m_game_localrep        = this->m_server.game.local_repository;
-    installer.m_game_remrep          = this->m_server.game.remote_repository;
+    installer.m_game_localrep        = this->m_server->game.local_repository;
+    installer.m_game_remrep          = this->m_server->game.remote_repository;
 
-    installer.m_mod_localrep         = this->m_server.game_mod.local_repository;
-    installer.m_mod_remrep           = this->m_server.game_mod.remote_repository;
+    installer.m_mod_localrep         = this->m_server->game_mod.local_repository;
+    installer.m_mod_remrep           = this->m_server->game_mod.remote_repository;
 
-    installer.m_steam_app_id         = this->m_server.game.steam_app_id;
-    installer.m_steam_app_set_config = this->m_server.game.steam_app_set_config;
+    installer.m_steam_app_id         = this->m_server->game.steam_app_id;
+    installer.m_steam_app_set_config = this->m_server->game.steam_app_set_config;
 
     fs::path work_path = ds.get_work_path();
-    work_path /= this->m_server.dir;
+    work_path /= this->m_server->dir;
 
     installer.m_server_absolute_path = work_path;
 
-    installer.set_user(this->m_server.user);
+    installer.set_user(this->m_server->user);
 
     int result = installer.install_server();
 
@@ -199,7 +212,7 @@ bool GameServerCmd::remove()
         return (result == EXIT_SUCCESS_CODE);
     } else {
         fs::path work_path = ds.get_work_path();
-        work_path /= this->m_server.dir;
+        work_path /= this->m_server->dir;
 
         try {
             GAMEAP_LOG_DEBUG << "Remove path: " << work_path;
@@ -220,32 +233,32 @@ void GameServerCmd::replace_shortcodes(std::string &command)
     DedicatedServer& dedicatedServer = DedicatedServer::getInstance();
 
     fs::path work_path = dedicatedServer.get_work_path();
-    work_path /= this->m_server.dir;
+    work_path /= this->m_server->dir;
 
     command = str_replace("{dir}", work_path.string(), command);
 
-    command = str_replace("{uuid}", this->m_server.uuid, command);
-    command = str_replace("{uuid_short}", this->m_server.uuid_short, command);
+    command = str_replace("{uuid}", this->m_server->uuid, command);
+    command = str_replace("{uuid_short}", this->m_server->uuid_short, command);
 
-    command = str_replace("{host}", this->m_server.ip, command);
-    command = str_replace("{ip}", this->m_server.ip, command);
-    command = str_replace("{game}", this->m_server.game.start_code, command);
+    command = str_replace("{host}", this->m_server->ip, command);
+    command = str_replace("{ip}", this->m_server->ip, command);
+    command = str_replace("{game}", this->m_server->game.start_code, command);
 
     command = str_replace("{id}", std::to_string(this->m_server_id), command);
-    command = str_replace("{port}", std::to_string(this->m_server.connect_port), command);
-    command = str_replace("{query_port}", std::to_string(this->m_server.query_port), command);
-    command = str_replace("{rcon_port}", std::to_string(this->m_server.rcon_port), command);
+    command = str_replace("{port}", std::to_string(this->m_server->connect_port), command);
+    command = str_replace("{query_port}", std::to_string(this->m_server->query_port), command);
+    command = str_replace("{rcon_port}", std::to_string(this->m_server->rcon_port), command);
 
-    command = str_replace("{user}", this->m_server.user, command);
+    command = str_replace("{user}", this->m_server->user, command);
 
-    for (const auto& var: this->m_server.vars) {
+    for (const auto& var: this->m_server->vars) {
         command = str_replace("{" + var.first + "}", var.second, command);
     }
 }
 
 int GameServerCmd::unprivileged_exec(std::string &command)
 {
-    privileges_down(this->m_server.user);
+    privileges_down(this->m_server->user);
     int result = this->cmd_exec(command);
     privileges_retrieve();
 

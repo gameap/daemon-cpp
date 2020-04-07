@@ -63,15 +63,26 @@ void GdaemonTasks::update()
         }
 
         if (jtask["task"].asString() == "") {
+            GAMEAP_LOG_WARNING
+                        << "Empty task. TaskID: " << jtask["id"].asUInt()
+                        << " StatusNum: " << jtask["status_num"].asUInt();
             continue;
         }
 
         if (jtask["status_num"].asUInt() != TASK_WAITING) {
+            GAMEAP_LOG_WARNING
+                        << "Invalid task status num. TaskID: " << jtask["id"].asUInt()
+                        << " StatusNum: " << jtask["status_num"].asUInt();
             continue;
         }
 
         GameServersList& gslist = GameServersList::getInstance();
         Server* server = gslist.get_server(jtask["server_id"].asLargestUInt());
+
+        if (server == nullptr) {
+            GAMEAP_LOG_ERROR << "Invalid game server. ID: " << jtask["server_id"].asLargestUInt();
+            continue;
+        }
 
         auto task = std::make_shared<GdaemonTask>(GdaemonTask{
                 jtask["id"].asUInt(),

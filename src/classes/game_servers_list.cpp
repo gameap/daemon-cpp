@@ -178,6 +178,8 @@ void GameServersList::sync_all()
 Server * GameServersList::get_server(ulong server_id)
 {
     if (servers_list.find(server_id) == servers_list.end()) {
+        // Forget cache and try update list
+        this->last_updated = 0;
         if (update_list() == ERROR_STATUS_INT) {
             return nullptr;
         }
