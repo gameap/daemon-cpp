@@ -21,7 +21,7 @@
 #define SUCCESS_STATUS_INT 			0
 #define ERROR_STATUS_INT	       -1
 
-#define GAMEAP_DAEMON_VERSION "2.1.0"
+#define GAMEAP_DAEMON_VERSION "3.0.0"
 
 // State keys
 
