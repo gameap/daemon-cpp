@@ -58,17 +58,44 @@ namespace GameAP {
              */
             void update();
 
+            /**
+             * If GameAP Daemon has unexpectedly stopped
+             * Get tasks with 'working' status and put them to queue
+             */
+            void check_after_crash();
+
+            /**
+             * Get scheduler stats
+             */
             GdaemonTasksStats stats();
 
         private:
+            /**
+             * Main tasks queue
+             */
             std::queue<std::shared_ptr<GdaemonTask>> tasks;
+
+            /**
+             * Exists queue tasks
+             */
             std::unordered_set<unsigned int> exists_tasks;
+
+            /**
+             * Working tasks commands (starting, installation, ... servers)
+             */
             std::unordered_map<unsigned int, std::shared_ptr<Cmd>> active_cmds;
 
             // TODO: Remove after replace to coroutines
             boost::thread_group cmds_threads;
 
+            /**
+             * Start new task
+             */
             void start(std::shared_ptr<GdaemonTask> &task);
+
+            /**
+             * Check tasks command. Update output
+             */
             void proceed(std::shared_ptr<GdaemonTask> &task);
 
             // API

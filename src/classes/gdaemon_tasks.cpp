@@ -100,6 +100,62 @@ void GdaemonTasks::update()
     }
 }
 
+void GdaemonTasks::check_after_crash()
+{
+    Json::Value jvalue;
+
+    try {
+        GAMEAP_LOG_VERBOSE << "Get working gdaemon tasks list from API...";
+        jvalue = Rest::get("/gdaemon_api/tasks?filter[status]=working&append=status_num");
+    } catch (Rest::RestapiException &exception) {
+        // Try later
+        GAMEAP_LOG_ERROR << exception.what();
+        return;
+    }
+
+    for (auto jtask: jvalue) {
+        if (this->exists_tasks.find(jtask["id"].asUInt()) != this->exists_tasks.end()) {
+            continue;
+        }
+
+        if (jtask["task"].asString() == "") {
+            GAMEAP_LOG_WARNING
+                        << "Empty task. TaskID: " << jtask["id"].asUInt()
+                        << " StatusNum: " << jtask["status_num"].asUInt();
+            continue;
+        }
+
+        if (jtask["status_num"].asUInt() != TASK_WORKING) {
+            GAMEAP_LOG_WARNING
+                        << "Invalid task status num. TaskID: " << jtask["id"].asUInt()
+                        << " StatusNum: " << jtask["status_num"].asUInt();
+            continue;
+        }
+
+        GameServersList& gslist = GameServersList::getInstance();
+        Server* server = gslist.get_server(jtask["server_id"].asLargestUInt());
+
+        if (server == nullptr) {
+            GAMEAP_LOG_ERROR << "Invalid game server. ID: " << jtask["server_id"].asLargestUInt();
+            continue;
+        }
+
+        auto task = std::make_shared<GdaemonTask>(GdaemonTask{
+                jtask["id"].asUInt(),
+                static_cast<unsigned int>(jtask["run_aft_id"].asLargestUInt()),
+                static_cast<unsigned int>(jtask["server_id"].asLargestUInt()),
+                server,
+                jtask["task"].asString(),
+                jtask["cmd"].isNull() ? "" : jtask["cmd"].asCString(),
+                GdaemonTask::WAITING // Change status to WAITING
+        });
+
+        this->exists_tasks.insert(jtask["id"].asUInt());
+
+        this->tasks.push(task);
+    }
+}
+
 void GdaemonTasks::api_update_status(std::shared_ptr<GdaemonTask> &task)
 {
     try {

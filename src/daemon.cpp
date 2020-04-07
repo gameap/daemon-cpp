@@ -39,6 +39,8 @@ void check_tasks()
     });
 
     GdaemonTasks& gdaemon_tasks = GdaemonTasks::getInstance();
+    gdaemon_tasks.check_after_crash();
+
     while (status_active) {
         gdaemon_tasks.update();
 
