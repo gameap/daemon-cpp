@@ -75,9 +75,10 @@ int GameServersList::update_list()
                 jserver["force_stop_command"].asString(),
                 jserver["restart_command"].asString(),
                 jserver["process_active"].asBool(),
-                0, // jserver["last_process_check"].asUInt(),
-                std::unordered_map<std::string, std::string>(),
-                std::unordered_map<std::string, std::string>(),
+                0, // Last process check
+                std::unordered_map<std::string, std::string>(), // vars
+                std::unordered_map<std::string, std::string>(), // settings
+                0                                               // updated_at
             });
 
             try {
@@ -106,7 +107,7 @@ void GameServersList::stats_process()
             ? 0
             : std::stol(str_timediff, 0, 10);
 
-    for (auto const& server : servers_list) {
+    for (auto const& server : this->servers_list) {
         Json::Value jserver;
         jserver["id"] = static_cast<unsigned long long>(server.second->id);
 
@@ -128,13 +129,59 @@ void GameServersList::stats_process()
 
         jserver["installed"]                = server.second->installed;
         jupdate_data.append(jserver);
+
+        server.second->updated_at = time(nullptr);
     }
 
-    try {
-        GAMEAP_LOG_VERBOSE << "Insert servers information...";
-        Rest::patch("/gdaemon_api/servers", jupdate_data);
-    } catch (Rest::RestapiException &exception) {
-        GAMEAP_LOG_ERROR << exception.what() << '\n';
+    if (! jupdate_data.empty()) {
+        try {
+            GAMEAP_LOG_VERBOSE << "Insert servers information...";
+            Rest::patch("/gdaemon_api/servers", jupdate_data);
+        } catch (Rest::RestapiException &exception) {
+            GAMEAP_LOG_ERROR << exception.what() << '\n';
+        }
+    }
+}
+
+void GameServersList::sync_all()
+{
+    Json::Value jupdate_data;
+
+    State& state = State::getInstance();
+    std::string str_timediff = state.get(STATE_PANEL_TIMEDIFF);
+
+    time_t time_diff = str_timediff.empty()
+       ? 0
+       : std::stol(str_timediff, 0, 10);
+
+    for (auto const& server : this->servers_list) {
+        Json::Value jserver;
+        jserver["id"] = static_cast<unsigned long long>(server.second->id);
+
+        time_t last_process_check = server.second->last_process_check - time_diff;
+
+        if (last_process_check > 0) {
+            std::tm *ptm = std::localtime(&last_process_check);
+            char buffer[32];
+            std::strftime(buffer, 32, "%F %T", ptm);
+
+            jserver["last_process_check"] = buffer;
+            jserver["process_active"] = server.second->process_active ? 1 : 0;
+        }
+
+        jserver["installed"]            = server.second->installed;
+        jupdate_data.append(jserver);
+
+        server.second->updated_at = time(nullptr);
+    }
+
+    if (! jupdate_data.empty()) {
+        try {
+            GAMEAP_LOG_VERBOSE << "Insert servers information...";
+            Rest::patch("/gdaemon_api/servers", jupdate_data);
+        } catch (Rest::RestapiException &exception) {
+            GAMEAP_LOG_ERROR << exception.what() << '\n';
+        }
     }
 }
 
@@ -165,13 +212,6 @@ void GameServersList::start_down_servers()
             start_cmd.output(&output);
             GAMEAP_LOG_VERBOSE_ERROR << output;
         }
-    }
-}
-
-void GameServersList::sync_all()
-{
-    for (auto& server : this->servers_list) {
-        this->sync_from_api(server.second->id);
     }
 }
 
@@ -221,9 +261,16 @@ void GameServersList::sync_from_api(ulong server_id)
 
     Server *server = servers_list[server_id].get();
 
-    server->enabled     = jserver["enabled"].asBool();
-    server->installed   = static_cast<Server::install_status>(jserver["installed"].asUInt());
-    server->blocked     = jserver["blocked"].asBool();
+    time_t updated_at   = human_to_timestamp(jserver["updated_at"].asString());
+
+    if (updated_at > server->updated_at) {
+        server->enabled     = jserver["enabled"].asBool();
+        server->installed   = static_cast<Server::install_status>(jserver["installed"].asUInt());
+        server->blocked     = jserver["blocked"].asBool();
+    }
+
+    server->updated_at  = updated_at;
+
     server->name        = jserver["name"].asString();
     server->uuid        = jserver["uuid"].asString();
     server->uuid_short  = jserver["uuid_short"].asString();

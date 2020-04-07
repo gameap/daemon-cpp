@@ -38,7 +38,7 @@ namespace GameAP {
             void loop();
 
             /**
-             * Synchronization all details servers data from API
+             * Synchronization all servers details data to API
              */
             void sync_all();
 

@@ -49,6 +49,8 @@ namespace GameAP {
         // Settings
         std::unordered_map<std::string, std::string> settings;
 
+        time_t updated_at;
+
         std::string get_setting(const std::string & name) {
             return (settings.find(name) != settings.end())
                ? settings[name]

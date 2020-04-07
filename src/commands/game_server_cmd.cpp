@@ -62,6 +62,9 @@ void GameServerCmd::execute()
             break;
     }
 
+    GameServersList& gslist = GameServersList::getInstance();
+    gslist.sync_all();
+
     this->m_complete = true;
 }
 
