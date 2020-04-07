@@ -187,13 +187,17 @@ bool GameServerCmd::update()
 
     installer.set_user(this->m_server->user);
 
+    this->m_server->installed = Server::SERVER_INSTALL_IN_PROCESS;
+
     int result = installer.install_server();
 
     if (result != EXIT_SUCCESS_CODE) {
+        this->m_server->installed = Server::SERVER_NOT_INSTALLED;
         this->m_output->append(installer.get_errors());
         return false;
     }
 
+    this->m_server->installed = Server::SERVER_INSTALLED;
     return true;
 }
 
@@ -224,6 +228,8 @@ bool GameServerCmd::remove()
             return false;
         }
     }
+
+    this->m_server->installed = Server::SERVER_NOT_INSTALLED;
 
     return true;
 }
