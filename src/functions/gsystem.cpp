@@ -197,7 +197,7 @@ namespace GameAP {
                         return;
                     }
 
-                    if (pwd->pw_uid != getuid() && seteuid(pwd->pw_uid) == -) {
+                    if (pwd->pw_uid != getuid() && seteuid(pwd->pw_uid) == -1) {
                         GAMEAP_LOG_ERROR << "Failed to set Effective uid (" << pwd->pw_uid
                                          << "). Username: " << username
                                          << ". " << strerror(errno);
