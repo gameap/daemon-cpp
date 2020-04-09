@@ -612,6 +612,8 @@ int DedicatedServer::update_db()
     } catch (Rest::RestapiException &exception) {
         GAMEAP_LOG_ERROR << "Output updating error: " << exception.what();
     }
+
+    return 0;
 }
 
 std::string DedicatedServer::get_script_cmd(ushort script)

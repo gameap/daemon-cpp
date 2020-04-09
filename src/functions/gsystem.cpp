@@ -19,15 +19,13 @@
 #endif
 
 namespace GameAP {
-
-    using namespace boost::process;
     using namespace boost::iostreams;
 
     namespace bp = boost::process;
 
     int exec(const std::string cmd, std::function<void (std::string)> callback)
     {
-        int exit_code;
+        int exit_code = -1;
 
         boost::asio::io_service ios;
         boost::asio::streambuf buf;
@@ -39,7 +37,7 @@ namespace GameAP {
 
             bp::child child_proccess(
                     bp::search_path(PROC_SHELL),
-                    args={SHELL_PREF, cmd},
+                    bp::args={SHELL_PREF, cmd},
                     (bp::std_out & bp::std_err) > out_stream,
                     load_env()
             );
@@ -70,7 +68,7 @@ namespace GameAP {
 
             bp::child child_proccess(
                     bp::search_path(PROC_SHELL),
-                    args={SHELL_PREF, cmd},
+                    bp::args={SHELL_PREF, cmd},
                     bp::std_out > out_stream,
                     bp::std_err > err_stream,
                     load_env()
@@ -98,7 +96,7 @@ namespace GameAP {
         try {
             bp::child child_proccess(
                     bp::search_path(PROC_SHELL),
-                    args={SHELL_PREF, cmd},
+                    bp::args={SHELL_PREF, cmd},
                     (bp::std_out & bp::std_err) > out,
                     load_env()
             );

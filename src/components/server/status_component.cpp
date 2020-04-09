@@ -79,7 +79,7 @@ void StatusSession::cmd_process()
     unsigned char command;
 
     if (!binn_list_get_uint8(read_binn, 1, &command)) {
-        response_msg(STATUS_ERROR, "Invalid Binn data: reading command failed", true);
+        response_msg(STATUS_ERROR, "Invalid Binn data: reading command failed");
         return;
     }
 
@@ -155,7 +155,7 @@ void StatusSession::cmd_process()
 
         default: {
             GAMEAP_LOG_WARNING << "Unknown Command";
-            response_msg(STATUS_UNKNOWN_COMMAND, "Unknown command", true);
+            response_msg(STATUS_UNKNOWN_COMMAND, "Unknown command");
             return;
         };
     }
@@ -170,7 +170,7 @@ void StatusSession::cmd_process()
  * @param sdesc text message
  * @param write
  */
-void StatusSession::response_msg(unsigned int snum, const char * sdesc, bool write)
+void StatusSession::response_msg(unsigned int snum, const char * sdesc)
 {
     binn *write_binn = binn_list();
     binn_list_add_uint32(write_binn, snum);
