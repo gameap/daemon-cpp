@@ -61,6 +61,9 @@ namespace GameAP {
             // bool reinstall();
             bool remove();
 
+            void _execute();
+            void error_handler(const std::exception & exception);
+
         private:
             void replace_shortcodes(std::string &command);
             int unprivileged_exec(std::string &command);

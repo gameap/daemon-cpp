@@ -12,6 +12,15 @@ using namespace GameAP;
 
 void GameServerCmd::execute()
 {
+    try {
+        this->_execute();
+    } catch (const std::exception & exception) {
+        this->error_handler(exception);
+    }
+}
+
+void GameServerCmd::_execute()
+{
     if (this->m_complete) {
         // Do nothing. Cmd is already complete
         return;
@@ -273,4 +282,14 @@ int GameServerCmd::unprivileged_exec(std::string &command)
     privileges_retrieve();
 
     return result;
+}
+
+void GameServerCmd::error_handler(const std::exception & exception)
+{
+    this->m_output->append("Unable to install server");
+    this->m_output->append(exception.what());
+
+    this->m_server->installed = Server::SERVER_NOT_INSTALLED;
+    this->m_complete = true;
+    this->m_result = false;
 }
