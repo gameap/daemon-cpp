@@ -196,8 +196,11 @@ int main(int argc, char** argv)
 	Config& config = Config::getInstance();
 	config.cfg_file = "daemon.cfg";
 
+    fs::path exe_path( fs::initial_path<fs::path>() );
+    exe_path = fs::system_complete( fs::path( argv[0] ) );
+
     std::string path_env = getenv("PATH");
-    path_env += ";" + fs::current_path().string();
+    path_env += ":" + exe_path.parent_path().string();
     std::string put_env = "PATH=" + path_env;
     putenv(&put_env[0]);
 
@@ -271,8 +274,6 @@ int main(int argc, char** argv)
 	        umask(0);
 	        setsid();
 
-	        fs::path exe_path( fs::initial_path<fs::path>() );
-	        exe_path = fs::system_complete( fs::path( argv[0] ) );
 	        fs::current_path(exe_path.parent_path());
 
 	        close(STDIN_FILENO);

@@ -112,7 +112,7 @@ namespace GameAP {
         bp::environment env = static_cast<bp::environment>(boost::this_process::environment());
 
 #ifdef __linux__
-        struct passwd *pw = getpwuid(getuid());
+        struct passwd *pw = getpwuid(geteuid());
 
         env["HOME"]                     = pw->pw_dir;
         env["USER"]                     = pw->pw_name;
