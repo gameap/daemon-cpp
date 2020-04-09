@@ -21,8 +21,10 @@ void GdaemonTasks::run_next()
     }
 
     if (task->status == GdaemonTask::WAITING) {
+        GAMEAP_LOG_VERBOSE << "Starting task [" << task->id << "]";
         this->start(task);
     } else if (task->status == GdaemonTask::WORKING) {
+        GAMEAP_LOG_VERBOSE << "Proceed task [" << task->id << "]";
         this->proceed(task);
     }
 
@@ -225,6 +227,7 @@ void GdaemonTasks::start(std::shared_ptr<GdaemonTask> &task)
 
         // TODO: Couroutines here
         this->cmds_threads.create_thread([=]() {
+            GAMEAP_LOG_VERBOSE << "Executing cmd";
             cmd->execute();
         });
 

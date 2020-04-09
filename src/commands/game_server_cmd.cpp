@@ -192,6 +192,7 @@ bool GameServerCmd::update()
 
     this->m_server->installed = Server::SERVER_INSTALL_IN_PROCESS;
 
+    GAMEAP_LOG_VERBOSE << "Starting installation server...";
     int result = installer.install_server();
 
     if (result != EXIT_SUCCESS_CODE) {
