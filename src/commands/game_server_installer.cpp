@@ -24,9 +24,23 @@ namespace bp = ::boost::process;
  */
 int GameServerInstaller::install_server()
 {
+    GAMEAP_LOG_VERBOSE << "Installation information. "
+        << "m_steam_app_id: "           << m_steam_app_id
+        << "m_steam_app_set_config: "   << m_steam_app_set_config
+        << "m_game_localrep: "          << m_game_localrep
+        << "m_game_remrep: "            << m_game_remrep
+        << "m_mod_localrep: "           << m_mod_localrep
+        << "m_mod_remrep: "             << m_mod_remrep;
+
     if (_detect_sources() == ERROR_STATUS_INT) {
         return ERROR_STATUS_INT;
     }
+
+    GAMEAP_LOG_VERBOSE << "Detect information. "
+        << "m_game_source_type: "   << m_game_source_type
+        << "m_mod_source_type: "    << m_mod_source_type
+        << "m_game_type: "          << m_game_type
+        << "m_mod_type: "           << m_mod_type;
 
     if (!fs::exists(m_server_absolute_path)) {
         fs::create_directories(m_server_absolute_path);
