@@ -555,7 +555,7 @@ int DedicatedServer::update_db()
 
         // Cpu
         std::string cpu = "";
-        for (int i = 0; i < item.cpu_load.size(); ++i) {
+        for (unsigned int i = 0; i < item.cpu_load.size(); ++i) {
             cpu +=  boost::str(boost::format("%.2f") % item.cpu_load[i]) + " ";
         }
 

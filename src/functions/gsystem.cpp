@@ -197,18 +197,16 @@ namespace GameAP {
                         return;
                     }
 
-                    if (pwd->pw_uid != getuid()) {
-                        if (seteuid(pwd->pw_uid) == -1)
-                            GAMEAP_LOG_ERROR << "Failed to set Effective uid (" << pwd->pw_uid
-                                             << "). Username: " << username
-                                             << ". " << strerror(errno);
+                    if (pwd->pw_uid != getuid() && seteuid(pwd->pw_uid) == -) {
+                        GAMEAP_LOG_ERROR << "Failed to set Effective uid (" << pwd->pw_uid
+                                         << "). Username: " << username
+                                         << ". " << strerror(errno);
                     }
 
-                    if (pwd->pw_uid != getgid()) {
-                        if (setegid(pwd->pw_gid) == -1)
-                            GAMEAP_LOG_ERROR << "Failed to set Effective gid (" << pwd->pw_gid
-                                             << "). Username: " << username
-                                             << ". " << strerror(errno);
+                    if (pwd->pw_uid != getgid() && setegid(pwd->pw_gid) == -1) {
+                        GAMEAP_LOG_ERROR << "Failed to set Effective gid (" << pwd->pw_gid
+                                         << "). Username: " << username
+                                         << ". " << strerror(errno);
                     }
                 }
         #endif
@@ -217,14 +215,12 @@ namespace GameAP {
     void privileges_retrieve()
     {
         #ifdef __linux__
-            if (geteuid() != getuid()) {
-                if (seteuid(getuid()) == -1)
-                    GAMEAP_LOG_ERROR << "Failed to set Effective uid (" << getuid() << ").";
+            if (geteuid() != getuid() && seteuid(getuid()) == -1) {
+                GAMEAP_LOG_ERROR << "Failed to set Effective uid (" << getuid() << ").";
             }
 
-            if (getegid() != getgid()) {
-                if (setegid(getgid()) == -1)
-                    GAMEAP_LOG_ERROR << "Failed to set Effective gid (" << getgid() << ").";
+            if (getegid() != getgid() && setegid(getgid()) == -1) {
+                GAMEAP_LOG_ERROR << "Failed to set Effective gid (" << getgid() << ").";
             }
         #endif
     }

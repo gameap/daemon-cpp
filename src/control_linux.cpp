@@ -193,8 +193,6 @@ void monitor_daemon()
 
 int main(int argc, char** argv)
 {
-    int pid;
-
 	Config& config = Config::getInstance();
 	config.cfg_file = "daemon.cfg";
 
@@ -263,7 +261,7 @@ int main(int argc, char** argv)
         run_daemon();
         return 0;
 	#else
-	    pid = fork();
+	    int pid = fork();
 
 	    if (pid == -1) {
 	        GAMEAP_LOG_FATAL << "Error: Start Daemon failed";

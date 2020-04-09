@@ -62,6 +62,8 @@ namespace auth {
             if (strcmp(passw->sp_pwdp, crypt(password, passw->sp_pwdp)) == 0) {
                 return true;
             }
+
+            return false;
         }
 #endif
 
