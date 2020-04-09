@@ -26,16 +26,16 @@ namespace GameAP {
     {
         Config& config = Config::getInstance();
 
-        auto conn = std::make_shared<RestClient::Connection>(config.api_host);
+        auto conn = RestClient::Connection(config.api_host);
 
         std::string uri = "/gdaemon_api/get_token";
-        conn->AppendHeader("Authorization", "Bearer " + config.api_key);
-        conn->AppendHeader("Accept", "application/json");
-        conn->SetUserAgent("GameAP Daemon");
-        conn->FollowRedirects(true);
-        conn->FollowRedirects(true, 3);
+        conn.AppendHeader("Authorization", "Bearer " + config.api_key);
+        conn.AppendHeader("Accept", "application/json");
+        conn.SetUserAgent("GameAP Daemon");
+        conn.FollowRedirects(true);
+        conn.FollowRedirects(true, 3);
 
-        RestClient::Response response = conn->get(uri);
+        RestClient::Response response = conn.get(uri);
 
         if (response.code != 200) {
             GAMEAP_LOG_ERROR << "RestClient HTTP response code (GET): " << response.code;
@@ -95,16 +95,16 @@ namespace GameAP {
     {
         Config& config = Config::getInstance();
 
-        auto conn = std::make_shared<RestClient::Connection>(config.api_host);
+        auto conn = RestClient::Connection(config.api_host);
 
-        conn->AppendHeader("X-Auth-Token", m_api_token);
-        conn->AppendHeader("Accept", "application/json");
+        conn.AppendHeader("X-Auth-Token", m_api_token);
+        conn.AppendHeader("Accept", "application/json");
 
-        conn->SetUserAgent("GameAP Daemon");
-        conn->FollowRedirects(true);
-        conn->FollowRedirects(true, 3);
+        conn.SetUserAgent("GameAP Daemon");
+        conn.FollowRedirects(true);
+        conn.FollowRedirects(true, 3);
 
-        RestClient::Response response = conn->get(uri);
+        RestClient::Response response = conn.get(uri);
 
         if (response.code != 200) {
             if (response.code == 401) {
@@ -150,18 +150,18 @@ namespace GameAP {
 
         Json::FastWriter jwriter;
 
-        auto conn = std::make_shared<RestClient::Connection>(config.api_host);
+        auto conn = RestClient::Connection(config.api_host);
 
-        conn->AppendHeader("X-Auth-Token", m_api_token);
-        conn->AppendHeader("Content-Type", "application/json");
-        conn->AppendHeader("Accept", "application/json");
+        conn.AppendHeader("X-Auth-Token", m_api_token);
+        conn.AppendHeader("Content-Type", "application/json");
+        conn.AppendHeader("Accept", "application/json");
 
-        conn->SetUserAgent("GameAP Daemon");
-        conn->FollowRedirects(true);
-        conn->FollowRedirects(true, 3);
+        conn.SetUserAgent("GameAP Daemon");
+        conn.FollowRedirects(true);
+        conn.FollowRedirects(true, 3);
 
         std::string write_data = jwriter.write(data);
-        RestClient::Response response = conn->post(uri, write_data);
+        RestClient::Response response = conn.post(uri, write_data);
 
         if (response.code == 201) {
             m_errors_count = 0;
@@ -214,18 +214,18 @@ namespace GameAP {
 
         Json::FastWriter jwriter;
 
-        auto conn = std::make_shared<RestClient::Connection>(config.api_host);
+        auto conn = RestClient::Connection(config.api_host);
 
-        conn->AppendHeader("X-Auth-Token", m_api_token);
-        conn->AppendHeader("Accept", "application/json");
-        conn->AppendHeader("Content-Type", "application/json");
+        conn.AppendHeader("X-Auth-Token", m_api_token);
+        conn.AppendHeader("Accept", "application/json");
+        conn.AppendHeader("Content-Type", "application/json");
 
-        conn->SetUserAgent("GameAP Daemon");
-        conn->FollowRedirects(true);
-        conn->FollowRedirects(true, 3);
+        conn.SetUserAgent("GameAP Daemon");
+        conn.FollowRedirects(true);
+        conn.FollowRedirects(true, 3);
 
         std::string write_data = jwriter.write(data);
-        RestClient::Response response = conn->put(uri, write_data);
+        RestClient::Response response = conn.put(uri, write_data);
 
         if (response.code == 200) {
             m_errors_count = 0;
@@ -268,18 +268,18 @@ namespace GameAP {
 
         Json::FastWriter jwriter;
 
-        auto conn = std::make_shared<RestClient::Connection>(config.api_host);
+        auto conn = RestClient::Connection(config.api_host);
 
-        conn->AppendHeader("X-Auth-Token", m_api_token);
-        conn->AppendHeader("Accept", "application/json");
-        conn->AppendHeader("Content-Type", "application/json");
+        conn.AppendHeader("X-Auth-Token", m_api_token);
+        conn.AppendHeader("Accept", "application/json");
+        conn.AppendHeader("Content-Type", "application/json");
 
-        conn->SetUserAgent("GameAP Daemon");
-        conn->FollowRedirects(true);
-        conn->FollowRedirects(true, 3);
+        conn.SetUserAgent("GameAP Daemon");
+        conn.FollowRedirects(true);
+        conn.FollowRedirects(true, 3);
 
         std::string write_data = jwriter.write(data);
-        RestClient::Response response = conn->patch(uri, write_data);
+        RestClient::Response response = conn.patch(uri, write_data);
 
         if (response.code == 200) {
             GAMEAP_LOG_DEBUG << "API. Resource Updated";
