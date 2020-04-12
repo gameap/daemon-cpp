@@ -7,6 +7,7 @@
 #include "consts.h"
 
 #ifdef __linux__
+#include <sys/mman.h>
 #include <pwd.h>
 #endif
 
@@ -220,6 +221,57 @@ namespace GameAP {
             if (getegid() != getgid() && setegid(getgid()) == -1) {
                 GAMEAP_LOG_ERROR << "Failed to set Effective gid (" << getgid() << ").";
             }
+        #endif
+    }
+
+    void run_process(std::function<void (void)> callback)
+    {
+        #ifdef __linux__
+            pid_t pid = fork();
+
+            if (pid == -1) {
+                GAMEAP_LOG_ERROR << "Fork failed\n";
+            }
+
+            if (pid == 0) {
+                callback();
+                exit(0);
+            }
+        #endif
+
+        #ifdef _WIN32
+            // TODO: Not implemented
+        #endif
+    }
+
+    void * shared_map_memory(size_t size)
+    {
+        #ifdef __linux__
+            void * addr = mmap(nullptr, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+
+            if (addr == MAP_FAILED) {
+                GAMEAP_LOG_ERROR << "Unable to create shared map memory\n";
+                return nullptr;
+            }
+
+            return addr;
+        #endif
+
+        #ifdef _WIN32
+                // TODO: Not implemented
+        #endif
+    }
+
+    void destroy_shared_map_memory(void * ptr, size_t size)
+    {
+        #ifdef __linux__
+            if (munmap(ptr, size) == -1) {
+                GAMEAP_LOG_ERROR << "Unable to destroy shared map memory\n";
+            }
+        #endif
+
+        #ifdef _WIN32
+                // TODO: Not implemented
         #endif
     }
 

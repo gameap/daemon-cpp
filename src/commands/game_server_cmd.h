@@ -3,7 +3,7 @@
 
 #include <boost/filesystem.hpp>
 
-#include "commands/output/cmd_output.h"
+#include "commands/output/ipc_cmd_output.h"
 #include "models/server.h"
 #include "classes/game_servers_list.h"
 #include "cmd.h"
@@ -25,10 +25,17 @@ namespace GameAP {
                 GameServersList& gslist = GameServersList::getInstance();
                 m_server = gslist.get_server(server_id);
 
-                m_output = std::make_shared<CmdOutput>();
-
                 m_complete = false;
+
+                this->create_output();
             };
+
+            ~GameServerCmd()
+            {
+                if (this->m_output != nullptr) {
+                    destroy_shared_map_memory((void*)this->m_output.get(), sizeof(IpcCmdOutput));
+                }
+            }
 
             static constexpr unsigned char START     = 1;
             static constexpr unsigned char PAUSE     = 2;
@@ -67,6 +74,8 @@ namespace GameAP {
         private:
             void replace_shortcodes(std::string &command);
             int unprivileged_exec(std::string &command);
+
+            void create_output();
     };
 }
 #endif //GDAEMON_GAME_SERVER_CMD_H

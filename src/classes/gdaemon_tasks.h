@@ -83,7 +83,7 @@ namespace GameAP {
             /**
              * Working tasks commands (starting, installation, ... servers)
              */
-            std::unordered_map<unsigned int, std::shared_ptr<Cmd>> active_cmds;
+            std::unordered_map<unsigned int, Cmd*> active_cmds;
 
             // TODO: Remove after replace to coroutines
             boost::thread_group cmds_threads;

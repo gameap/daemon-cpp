@@ -66,7 +66,7 @@ namespace GameAP {
 
             bool m_complete;
             bool m_result;
-            std::shared_ptr<CmdOutput> m_output;
+            std::shared_ptr<BaseOutput> m_output;
 
             /**
              * Execute shell command

@@ -7,7 +7,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
-#include "commands/output/cmd_output.h"
+#include "commands/output/base_output.h"
 
 #define INST_NO_SOURCE      0
 #define INST_FROM_LOCREP    1
@@ -35,7 +35,7 @@ namespace GameAP {
 
     class GameServerInstaller {
         public:
-            GameServerInstaller(const std::shared_ptr<CmdOutput>& cmd_output)
+            GameServerInstaller(const std::shared_ptr<BaseOutput>& cmd_output)
                 : m_cmd_output{cmd_output}
             {
                 m_game_source_type = INST_NO_SOURCE;
@@ -92,7 +92,7 @@ namespace GameAP {
             std::unordered_set<int> m_ignored_game_source;
             std::unordered_set<int> m_ignored_mod_source;
 
-            std::shared_ptr<CmdOutput> m_cmd_output;
+            std::shared_ptr<BaseOutput> m_cmd_output;
 
             int _detect_sources();
             void _detect_game_source();

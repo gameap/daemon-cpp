@@ -28,5 +28,11 @@ namespace GameAP {
         const fs::path &source,
         const fs::path &destination
     );
+
+    void run_process(std::function<void (void)> callback);
+
+    // Shared memory
+    void * shared_map_memory(size_t size);
+    void destroy_shared_map_memory(void * ptr, size_t size);
 }
 #endif //GDAEMON_GSYSTEM_H

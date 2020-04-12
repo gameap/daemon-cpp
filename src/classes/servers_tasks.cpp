@@ -53,6 +53,9 @@ void ServersTasks::run_next()
             this->exists_tasks.erase(task->id);
         }
 
+        Cmd* game_server_cmd = this->active_cmds[task->id];
+        delete game_server_cmd;
+
         this->active_cmds.erase(task->id);
         this->last_sync.erase(task->id);
 
@@ -69,10 +72,10 @@ void ServersTasks::start(std::shared_ptr<ServerTask> &task)
 {
     task->status = ServerTask::WORKING;
 
-    std::shared_ptr<GameServerCmd> game_server_cmd = std::make_shared<GameServerCmd>(task->command, task->server_id);
+    GameServerCmd* game_server_cmd = new GameServerCmd(task->command, task->server_id);
 
     this->active_cmds.insert(
-        std::pair<unsigned int, std::shared_ptr<GameServerCmd>>(task->id, game_server_cmd)
+        std::pair<unsigned int, GameServerCmd*>(task->id, game_server_cmd)
     );
 
     // TODO: Couroutines here
@@ -88,7 +91,7 @@ void ServersTasks::proceed(std::shared_ptr<ServerTask> &task)
         return;
     }
 
-    std::shared_ptr<GameServerCmd> game_server_cmd = this->active_cmds[task->id];
+    GameServerCmd* game_server_cmd = this->active_cmds[task->id];
 
     if (game_server_cmd->is_complete()) {
         task->status = game_server_cmd->result()

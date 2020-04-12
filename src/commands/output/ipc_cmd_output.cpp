@@ -6,6 +6,8 @@ using namespace GameAP;
 
 void IpcCmdOutput::append(const std::string &line)
 {
+    m_mutex.lock();
+
     std::vector<char> chars(line.c_str(), line.c_str() + line.size());
     chars.push_back('\n');
 
@@ -20,6 +22,8 @@ void IpcCmdOutput::append(const std::string &line)
             this->m_write_pos = 0;
         }
     }
+
+    m_mutex.unlock();
 }
 
 void IpcCmdOutput::get(std::string *str_out)
@@ -44,6 +48,10 @@ void IpcCmdOutput::get(std::string *str_out)
 
 void IpcCmdOutput::clear()
 {
+    m_mutex.lock();
+
     this->m_readable = 0;
     this->m_read_pos = this->m_write_pos;
+
+    m_mutex.unlock();
 }
