@@ -7,7 +7,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
-#include "classes/cmd_output.h"
+#include "commands/output/cmd_output.h"
 
 #define INST_NO_SOURCE      0
 #define INST_FROM_LOCREP    1

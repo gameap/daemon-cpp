@@ -10,7 +10,8 @@ set(SOURCES_CPP
         ${CMAKE_HOME_DIRECTORY}/src/commands/game_server_installer.cpp
         ${CMAKE_HOME_DIRECTORY}/src/commands/game_server_cmd.cpp
         ${CMAKE_HOME_DIRECTORY}/src/commands/dedicated_server_cmd.cpp
-        ${CMAKE_HOME_DIRECTORY}/src/classes/cmd_output.cpp
+        ${CMAKE_HOME_DIRECTORY}/src/commands/output/cmd_output.cpp
+        ${CMAKE_HOME_DIRECTORY}/src/commands/output/ipc_cmd_output.cpp
         ${CMAKE_HOME_DIRECTORY}/src/classes/servers_tasks.cpp
         ${CMAKE_HOME_DIRECTORY}/src/classes/gdaemon_tasks.cpp
         ../mocks/restapi_mock.cpp

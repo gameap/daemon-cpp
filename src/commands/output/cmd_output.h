@@ -1,16 +1,21 @@
 #ifndef GDAEMON_CMD_OUTPUT_H
 #define GDAEMON_CMD_OUTPUT_H
 
-#include <memory>
-#include <string>
-#include <mutex>
+#include "base_output.h"
 
 namespace GameAP {
-    class CmdOutput {
+    class CmdOutput: public BaseOutput {
         public:
             CmdOutput() {
-                m_output = std::make_shared<std::string> ("");
+                this->init();
             };
+
+            /**
+             * Initial output
+             */
+            void init() {
+                m_output = std::make_shared<std::string> ("");
+            }
 
             /**
              * Append output
@@ -25,7 +30,7 @@ namespace GameAP {
             void get(std::string *str_out);
 
             /**
-             *
+             * Clear output buffer
              */
             void clear();
         private:

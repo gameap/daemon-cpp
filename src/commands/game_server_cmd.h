@@ -3,7 +3,7 @@
 
 #include <boost/filesystem.hpp>
 
-#include "classes/cmd_output.h"
+#include "commands/output/cmd_output.h"
 #include "models/server.h"
 #include "classes/game_servers_list.h"
 #include "cmd.h"

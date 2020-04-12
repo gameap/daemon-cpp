@@ -1,7 +1,7 @@
 #ifndef GDAEMON_DEDICATED_SERVER_CMD_H
 #define GDAEMON_DEDICATED_SERVER_CMD_H
 
-#include "classes/cmd_output.h"
+#include "commands/output/cmd_output.h"
 #include "cmd.h"
 
 namespace GameAP {
