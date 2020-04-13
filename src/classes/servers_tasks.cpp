@@ -79,7 +79,8 @@ void ServersTasks::start(std::shared_ptr<ServerTask> &task)
     );
 
     // TODO: Couroutines here
-    this->cmds_threads.create_thread([=]() {
+    run_process([=]() {
+        GAMEAP_LOG_VERBOSE << "Executing cmd";
         game_server_cmd->execute();
     });
 }

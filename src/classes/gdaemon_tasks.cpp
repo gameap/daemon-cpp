@@ -17,6 +17,7 @@ void GdaemonTasks::run_next()
 
     if (task->run_aft_id > 0 && this->exists_tasks.find(task->run_aft_id) != this->exists_tasks.end()) {
         // Waiting for another task to complete
+        this->tasks.push(task);
         return;
     }
 
