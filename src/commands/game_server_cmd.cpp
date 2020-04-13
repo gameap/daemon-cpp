@@ -217,7 +217,8 @@ bool GameServerCmd::update()
 
 bool GameServerCmd::remove()
 {
-    if (!this->stop()) {
+    if (this->status() && ! this->stop()) {
+        this->m_output->append("Unable to stop server");
         return false;
     }
 
