@@ -59,6 +59,10 @@ void ServersTasks::run_next()
         this->active_cmds.erase(task->id);
         this->last_sync.erase(task->id);
 
+        if (this->cmd_processes.find(task->id) != this->cmd_processes.end()) {
+            this->cmd_processes.erase(task->id);
+        }
+
         return;
     }
 
