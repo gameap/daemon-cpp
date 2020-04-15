@@ -45,11 +45,11 @@ namespace GameAP {
                     bp::extend::on_exec_setup=[](auto&) {
                         #ifdef __linux__
                             if (geteuid() != getuid()) {
-                                setuid(geteuid());
+                                setreuid(geteuid(), geteuid());
                             }
 
                             if (getegid() != getgid()) {
-                                setgid(getegid());
+                                setregid(getegid(), getegid());
                             }
                         #endif
                     }
@@ -88,11 +88,11 @@ namespace GameAP {
                     bp::extend::on_exec_setup=[](auto&) {
                         #ifdef __linux__
                             if (geteuid() != getuid()) {
-                                setuid(geteuid());
+                                setreuid(geteuid(), geteuid());
                             }
 
                             if (getegid() != getgid()) {
-                                setgid(getegid());
+                                setregid(getegid(), getegid());
                             }
                         #endif
                     }
@@ -126,11 +126,11 @@ namespace GameAP {
                     bp::extend::on_exec_setup=[](auto&) {
                         #ifdef __linux__
                             if (geteuid() != getuid()) {
-                                setuid(geteuid());
+                                setreuid(geteuid(), geteuid());
                             }
 
                             if (getegid() != getgid()) {
-                                setgid(getegid());
+                                setregid(getegid(), getegid());
                             }
                         #endif
                     }
