@@ -1,6 +1,7 @@
 #include <string>
 #include <functional>
 #include <boost/asio.hpp>
+#include <boost/process/extend.hpp>
 
 #include "log.h"
 #include "gsystem.h"
@@ -40,7 +41,13 @@ namespace GameAP {
                     bp::search_path(PROC_SHELL),
                     bp::args={SHELL_PREF, cmd},
                     (bp::std_out & bp::std_err) > out_stream,
-                    load_env()
+                    load_env(),
+                    bp::extend::on_setup=[](auto & exec) {
+                        #ifdef __linux__
+                            setuid(geteuid());
+                            setgid(getegid());
+                        #endif
+                    }
             );
 
             std::string s;
@@ -72,7 +79,13 @@ namespace GameAP {
                     bp::args={SHELL_PREF, cmd},
                     bp::std_out > out_stream,
                     bp::std_err > err_stream,
-                    load_env()
+                    load_env(),
+                    bp::extend::on_setup=[](auto & exec) {
+                        #ifdef __linux__
+                            setuid(geteuid());
+                            setgid(getegid());
+                        #endif
+                    }
             );
 
             std::string s;
@@ -99,7 +112,13 @@ namespace GameAP {
                     bp::search_path(PROC_SHELL),
                     bp::args={SHELL_PREF, cmd},
                     (bp::std_out & bp::std_err) > out,
-                    load_env()
+                    load_env(),
+                    bp::extend::on_setup=[](auto & exec) {
+                        #ifdef __linux__
+                            setuid(geteuid());
+                            setgid(getegid());
+                        #endif
+                    }
             );
 
             return child_proccess;
@@ -112,12 +131,12 @@ namespace GameAP {
     {
         bp::environment env = static_cast<bp::environment>(boost::this_process::environment());
 
-#ifdef __linux__
-        struct passwd *pw = getpwuid(geteuid());
+        #ifdef __linux__
+            struct passwd *pw = getpwuid(geteuid());
 
-        env["HOME"]                     = pw->pw_dir;
-        env["USER"]                     = pw->pw_name;
-#endif
+            env["HOME"]                     = pw->pw_dir;
+            env["USER"]                     = pw->pw_name;
+        #endif
 
         env["GAMEAP_DAEMON_VERSION"]    = GAMEAP_DAEMON_VERSION;
 
@@ -202,7 +221,7 @@ namespace GameAP {
                                          << ". " << strerror(errno);
                     }
 
-                    if (pwd->pw_uid != getgid() && setegid(pwd->pw_gid) == -1) {
+                    if (pwd->pw_gid != getgid() && setegid(pwd->pw_gid) == -1) {
                         GAMEAP_LOG_ERROR << "Failed to set Effective gid (" << pwd->pw_gid
                                          << "). Username: " << username
                                          << ". " << strerror(errno);
