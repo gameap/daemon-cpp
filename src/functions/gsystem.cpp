@@ -42,10 +42,15 @@ namespace GameAP {
                     bp::args={SHELL_PREF, cmd},
                     (bp::std_out & bp::std_err) > out_stream,
                     load_env(),
-                    bp::extend::on_setup=[](auto & exec) {
+                    bp::extend::on_exec_setup=[](auto&) {
                         #ifdef __linux__
-                            setuid(geteuid());
-                            setgid(getegid());
+                            if (geteuid() != getuid()) {
+                                setuid(geteuid());
+                            }
+
+                            if (getegid() != getgid()) {
+                                setgid(getegid());
+                            }
                         #endif
                     }
             );
@@ -80,10 +85,15 @@ namespace GameAP {
                     bp::std_out > out_stream,
                     bp::std_err > err_stream,
                     load_env(),
-                    bp::extend::on_setup=[](auto & exec) {
+                    bp::extend::on_exec_setup=[](auto&) {
                         #ifdef __linux__
-                            setuid(geteuid());
-                            setgid(getegid());
+                            if (geteuid() != getuid()) {
+                                setuid(geteuid());
+                            }
+
+                            if (getegid() != getgid()) {
+                                setgid(getegid());
+                            }
                         #endif
                     }
             );
@@ -113,10 +123,15 @@ namespace GameAP {
                     bp::args={SHELL_PREF, cmd},
                     (bp::std_out & bp::std_err) > out,
                     load_env(),
-                    bp::extend::on_setup=[](auto & exec) {
+                    bp::extend::on_exec_setup=[](auto&) {
                         #ifdef __linux__
-                            setuid(geteuid());
-                            setgid(getegid());
+                            if (geteuid() != getuid()) {
+                                setuid(geteuid());
+                            }
+
+                            if (getegid() != getgid()) {
+                                setgid(getegid());
+                            }
                         #endif
                     }
             );
