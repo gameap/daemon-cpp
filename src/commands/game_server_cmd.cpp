@@ -202,6 +202,9 @@ bool GameServerCmd::update()
 
     this->m_server->installed = Server::SERVER_INSTALL_IN_PROCESS;
 
+    GameServersList& gslist = GameServersList::getInstance();
+    gslist.sync_all();
+
     GAMEAP_LOG_VERBOSE << "Starting installation server...";
     int result = installer.install_server();
 
@@ -245,6 +248,9 @@ bool GameServerCmd::remove()
     }
 
     this->m_server->installed = Server::SERVER_NOT_INSTALLED;
+
+    GameServersList& gslist = GameServersList::getInstance();
+    gslist.sync_all();
 
     return true;
 }
