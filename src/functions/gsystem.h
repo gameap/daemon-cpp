@@ -11,6 +11,10 @@
 #define EXIT_ERROR_CODE             1
 #define EXIT_CRITICAL_ERROR_CODE    2
 
+#define PROCESS_FAIL       -1
+#define PROCESS_SUCCESS     0
+#define PROCESS_WORKING     1
+
 namespace GameAP {
     namespace fs = boost::filesystem;
     namespace bp = boost::process;
@@ -29,7 +33,8 @@ namespace GameAP {
         const fs::path &destination
     );
 
-    void run_process(std::function<void (void)> callback);
+    pid_t run_process(std::function<void (void)> callback);
+    int child_process_status(pid_t pid);
 
     // Shared memory
     void * shared_map_memory(size_t size);

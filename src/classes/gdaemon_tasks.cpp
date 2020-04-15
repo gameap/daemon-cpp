@@ -233,10 +233,14 @@ void GdaemonTasks::start(std::shared_ptr<GdaemonTask> &task)
         );
 
         // TODO: Couroutines here
-        run_process([=]() {
+        pid_t child_pid = run_process([=]() {
             GAMEAP_LOG_VERBOSE << "Executing cmd";
             cmd->execute();
         });
+
+        this->cmd_processes.insert(
+            std::pair<unsigned int, pid_t>(task->id, child_pid)
+        );
 
         task->status = GdaemonTask::WORKING;
         this->api_update_status(task);
@@ -261,8 +265,20 @@ void GdaemonTasks::proceed(std::shared_ptr<GdaemonTask> &task)
     std::string output;
     game_server_cmd->output(&output);
 
-    if (game_server_cmd->is_complete()) {
-        task->status = game_server_cmd->result()
+    int child_status;
+    auto cmd_process_itr = this->cmd_processes.find(task->id);
+
+    if (cmd_process_itr == this->cmd_processes.end()) {
+        child_status = PROCESS_FAIL;
+    } else {
+        child_status = child_process_status(cmd_process_itr->second);
+    }
+
+    bool cmd_completed = game_server_cmd->is_complete()
+                         || (child_status == PROCESS_SUCCESS || child_status == PROCESS_FAIL);
+
+    if (cmd_completed) {
+        task->status = (game_server_cmd->result() && child_status == PROCESS_SUCCESS)
                    ? GdaemonTask::SUCCESS
                    : GdaemonTask::ERROR;
 

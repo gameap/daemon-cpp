@@ -53,6 +53,7 @@ namespace GameAP {
             std::priority_queue<std::shared_ptr<ServerTask>, std::vector<std::shared_ptr<ServerTask>>, CompareTask> tasks;
             std::unordered_set<unsigned int> exists_tasks;
             std::unordered_map<unsigned int, GameServerCmd*> active_cmds;
+            std::unordered_map<unsigned int, pid_t> cmd_processes;
 
             unsigned int cache_ttl;
             std::unordered_map<unsigned int, time_t> last_sync;

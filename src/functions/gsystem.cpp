@@ -224,7 +224,7 @@ namespace GameAP {
         #endif
     }
 
-    void run_process(std::function<void (void)> callback)
+    pid_t run_process(std::function<void (void)> callback)
     {
         #ifdef __linux__
             pid_t pid = fork();
@@ -236,6 +236,27 @@ namespace GameAP {
             if (pid == 0) {
                 callback();
                 exit(0);
+            }
+
+            return pid;
+        #endif
+
+        #ifdef _WIN32
+            // TODO: Not implemented
+        #endif
+    }
+
+    int child_process_status(pid_t pid)
+    {
+        #ifdef __linux__
+            int status;
+
+            if (waitpid(pid, &status, WNOHANG) > 0) {
+                // Process complete
+
+                return WIFEXITED(status) != 0 ? PROCESS_SUCCESS : PROCESS_FAIL;
+            } else {
+                return PROCESS_WORKING;
             }
         #endif
 

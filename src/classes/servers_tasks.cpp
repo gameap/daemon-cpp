@@ -79,10 +79,14 @@ void ServersTasks::start(std::shared_ptr<ServerTask> &task)
     );
 
     // TODO: Couroutines here
-    run_process([=]() {
+    pid_t child_pid = run_process([=]() {
         GAMEAP_LOG_VERBOSE << "Executing cmd";
         game_server_cmd->execute();
     });
+
+    this->cmd_processes.insert(
+            std::pair<unsigned int, pid_t>(task->id, child_pid)
+    );
 }
 
 void ServersTasks::proceed(std::shared_ptr<ServerTask> &task)
@@ -94,8 +98,20 @@ void ServersTasks::proceed(std::shared_ptr<ServerTask> &task)
 
     GameServerCmd* game_server_cmd = this->active_cmds[task->id];
 
-    if (game_server_cmd->is_complete()) {
-        task->status = game_server_cmd->result()
+    int child_status;
+    auto cmd_process_itr = this->cmd_processes.find(task->id);
+
+    if (cmd_process_itr == this->cmd_processes.end()) {
+        child_status = PROCESS_FAIL;
+    } else {
+        child_status = child_process_status(cmd_process_itr->second);
+    }
+
+    bool cmd_completed = game_server_cmd->is_complete()
+                         || (child_status == PROCESS_SUCCESS || child_status == PROCESS_FAIL);
+
+    if (cmd_completed) {
+        task->status = (game_server_cmd->result() && child_status == PROCESS_SUCCESS)
                 ? ServerTask::SUCCESS
                 : ServerTask::FAIL;
 
