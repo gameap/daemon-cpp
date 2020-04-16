@@ -72,9 +72,6 @@ void GameServerCmd::_execute()
             break;
     }
 
-    GameServersList& gslist = GameServersList::getInstance();
-    gslist.sync_all();
-
     this->m_complete = true;
 }
 
@@ -200,21 +197,17 @@ bool GameServerCmd::update()
 
     installer.set_user(this->m_server->user);
 
-    this->m_server->installed = Server::SERVER_INSTALL_IN_PROCESS;
-
-    GameServersList& gslist = GameServersList::getInstance();
-    gslist.sync_all();
-
     GAMEAP_LOG_VERBOSE << "Starting installation server...";
     int result = installer.install_server();
 
     if (result != EXIT_SUCCESS_CODE) {
-        this->m_server->installed = Server::SERVER_NOT_INSTALLED;
+        GAMEAP_LOG_DEBUG_ERROR << "Game server installation error";
         this->m_output->append(installer.get_errors());
         return false;
     }
 
-    this->m_server->installed = Server::SERVER_INSTALLED;
+    GAMEAP_LOG_VERBOSE << "Game server installed successfully";
+
     return true;
 }
 
@@ -246,11 +239,6 @@ bool GameServerCmd::remove()
             return false;
         }
     }
-
-    this->m_server->installed = Server::SERVER_NOT_INSTALLED;
-
-    GameServersList& gslist = GameServersList::getInstance();
-    gslist.sync_all();
 
     return true;
 }
@@ -297,7 +285,6 @@ void GameServerCmd::error_handler(const std::exception & exception)
     this->m_output->append("Unable to install server");
     this->m_output->append(exception.what());
 
-    this->m_server->installed = Server::SERVER_NOT_INSTALLED;
     this->m_complete = true;
     this->m_result = false;
 }

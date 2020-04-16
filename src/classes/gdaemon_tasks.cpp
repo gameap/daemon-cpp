@@ -209,7 +209,7 @@ void GdaemonTasks::start(std::shared_ptr<GdaemonTask> &task)
         cmd = (GameServerCmd*)shared_map_memory(sizeof(GameServerCmd));
         new (cmd) GameServerCmd(GameServerCmd::INSTALL, task->server_id);
     }
-    else if (! strcmp(task->task.c_str(), GAME_SERVER_UPDATE) || ! strcmp(task->task.c_str(), GAME_SERVER_INSTALL)) {
+    else if (! strcmp(task->task.c_str(), GAME_SERVER_UPDATE)) {
         cmd = (GameServerCmd*)shared_map_memory(sizeof(GameServerCmd));
         new (cmd) GameServerCmd(GameServerCmd::UPDATE, task->server_id);
     }
@@ -232,6 +232,8 @@ void GdaemonTasks::start(std::shared_ptr<GdaemonTask> &task)
             std::pair<unsigned int, Cmd*>(task->id, cmd)
         );
 
+        this->before_cmd(task);
+
         // TODO: Couroutines here
         pid_t child_pid = run_process([=]() {
             GAMEAP_LOG_VERBOSE << "Executing cmd";
@@ -250,6 +252,33 @@ void GdaemonTasks::start(std::shared_ptr<GdaemonTask> &task)
         std::string output = "Empty cmd";
         this->api_append_output(task, output);
         this->api_update_status(task);
+    }
+}
+
+void GdaemonTasks::before_cmd(std::shared_ptr<GdaemonTask> &task)
+{
+    GameServersList& gslist = GameServersList::getInstance();
+
+    if (! strcmp(task->task.c_str(), GAME_SERVER_INSTALL) || ! strcmp(task->task.c_str(), GAME_SERVER_UPDATE)) {
+        gslist.set_install_status(task->server_id, Server::SERVER_INSTALL_IN_PROCESS);
+    }
+}
+
+void GdaemonTasks::after_cmd(std::shared_ptr<GdaemonTask> &task)
+{
+    GameServersList& gslist = GameServersList::getInstance();
+
+    if (! strcmp(task->task.c_str(), GAME_SERVER_INSTALL) || ! strcmp(task->task.c_str(), GAME_SERVER_UPDATE)) {
+
+        if (task->status == GdaemonTask::SUCCESS) {
+            gslist.set_install_status(task->server_id, Server::SERVER_INSTALLED);
+        } else if (task->status == GdaemonTask::ERROR || task->status == GdaemonTask::CANCELED) {
+            gslist.set_install_status(task->server_id, Server::SERVER_NOT_INSTALLED);
+        }
+    } else if (! strcmp(task->task.c_str(), GAME_SERVER_DELETE)) {
+        if (task->status == GdaemonTask::SUCCESS) {
+            gslist.set_install_status(task->server_id, Server::SERVER_NOT_INSTALLED);
+        }
     }
 }
 
@@ -281,6 +310,8 @@ void GdaemonTasks::proceed(std::shared_ptr<GdaemonTask> &task)
         task->status = (game_server_cmd->result() && child_status == PROCESS_SUCCESS)
                    ? GdaemonTask::SUCCESS
                    : GdaemonTask::ERROR;
+
+        this->after_cmd(task);
 
         destroy_shared_map_memory((void *)game_server_cmd, sizeof(*game_server_cmd));
         this->active_cmds.erase(task->id);

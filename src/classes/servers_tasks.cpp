@@ -82,6 +82,8 @@ void ServersTasks::start(std::shared_ptr<ServerTask> &task)
         std::pair<unsigned int, GameServerCmd*>(task->id, game_server_cmd)
     );
 
+    this->before_cmd(task);
+
     // TODO: Couroutines here
     pid_t child_pid = run_process([=]() {
         GAMEAP_LOG_VERBOSE << "Executing cmd";
@@ -119,6 +121,8 @@ void ServersTasks::proceed(std::shared_ptr<ServerTask> &task)
                 ? ServerTask::SUCCESS
                 : ServerTask::FAIL;
 
+        this->after_cmd(task);
+
         if (task->status == ServerTask::FAIL) {
             std::string output;
             game_server_cmd->output(&output);
@@ -131,6 +135,47 @@ void ServersTasks::proceed(std::shared_ptr<ServerTask> &task)
         this->sync_to_api(task);
 
         return;
+    }
+}
+
+void ServersTasks::before_cmd(std::shared_ptr<ServerTask> &task)
+{
+    GameServersList& gslist = GameServersList::getInstance();
+
+    switch (task->command) {
+        case GameServerCmd::INSTALL:
+        case GameServerCmd::UPDATE:
+            gslist.set_install_status(task->server_id, Server::SERVER_INSTALL_IN_PROCESS);
+            break;
+        default:
+            // Do nothing
+            break;
+    }
+}
+
+void ServersTasks::after_cmd(std::shared_ptr<ServerTask> &task)
+{
+    GameServersList& gslist = GameServersList::getInstance();
+
+    switch (task->command) {
+        case GameServerCmd::INSTALL:
+        case GameServerCmd::UPDATE:
+
+            if (task->status == ServerTask::SUCCESS) {
+                gslist.set_install_status(task->server_id, Server::SERVER_INSTALLED);
+            } else if (task->status == ServerTask::FAIL) {
+                gslist.set_install_status(task->server_id, Server::SERVER_NOT_INSTALLED);
+            }
+
+            break;
+        case GameServerCmd::DELETE:
+            if (task->status == ServerTask::SUCCESS) {
+                gslist.set_install_status(task->server_id, Server::SERVER_NOT_INSTALLED);
+            }
+            break;
+        default:
+            // Do nothing
+            break;
     }
 }
 

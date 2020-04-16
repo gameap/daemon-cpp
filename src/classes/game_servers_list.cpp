@@ -217,20 +217,30 @@ void GameServersList::start_down_servers()
 
 Server * GameServersList::get_server(ulong server_id)
 {
-    if (servers_list.find(server_id) == servers_list.end()) {
+    if (this->servers_list.find(server_id) == this->servers_list.end()) {
         // Forget cache and try update list
         this->last_updated = 0;
-        if (update_list() == ERROR_STATUS_INT) {
+        if (this->update_list() == ERROR_STATUS_INT) {
             return nullptr;
         }
 
-        if (servers_list.find(server_id) == servers_list.end()) {
+        if (this->servers_list.find(server_id) == this->servers_list.end()) {
             return nullptr;
         }
     }
 
     this->sync_from_api(server_id);
-    return servers_list[server_id].get();
+    return this->servers_list[server_id].get();
+}
+
+void GameServersList::set_install_status(unsigned long server_id, Server::install_status status)
+{
+    if (this->servers_list.find(server_id) == this->servers_list.end()) {
+        return;
+    }
+
+    this->servers_list[server_id]->installed = status;
+    this->sync_all();
 }
 
 void GameServersList::delete_server(ulong server_id)

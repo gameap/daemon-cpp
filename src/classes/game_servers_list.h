@@ -47,6 +47,13 @@ namespace GameAP {
              * @return
              */
             GameServersListStats stats();
+
+            /**
+             * Set server install status (SERVER_NOT_INSTALLED, SERVER_INSTALLED, SERVER_INSTALL_IN_PROCESS)
+             * @param server_id
+             * @param status
+             */
+            void set_install_status(unsigned long server_id, Server::install_status status);
         private:
             std::unordered_map<unsigned long, std::shared_ptr<Server>> servers_list;
 

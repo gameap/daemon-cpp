@@ -100,6 +100,10 @@ namespace GameAP {
              */
             void start(std::shared_ptr<GdaemonTask> &task);
 
+            void before_cmd(std::shared_ptr<GdaemonTask> &task);
+
+            void after_cmd(std::shared_ptr<GdaemonTask> &task);
+
             /**
              * Check tasks command. Update output
              */

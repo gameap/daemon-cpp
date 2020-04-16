@@ -64,6 +64,9 @@ namespace GameAP {
             void start(std::shared_ptr<ServerTask> &task);
             void proceed(std::shared_ptr<ServerTask> &task);
 
+            void before_cmd(std::shared_ptr<ServerTask> &task);
+            void after_cmd(std::shared_ptr<ServerTask> &task);
+
             unsigned char convert_command(const std::string& command);
             void sync_from_api(std::shared_ptr<ServerTask> &task);
             void sync_to_api(std::shared_ptr<ServerTask> &task);
