@@ -263,6 +263,7 @@ int GameServerInstaller::_install_game()
     else if (m_game_source_type == INST_FROM_REMREP) {
         install_result = _install_remrep(_get_game_source());
     } else {
+        _error("Invalid game installation source type");
         install_result = ERROR_STATUS_INT;
     }
 
@@ -284,7 +285,7 @@ int GameServerInstaller::_install_mod()
         install_result = _install_remrep(_get_mod_source());
     }
     else {
-        install_result = ERROR_STATUS_INT;
+        install_result = SUCCESS_STATUS_INT;
     }
 
     return install_result;
@@ -376,6 +377,7 @@ int GameServerInstaller::_install_locrep(const fs::path &path, int type)
     else if (type == INST_TYPE_DIR) {
         return !copy_dir(path, m_server_absolute_path);
     } else {
+        _error("Invalid local repository installation type");
         return ERROR_STATUS_INT;
     }
 }
