@@ -70,6 +70,18 @@ int GameServerInstaller::install_server()
         // Need a retrieve privileges
         privileges_retrieve();
         int result = _exec(after_install_script.string());
+
+#ifdef __linux__
+        if (m_user != "" && getuid() == 0) {
+            _exec(boost::str(
+                    boost::format("chown -R %1% %2%")
+                    % m_user
+                    % m_server_absolute_path.string()
+            ));
+            fs::permissions(m_server_absolute_path, fs::owner_all);
+        }
+#endif
+
         privileges_down(this->m_user);
 
         if (result != EXIT_SUCCESS_CODE) {
@@ -79,16 +91,6 @@ int GameServerInstaller::install_server()
         fs::remove(after_install_script);
     }
 
-#ifdef __linux__
-    if (m_user != "" && getuid() == 0) {
-        _exec(boost::str(
-                boost::format("chown -R %1% %2%")
-                % m_user
-                % m_server_absolute_path.string()
-        ));
-        fs::permissions(m_server_absolute_path, fs::owner_all);
-    }
-#endif
     return SUCCESS_STATUS_INT;
 }
 

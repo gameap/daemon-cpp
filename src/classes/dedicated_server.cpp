@@ -30,6 +30,25 @@ namespace fs = boost::filesystem;
 
 DedicatedServer::DedicatedServer()
 {
+    this->initialized = false;
+
+    unsigned short tries = 3;
+    unsigned int seconds_to_try = 5;
+
+    while (tries > 0) {
+        if (this->init()) {
+            this->initialized = true;
+            break;
+        }
+
+        std::this_thread::sleep_for(std::chrono::seconds(seconds_to_try));
+        seconds_to_try *= 2;
+        tries--;
+    }
+}
+
+bool DedicatedServer::init()
+{
     Config& config = Config::getInstance();
 
     ds_id = config.ds_id;
@@ -138,18 +157,13 @@ DedicatedServer::DedicatedServer()
             script_stop = starter_path + " -t stop -d {dir} -u {user}";
         }
 
-        //if (script_status.empty()) {
-        //    script_status = "gameap-starter -t status -d {dir} -u {user}";
-        //}
-
-
     } catch (Rest::RestapiException &exception) {
-        // Try later
         GAMEAP_LOG_ERROR << exception.what();
+        return false;
     }
-}
 
-// ---------------------------------------------------------------------
+    return true;
+}
 
 int DedicatedServer::stats_process()
 {
@@ -261,8 +275,6 @@ int DedicatedServer::stats_process()
 
     return 0;
 }
-
-// ---------------------------------------------------------------------
 
 int DedicatedServer::get_net_load(std::map<std::string, netstats> &ifstats)
 {
@@ -395,15 +407,11 @@ int DedicatedServer::get_net_load(std::map<std::string, netstats> &ifstats)
     return 0;
 }
 
-// ---------------------------------------------------------------------
-
 int DedicatedServer::get_ping(ushort &ping)
 {
     ping = 0;
     return ping;
 }
-
-// ---------------------------------------------------------------------
 
 int DedicatedServer::get_cpu_load(std::vector<float> &cpu_percent)
 {

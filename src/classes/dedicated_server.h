@@ -87,70 +87,77 @@ struct ds_stats {
 };
 
 class DedicatedServer {
-public:
-	static DedicatedServer& getInstance() {
-		static DedicatedServer instance;
-		return instance;
-	}
+    public:
+        static DedicatedServer& getInstance() {
+            static DedicatedServer instance;
+            return instance;
+        }
 
-	int stats_process();
-	int update_db();
+        int stats_process();
+        int update_db();
 
-	int get_net_load(std::map<std::string, netstats> &ifstat);
-	int get_cpu_load(std::vector<float> &cpu_percent);
+        int get_net_load(std::map<std::string, netstats> &ifstat);
+        int get_cpu_load(std::vector<float> &cpu_percent);
 
-	std::string get_work_path();
-	std::string get_steamcmd_path();
+        std::string get_work_path();
+        std::string get_steamcmd_path();
 
-	int get_ping(ushort &ping);
+        int get_ping(ushort &ping);
 
-	std::string get_script_cmd(ushort script);
-private:
-    ushort cpu_count;
-    uintmax_t ram_total;
-    std::map<std::string, uintmax_t> drv_space;
+        std::string get_script_cmd(ushort script);
 
-    std::vector<ds_stats> stats;
-    std::string ds_ip;
+        bool is_initialized() {
+            return this->initialized;
+        }
+    private:
+        bool initialized;
+        ushort cpu_count;
+        uintmax_t ram_total;
+        std::map<std::string, uintmax_t> drv_space;
 
-    time_t last_stats_update;
-    time_t last_db_update{};
+        std::vector<ds_stats> stats;
+        std::string ds_ip;
 
-    ushort stats_update_period;
-    ushort db_update_period;
+        time_t last_stats_update;
+        time_t last_db_update{};
 
-    time_t last_cpustat_time;
-    std::map<ushort, ulong> last_cpustat[4];
+        ushort stats_update_period;
+        ushort db_update_period;
 
-    time_t last_ifstat_time;
-    std::map<std::string, netstats> last_ifstats;
+        time_t last_cpustat_time;
+        std::map<ushort, ulong> last_cpustat[4];
 
-    std::vector<std::string> interfaces;
-    std::vector<std::string> drives;
+        time_t last_ifstat_time;
+        std::map<std::string, netstats> last_ifstats;
 
-    ulong ds_id;
+        std::vector<std::string> interfaces;
+        std::vector<std::string> drives;
 
-	std::string work_path;
-	std::string steamcmd_path;
+        ulong ds_id;
 
-    ushort prefer_installation_method;
-    std::string script_install;
-    std::string script_reinstall;
-    std::string script_update;
-    std::string script_start;
-    std::string script_pause;
-    std::string script_unpause;
-    std::string script_stop;
-    std::string script_kill;
-    std::string script_restart;
-    std::string script_status;
-    std::string script_get_console;
-    std::string script_send_command;
-    std::string script_delete;
+        std::string work_path;
+        std::string steamcmd_path;
 
-    DedicatedServer();
-    DedicatedServer( const DedicatedServer&);
-    DedicatedServer& operator=( DedicatedServer& );
+        ushort prefer_installation_method;
+        std::string script_install;
+        std::string script_reinstall;
+        std::string script_update;
+        std::string script_start;
+        std::string script_pause;
+        std::string script_unpause;
+        std::string script_stop;
+        std::string script_kill;
+        std::string script_restart;
+        std::string script_status;
+        std::string script_get_console;
+        std::string script_send_command;
+        std::string script_delete;
+
+        bool init();
+
+        DedicatedServer();
+        DedicatedServer( const DedicatedServer&);
+        DedicatedServer& operator=( DedicatedServer& );
 };
 
 /* End namespace GameAP */

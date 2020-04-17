@@ -21,8 +21,19 @@
 
 using namespace GameAP;
 
+void wait_ds_init()
+{
+    DedicatedServer &deds = DedicatedServer::getInstance();
+
+    while (! deds.is_initialized()) {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+}
+
 void check_tasks()
 {
+    wait_ds_init();
+
     // TODO: Coroutines here
     std::thread server_tasks([&]() {
         ServersTasks &servers_tasks = ServersTasks::getInstance();
@@ -30,7 +41,7 @@ void check_tasks()
         while (status_active) {
             servers_tasks.update();
 
-            while (!servers_tasks.empty()) {
+            if (!servers_tasks.empty()) {
                 servers_tasks.run_next();
             }
 
@@ -44,9 +55,9 @@ void check_tasks()
     while (status_active) {
         gdaemon_tasks.update();
 
-        while (!gdaemon_tasks.empty()) {
+
+        if (!gdaemon_tasks.empty()) {
             gdaemon_tasks.run_next();
-            std::this_thread::sleep_for(std::chrono::seconds(5));
         }
 
         std::this_thread::sleep_for(std::chrono::seconds(5));
@@ -97,6 +108,8 @@ int run_daemon()
 
     // Run Daemon Server
     std::thread daemon_server([&]() {
+        wait_ds_init();
+
         int server_exit_status;
 
         while (status_active) {
@@ -114,6 +127,18 @@ int run_daemon()
     } else {
         DedicatedServer &deds = DedicatedServer::getInstance();
         GameServersList &gslist = GameServersList::getInstance();
+
+        if (! deds.is_initialized()) {
+            GAMEAP_LOG_FATAL << "Failed to initilize dedicated server";
+            status_active = false;
+            exit(2);
+        }
+
+        if (deds.get_work_path().empty()) {
+            GAMEAP_LOG_FATAL << "Invalid dedicated server settings. Empty work path";
+            status_active = false;
+            exit(2);
+        }
 
         if (!boost::filesystem::exists(deds.get_work_path())) {
             boost::filesystem::create_directory(deds.get_work_path());

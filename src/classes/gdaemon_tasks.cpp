@@ -311,6 +311,11 @@ void GdaemonTasks::proceed(std::shared_ptr<GdaemonTask> &task)
                    ? GdaemonTask::SUCCESS
                    : GdaemonTask::ERROR;
 
+        if (child_status != PROCESS_SUCCESS) {
+            output.append("Child process failure");
+            GAMEAP_LOG_ERROR << "Child process failure";
+        }
+
         this->after_cmd(task);
 
         destroy_shared_map_memory((void *)game_server_cmd, sizeof(*game_server_cmd));

@@ -121,6 +121,10 @@ void ServersTasks::proceed(std::shared_ptr<ServerTask> &task)
                 ? ServerTask::SUCCESS
                 : ServerTask::FAIL;
 
+        if (child_status != PROCESS_SUCCESS) {
+            GAMEAP_LOG_ERROR << "Child process failure";
+        }
+
         this->after_cmd(task);
 
         if (task->status == ServerTask::FAIL) {
