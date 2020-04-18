@@ -14,6 +14,8 @@ namespace GameAP {
                 m_complete = false;
             };
 
+            void destroy() { };
+
             // Commands
             static constexpr unsigned char CMD_EXECUTE = 1;
 

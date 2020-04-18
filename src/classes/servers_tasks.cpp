@@ -54,7 +54,9 @@ void ServersTasks::run_next()
         }
 
         Cmd* game_server_cmd = this->active_cmds[task->id];
-        delete game_server_cmd;
+        
+        game_server_cmd->destroy();
+        destroy_shared_map_memory((void *)game_server_cmd, sizeof(*game_server_cmd));
 
         this->active_cmds.erase(task->id);
         this->last_sync.erase(task->id);
@@ -76,7 +78,8 @@ void ServersTasks::start(std::shared_ptr<ServerTask> &task)
 {
     task->status = ServerTask::WORKING;
 
-    GameServerCmd* game_server_cmd = new GameServerCmd(task->command, task->server_id);
+    GameServerCmd* game_server_cmd = (GameServerCmd*)shared_map_memory(sizeof(GameServerCmd));
+    new (game_server_cmd) GameServerCmd(GameServerCmd::RESTART, task->server_id);
 
     this->active_cmds.insert(
         std::pair<unsigned int, GameServerCmd*>(task->id, game_server_cmd)

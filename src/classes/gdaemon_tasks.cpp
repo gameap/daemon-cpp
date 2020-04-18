@@ -318,6 +318,7 @@ void GdaemonTasks::proceed(std::shared_ptr<GdaemonTask> &task)
 
         this->after_cmd(task);
 
+        game_server_cmd->destroy();
         destroy_shared_map_memory((void *)game_server_cmd, sizeof(*game_server_cmd));
         this->active_cmds.erase(task->id);
 

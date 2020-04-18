@@ -32,6 +32,11 @@ namespace GameAP {
 
             ~GameServerCmd()
             {
+                this->destroy();
+            }
+
+            void destroy()
+            {
                 if (this->m_output != nullptr) {
                     destroy_shared_map_memory((void*)this->m_output.get(), sizeof(IpcCmdOutput));
                 }

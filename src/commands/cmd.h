@@ -56,6 +56,11 @@ namespace GameAP {
                 this->m_options.insert(std::pair<char, std::string>(name, value));
             }
 
+            /**
+             * Destructor
+             */
+            virtual void destroy() = 0;
+
         protected:
             /**
              * Current command
