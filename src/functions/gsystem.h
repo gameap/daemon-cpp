@@ -7,6 +7,8 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/filesystem.hpp>
 
+#include "typedefs.h"
+
 #define EXIT_SUCCESS_CODE           0
 #define EXIT_ERROR_CODE             1
 #define EXIT_CRITICAL_ERROR_CODE    2
@@ -32,6 +34,10 @@ namespace GameAP {
         const fs::path &source,
         const fs::path &destination
     );
+
+#ifdef _WIN32
+    extern std::unordered_map<unsigned int, std::thread> functions_gsystem_threads;
+#endif
 
     pid_t run_process(std::function<void (void)> callback);
     int child_process_status(pid_t pid);

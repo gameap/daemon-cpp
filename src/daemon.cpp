@@ -167,5 +167,11 @@ int run_daemon()
         daemon_server.join();
     }
 
+#ifdef _WIN32
+    for (auto & thread : functions_gsystem_threads) {
+        thread.second.join();
+    }
+#endif
+
     return 0;
 }

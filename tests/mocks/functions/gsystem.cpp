@@ -79,5 +79,102 @@ namespace GameAP {
         return true;
     }
 
+#ifdef _WIN32
+    std::unordered_map<unsigned int, std::thread> functions_gsystem_threads;
+#endif
+
+    pid_t run_process(std::function<void(void)> callback)
+    {
+#ifdef __linux__
+        pid_t pid = fork();
+
+        if (pid == -1) {
+            GAMEAP_LOG_ERROR << "Fork failed\n";
+        }
+
+        if (pid == 0) {
+            callback();
+            exit(0);
+        }
+
+        return pid;
+#endif
+
+#ifdef _WIN32
+        std::thread thread(callback);
+
+        pid_t thread_hash = std::hash<std::thread::id>{}(thread.get_id());
+
+        functions_gsystem_threads.insert(
+            std::pair<unsigned int, std::thread>(thread_hash, std::move(thread))
+        );
+
+        return thread_hash;
+#endif
+    }
+
+    int child_process_status(pid_t pid)
+    {
+#ifdef __linux__
+        int status;
+
+        if (waitpid(pid, &status, WNOHANG) > 0) {
+            // Process complete
+
+            return WIFEXITED(status) != 0 ? PROCESS_SUCCESS : PROCESS_FAIL;
+        }
+        else {
+            return PROCESS_WORKING;
+        }
+#endif
+
+#ifdef _WIN32
+        auto itr = functions_gsystem_threads.find(pid);
+
+        if (itr == functions_gsystem_threads.end()) {
+            return PROCESS_SUCCESS;
+        }
+
+        if (itr->second.joinable()) {
+            return PROCESS_WORKING;
+        }
+
+        functions_gsystem_threads.erase(itr);
+
+        return PROCESS_SUCCESS;
+#endif
+    }
+
+    void* shared_map_memory(size_t size)
+    {
+#ifdef __linux__
+        void* addr = mmap(nullptr, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+
+        if (addr == MAP_FAILED) {
+            GAMEAP_LOG_ERROR << "Unable to create shared map memory\n";
+            return nullptr;
+        }
+
+        return addr;
+#endif
+
+#ifdef _WIN32
+        return malloc(size);
+#endif
+    }
+
+    void destroy_shared_map_memory(void* ptr, size_t size)
+    {
+#ifdef __linux__
+        if (munmap(ptr, size) == -1) {
+            GAMEAP_LOG_ERROR << "Unable to destroy shared map memory\n";
+        }
+#endif
+
+#ifdef _WIN32
+        free(ptr);
+#endif
+    }
+
     // End GameAP namespace
 }

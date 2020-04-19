@@ -41,9 +41,9 @@ namespace GameAP {
                     bp::search_path(PROC_SHELL),
                     bp::args={SHELL_PREF, cmd},
                     (bp::std_out & bp::std_err) > out_stream,
-                    load_env(),
-                    bp::extend::on_exec_setup=[](auto&) {
-                        #ifdef __linux__
+                    load_env()
+#ifdef __linux__
+                    ,bp::extend::on_exec_setup=[](auto&) {
                             if (geteuid() != getuid()) {
                                 setreuid(geteuid(), geteuid());
                             }
@@ -51,8 +51,8 @@ namespace GameAP {
                             if (getegid() != getgid()) {
                                 setregid(getegid(), getegid());
                             }
-                        #endif
                     }
+#endif
             );
 
             std::string s;
@@ -84,18 +84,18 @@ namespace GameAP {
                     bp::args={SHELL_PREF, cmd},
                     bp::std_out > out_stream,
                     bp::std_err > err_stream,
-                    load_env(),
-                    bp::extend::on_exec_setup=[](auto&) {
-                        #ifdef __linux__
-                            if (geteuid() != getuid()) {
-                                setreuid(geteuid(), geteuid());
-                            }
-
-                            if (getegid() != getgid()) {
-                                setregid(getegid(), getegid());
-                            }
-                        #endif
+                    load_env()
+#ifdef __linux__
+                ,bp::extend::on_exec_setup = [](auto&) {
+                    if (geteuid() != getuid()) {
+                        setreuid(geteuid(), geteuid());
                     }
+
+                    if (getegid() != getgid()) {
+                        setregid(getegid(), getegid());
+                    }
+                }
+#endif
             );
 
             std::string s;
@@ -122,18 +122,18 @@ namespace GameAP {
                     bp::search_path(PROC_SHELL),
                     bp::args={SHELL_PREF, cmd},
                     (bp::std_out & bp::std_err) > out,
-                    load_env(),
-                    bp::extend::on_exec_setup=[](auto&) {
-                        #ifdef __linux__
-                            if (geteuid() != getuid()) {
-                                setreuid(geteuid(), geteuid());
-                            }
+                    load_env()
+#ifdef __linux__
+                    ,bp::extend::on_exec_setup = [](auto&) {
+                        if (geteuid() != getuid()) {
+                            setreuid(geteuid(), geteuid());
+                        }
 
-                            if (getegid() != getgid()) {
-                                setregid(getegid(), getegid());
-                            }
-                        #endif
+                        if (getegid() != getgid()) {
+                            setregid(getegid(), getegid());
+                        }
                     }
+#endif
             );
 
             return child_proccess;
@@ -258,6 +258,10 @@ namespace GameAP {
         #endif
     }
 
+#ifdef _WIN32
+    std::unordered_map<unsigned int, std::thread> functions_gsystem_threads;
+#endif
+
     pid_t run_process(std::function<void (void)> callback)
     {
         #ifdef __linux__
@@ -276,7 +280,15 @@ namespace GameAP {
         #endif
 
         #ifdef _WIN32
-            // TODO: Not implemented
+            std::thread thread(callback);
+        
+            pid_t thread_hash = std::hash<std::thread::id>{}(thread.get_id());
+
+            functions_gsystem_threads.insert(
+                std::pair<unsigned int, std::thread>(thread_hash, std::move(thread))
+            );
+
+            return thread_hash;
         #endif
     }
 
@@ -295,7 +307,19 @@ namespace GameAP {
         #endif
 
         #ifdef _WIN32
-            // TODO: Not implemented
+            auto itr = functions_gsystem_threads.find(pid);
+
+            if (itr == functions_gsystem_threads.end()) {
+                return PROCESS_SUCCESS;
+            }
+
+            if (itr->second.joinable()) {
+                return PROCESS_WORKING;
+            }
+
+            functions_gsystem_threads.erase(itr);
+
+            return PROCESS_SUCCESS;
         #endif
     }
 
@@ -313,7 +337,7 @@ namespace GameAP {
         #endif
 
         #ifdef _WIN32
-                // TODO: Not implemented
+            return malloc(size);
         #endif
     }
 
@@ -326,7 +350,7 @@ namespace GameAP {
         #endif
 
         #ifdef _WIN32
-                // TODO: Not implemented
+            free(ptr);
         #endif
     }
 
