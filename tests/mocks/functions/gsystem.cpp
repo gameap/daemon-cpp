@@ -4,6 +4,7 @@
 #include "consts.h"
 
 #ifdef __linux__
+#include <sys/mman.h>
 #include <pwd.h>
 #endif
 
