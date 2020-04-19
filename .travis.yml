@@ -1,6 +1,6 @@
 language: cpp
 sudo: required
-dist: trusty
+dist: bionic
 compiler:
 - g++
 os:
@@ -12,7 +12,7 @@ addons:
     sources:
       - ubuntu-toolchain-r-test
       - sourceline: 'ppa:mhier/libboost-latest'
-      - sourceline: 'deb http://packages.gameap.ru/ubuntu trusty main'
+      - sourceline: 'deb http://packages.gameap.ru/ubuntu bionic main'
         key_url: 'http://packages.gameap.ru/gameap-rep.gpg.key'
     packages:
       - cmake
