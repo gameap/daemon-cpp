@@ -5,7 +5,7 @@ compiler:
 - g++
 os:
 - linux
-script: cmake . && cmake --build .
+script: cmake . && cmake --build . && ctest
 addons:
   apt:
     update: true
