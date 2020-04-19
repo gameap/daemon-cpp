@@ -33,7 +33,6 @@ else()
     set(SOURCES_CPP ${SOURCES_CPP} ../status_vars.cpp)
 endif()
 
-
 add_executable(run_unit_tests
         ${SOURCES_CPP} ${GDAEMON_SOURCES_CPP}
         state_test.cpp
@@ -61,6 +60,8 @@ target_link_libraries(run_unit_tests
         gtest_main
         gmock_main
 )
+
+target_compile_definitions(run_unit_tests PRIVATE IPC_OUTPUT_BUFFER_SIZE=100)
 
 add_test(NAME state_test COMMAND run_unit_tests)
 add_test(NAME cmd_output COMMAND run_unit_tests)
