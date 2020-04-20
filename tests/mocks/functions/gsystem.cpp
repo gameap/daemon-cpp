@@ -98,17 +98,15 @@ namespace GameAP {
 #endif
 
 #ifdef _WIN32
-        gsystem_thread* gsthread = new gsystem_thread;
+        gsystem_thread * gsthread = new gsystem_thread;
         gsthread->result = -1;
 
-        std::thread thread([&callback, &gsthread]() {
+        gsthread->thread = std::thread([&callback, &gsthread]() {
             callback();
             gsthread->result = 0;
-            });
+        });
 
-        gsthread->thread = std::move(thread);
-
-        pid_t thread_hash = std::hash<std::thread::id>{}(thread.get_id());
+        pid_t thread_hash = std::hash<std::thread::id>{}(gsthread->thread.get_id());
 
         functions_gsystem_threads.insert(
             std::pair<unsigned int, gsystem_thread*>(thread_hash, gsthread)
