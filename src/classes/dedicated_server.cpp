@@ -157,11 +157,9 @@ bool DedicatedServer::init()
             script_stop = starter_path + " -t stop -d {dir} -u {user}";
         }
 
-        #ifdef __linux__
-                if (script_status.empty()) {
-                    script_status = starter_path + " -t status -d {dir} -u {user}";
-                }
-        #endif
+        if (script_status.empty()) {
+            script_status = starter_path + " -t status -d {dir} -u {user}";
+        }
 
     } catch (Rest::RestapiException &exception) {
         GAMEAP_LOG_ERROR << exception.what();
