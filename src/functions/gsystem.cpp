@@ -5,6 +5,7 @@
 
 #include "log.h"
 #include "gsystem.h"
+#include "gstring.h"
 #include "consts.h"
 
 #ifdef __linux__
