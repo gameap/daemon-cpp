@@ -250,7 +250,10 @@ void GameServerCmd::replace_shortcodes(std::string &command)
     fs::path work_path = dedicatedServer.get_work_path();
     work_path /= this->m_server->dir;
 
-    command = str_replace("{dir}", work_path.string(), command);
+    std::string str_work_path = work_path.string();
+    fix_path_slashes(str_work_path);
+
+    command = str_replace("{dir}", str_work_path, command);
 
     command = str_replace("{uuid}", this->m_server->uuid, command);
     command = str_replace("{uuid_short}", this->m_server->uuid_short, command);

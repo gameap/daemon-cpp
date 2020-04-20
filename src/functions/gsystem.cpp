@@ -363,5 +363,16 @@ namespace GameAP {
         #endif
     }
 
+    void fix_path_slashes(std::string &path)
+    {
+        #ifdef _WIN32
+            std::replace(path.begin(), path.end(), '/', '\\');
+            path = str_replace("\\\\", "\\", path);
+        #else
+            std::replace(path.begin(), path.end(), '\\', '/');
+            path = str_replace("//", "/", path);
+        #endif
+    }
+
     // End GameAP namespace
 }
