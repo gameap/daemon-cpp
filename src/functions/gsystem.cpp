@@ -323,7 +323,7 @@ namespace GameAP {
             }
 
             if (itr->second->result == 0) {
-                delete itr->second;
+                delete (void*)itr->second;
                 functions_gsystem_threads.erase(itr);
                 return PROCESS_SUCCESS;
             }
