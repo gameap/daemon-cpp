@@ -266,7 +266,7 @@ void ServersTasks::sync_to_api(std::shared_ptr<ServerTask> &task) {
     time_t time_diff = std::stoi(state.get(STATE_PANEL_TIMEDIFF));
 
     std::time_t time = task->execute_date - time_diff;
-    std::tm *ptm = std::localtime(&time);
+    std::tm *ptm = std::gmtime(&time);
     char buffer[32];
     std::strftime(buffer, 32, "%F %T", ptm);
 

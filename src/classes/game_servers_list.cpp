@@ -161,7 +161,7 @@ void GameServersList::sync_all()
         time_t last_process_check = server.second->last_process_check - time_diff;
 
         if (last_process_check > 0) {
-            std::tm *ptm = std::localtime(&last_process_check);
+            std::tm *ptm = std::gmtime(&last_process_check);
             char buffer[32];
             std::strftime(buffer, 32, "%F %T", ptm);
 
