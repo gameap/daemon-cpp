@@ -285,7 +285,7 @@ namespace GameAP {
 
             GAMEAP_LOG_VERBOSE << "Running thread";
 
-            gsthread->thread = std::thread([&callback, &gsthread]() {
+            gsthread->thread = std::thread([=]() {
                 callback();
                 gsthread->result = 0;
             });

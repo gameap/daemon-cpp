@@ -101,7 +101,7 @@ namespace GameAP {
         gsystem_thread * gsthread = new gsystem_thread;
         gsthread->result = -1;
 
-        gsthread->thread = std::thread([&callback, &gsthread]() {
+        gsthread->thread = std::thread([=]() {
             callback();
             gsthread->result = 0;
         });
