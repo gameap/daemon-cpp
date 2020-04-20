@@ -1,6 +1,7 @@
 #include <string>
 
 #include "functions/gsystem.h"
+#include "functions/gstring.h"
 #include "consts.h"
 
 #ifdef __linux__
