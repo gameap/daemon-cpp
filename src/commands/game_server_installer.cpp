@@ -5,7 +5,7 @@
 #include "config.h"
 
 #include "log.h"
-#include "dedicated_server.h"
+#include "classes/dedicated_server.h"
 
 #ifdef __linux__
 #define STEAMCMD "steamcmd.sh"
@@ -24,9 +24,24 @@ namespace bp = ::boost::process;
  */
 int GameServerInstaller::install_server()
 {
+    GAMEAP_LOG_VERBOSE << "Installation information. "
+        << " m_server_absolute_path: "   << m_server_absolute_path
+        << " m_steam_app_id: "           << m_steam_app_id
+        << " m_steam_app_set_config: "   << m_steam_app_set_config
+        << " m_game_localrep: "          << m_game_localrep
+        << " m_game_remrep: "            << m_game_remrep
+        << " m_mod_localrep: "           << m_mod_localrep
+        << " m_mod_remrep: "             << m_mod_remrep;
+
     if (_detect_sources() == ERROR_STATUS_INT) {
         return ERROR_STATUS_INT;
     }
+
+    GAMEAP_LOG_VERBOSE << "Detect information. "
+        << " m_game_source_type: "   << m_game_source_type
+        << " m_mod_source_type: "    << m_mod_source_type
+        << " m_game_type: "          << m_game_type
+        << " m_mod_type: "           << m_mod_type;
 
     if (!fs::exists(m_server_absolute_path)) {
         fs::create_directories(m_server_absolute_path);
@@ -51,7 +66,23 @@ int GameServerInstaller::install_server()
     fs::path after_install_script = m_server_absolute_path / AFTER_INSTALL_SCRIPT;
 
     if (fs::exists(after_install_script)) {
+
+        // Need a retrieve privileges
+        privileges_retrieve();
         int result = _exec(after_install_script.string());
+
+#ifdef __linux__
+        if (m_user != "" && getuid() == 0) {
+            _exec(boost::str(
+                    boost::format("chown -R %1% %2%")
+                    % m_user
+                    % m_server_absolute_path.string()
+            ));
+            fs::permissions(m_server_absolute_path, fs::owner_all);
+        }
+#endif
+
+        privileges_down(this->m_user);
 
         if (result != EXIT_SUCCESS_CODE) {
             return ERROR_STATUS_INT;
@@ -60,16 +91,6 @@ int GameServerInstaller::install_server()
         fs::remove(after_install_script);
     }
 
-#ifdef __linux__
-    if (m_user != "" && getuid() == 0) {
-        _exec(boost::str(
-                boost::format("chown -R %1% %2%")
-                % m_user
-                % m_server_absolute_path.string()
-        ));
-        fs::permissions(m_server_absolute_path, fs::owner_all);
-    }
-#endif
     return SUCCESS_STATUS_INT;
 }
 
@@ -90,7 +111,7 @@ int GameServerInstaller::install_server()
 int GameServerInstaller::_detect_sources()
 {
     bool game_source_detected = false;
-    while (!game_source_detected) {
+    while (! game_source_detected) {
         _detect_game_source();
 
         if (m_game_source_type == INST_NO_SOURCE) {
@@ -98,7 +119,7 @@ int GameServerInstaller::_detect_sources()
             return ERROR_STATUS_INT;
         }
 
-        if ((m_game_source_type == INST_FROM_LOCREP || m_game_source_type == INST_FROM_REMREP)
+        if (m_game_source_type == INST_FROM_LOCREP
             && _detect_localrep_type(_get_game_source()) == INST_TYPE_INVALID
         ) {
             m_ignored_game_source.insert(m_game_source_type);
@@ -136,16 +157,16 @@ void GameServerInstaller::_detect_game_source()
 
     std::string steamcmd_fullpath = steamcmd_path + "/" + STEAMCMD;
 
-    if (!m_game_localrep.empty()
+    if (! m_game_localrep.empty()
         && m_ignored_game_source.find(INST_FROM_LOCREP) == m_ignored_game_source.end()
     ) {
         m_game_source_type = INST_FROM_LOCREP;
-    } else if (!m_game_remrep.empty()
+    } else if (! m_game_remrep.empty()
                && m_ignored_game_source.find(INST_FROM_REMREP) == m_ignored_game_source.end()
     ) {
         m_game_source_type = INST_FROM_REMREP;
-    } else if (!m_steam_app_id.empty()
-               && !steamcmd_path.empty()
+    } else if (m_steam_app_id > 0
+               && ! steamcmd_path.empty()
                && m_ignored_game_source.find(INST_FROM_STEAM) == m_ignored_game_source.end()
     ) {
         m_game_source_type = INST_FROM_STEAM;
@@ -154,10 +175,10 @@ void GameServerInstaller::_detect_game_source()
 
 void GameServerInstaller::_detect_mod_source()
 {
-    if (!m_mod_localrep.empty()) {
+    if (! m_mod_localrep.empty()) {
         m_mod_source_type = INST_FROM_LOCREP;
     }
-    else if (!m_mod_remrep.empty()) {
+    else if (! m_mod_remrep.empty()) {
         m_mod_source_type = INST_FROM_REMREP;
     }
     else {
@@ -242,6 +263,7 @@ int GameServerInstaller::_install_game()
     else if (m_game_source_type == INST_FROM_REMREP) {
         install_result = _install_remrep(_get_game_source());
     } else {
+        _error("Invalid game installation source type");
         install_result = ERROR_STATUS_INT;
     }
 
@@ -263,7 +285,7 @@ int GameServerInstaller::_install_mod()
         install_result = _install_remrep(_get_mod_source());
     }
     else {
-        install_result = ERROR_STATUS_INT;
+        install_result = SUCCESS_STATUS_INT;
     }
 
     return install_result;
@@ -355,6 +377,7 @@ int GameServerInstaller::_install_locrep(const fs::path &path, int type)
     else if (type == INST_TYPE_DIR) {
         return !copy_dir(path, m_server_absolute_path);
     } else {
+        _error("Invalid local repository installation type");
         return ERROR_STATUS_INT;
     }
 }
@@ -466,6 +489,12 @@ int GameServerInstaller::_exec(const std::string &command, bool enable_append)
     }
 
     return exit_code;
+}
+
+void GameServerInstaller::set_user(const std::string &user)
+{
+    this->m_user = user;
+    privileges_down(user);
 }
 
 int GameServerInstaller::_exec(const std::string &command)

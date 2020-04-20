@@ -1,5 +1,5 @@
 set(SOURCES_CPP
-        mocks/config_mock.cpp
+        ../mocks/config_mock.cpp
         ${CMAKE_HOME_DIRECTORY}/src/state.cpp
         ${CMAKE_HOME_DIRECTORY}/src/daemon.cpp
         ${CMAKE_HOME_DIRECTORY}/src/daemon_server.cpp
@@ -7,12 +7,14 @@ set(SOURCES_CPP
         ${CMAKE_HOME_DIRECTORY}/src/functions/gsystem.cpp
         ${CMAKE_HOME_DIRECTORY}/src/classes/dedicated_server.cpp
         ${CMAKE_HOME_DIRECTORY}/src/classes/game_servers_list.cpp
-        ${CMAKE_HOME_DIRECTORY}/src/classes/game_server.cpp
-        ${CMAKE_HOME_DIRECTORY}/src/classes/game_server_installer.cpp
-        ${CMAKE_HOME_DIRECTORY}/src/classes/cmd_output.cpp
-        ${CMAKE_HOME_DIRECTORY}/src/classes/task_list.cpp
-        ${CMAKE_HOME_DIRECTORY}/src/classes/tasks.cpp
-        mocks/restapi_mock.cpp
+        ${CMAKE_HOME_DIRECTORY}/src/commands/game_server_installer.cpp
+        ${CMAKE_HOME_DIRECTORY}/src/commands/game_server_cmd.cpp
+        ${CMAKE_HOME_DIRECTORY}/src/commands/dedicated_server_cmd.cpp
+        ${CMAKE_HOME_DIRECTORY}/src/commands/output/cmd_output.cpp
+        ${CMAKE_HOME_DIRECTORY}/src/commands/output/ipc_cmd_output.cpp
+        ${CMAKE_HOME_DIRECTORY}/src/classes/servers_tasks.cpp
+        ${CMAKE_HOME_DIRECTORY}/src/classes/gdaemon_tasks.cpp
+        ../mocks/restapi_mock.cpp
         ${CMAKE_HOME_DIRECTORY}/src/functions/auth.cpp
         ${CMAKE_HOME_DIRECTORY}/src/components/server/commands_component.cpp
         ${CMAKE_HOME_DIRECTORY}/src/components/server/files_component.cpp
@@ -22,12 +24,13 @@ set(SOURCES_CPP
 if(UNIX)
     link_directories(${CMAKE_CURRENT_SOURCE_DIR}/libs)
     set(SOURCES_CPP ${SOURCES_CPP} ${CMAKE_HOME_DIRECTORY}/src/status.cpp)
+else()
+    set(SOURCES_CPP ${SOURCES_CPP} ../status_vars.cpp)
 endif()
 
 add_executable(run_functional_tests
         ${SOURCES_CPP} ${GDAEMON_SOURCES_CPP}
         common.cpp
-        tasks.cpp
 )
 
 target_link_libraries(run_functional_tests

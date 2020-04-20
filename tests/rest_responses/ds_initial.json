@@ -1,0 +1,18 @@
+{
+    "work_path": "/srv/gameap",
+    "steamcmd_path": "/srv/gameap/steamcmd",
+    "prefer_install_method": "auto",
+    "script_install": null,
+    "script_reinstall": null,
+    "script_update": null,
+    "script_start": null,
+    "script_pause": null,
+    "script_unpause": null,
+    "script_stop": null,
+    "script_kill": null,
+    "script_restart": null,
+    "script_status": null,
+    "script_get_console": null,
+    "script_send_command": null,
+    "script_delete": null
+}

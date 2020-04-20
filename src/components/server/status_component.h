@@ -33,7 +33,7 @@ private:
     void do_write();
 
     void cmd_process();
-    void response_msg(unsigned int snum, const char * sdesc, bool write);
+    void response_msg(unsigned int snum, const char * sdesc);
 };
 
 

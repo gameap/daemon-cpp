@@ -143,11 +143,13 @@ set(SOURCES_CPP
         functions/gsystem.cpp
         classes/dedicated_server.cpp
         classes/game_servers_list.cpp
-        classes/game_server.cpp
-        classes/game_server_installer.cpp
-        classes/cmd_output.cpp
-        classes/task_list.cpp
-        classes/tasks.cpp
+        commands/game_server_installer.cpp
+        commands/game_server_cmd.cpp
+        commands/dedicated_server_cmd.cpp
+        commands/output/cmd_output.cpp
+        commands/output/ipc_cmd_output.cpp
+        classes/servers_tasks.cpp
+        classes/gdaemon_tasks.cpp
         functions/restapi.cpp
         functions/auth.cpp
         components/server/commands_component.cpp

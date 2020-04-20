@@ -19,5 +19,7 @@ void CmdOutput::get(std::string *str_out)
 
 void CmdOutput::clear()
 {
+    m_mutex.lock();
     m_output->clear();
+    m_mutex.unlock();
 }

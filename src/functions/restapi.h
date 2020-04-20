@@ -10,7 +10,7 @@
 #include <json/json.h>
 
 
-namespace Gameap {
+namespace GameAP {
 
     class Rest {
     public:

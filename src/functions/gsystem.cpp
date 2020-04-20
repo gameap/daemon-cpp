@@ -1,12 +1,15 @@
 #include <string>
 #include <functional>
 #include <boost/asio.hpp>
+#include <boost/process/extend.hpp>
 
 #include "log.h"
 #include "gsystem.h"
+#include "gstring.h"
 #include "consts.h"
 
 #ifdef __linux__
+#include <sys/mman.h>
 #include <pwd.h>
 #endif
 
@@ -19,15 +22,13 @@
 #endif
 
 namespace GameAP {
-
-    using namespace boost::process;
     using namespace boost::iostreams;
 
     namespace bp = boost::process;
 
     int exec(const std::string cmd, std::function<void (std::string)> callback)
     {
-        int exit_code;
+        int exit_code = -1;
 
         boost::asio::io_service ios;
         boost::asio::streambuf buf;
@@ -39,9 +40,20 @@ namespace GameAP {
 
             bp::child child_proccess(
                     bp::search_path(PROC_SHELL),
-                    args={SHELL_PREF, cmd},
+                    bp::args={SHELL_PREF, cmd},
                     (bp::std_out & bp::std_err) > out_stream,
                     load_env()
+#ifdef __linux__
+                    ,bp::extend::on_exec_setup=[](auto&) {
+                            if (geteuid() != getuid()) {
+                                setreuid(geteuid(), geteuid());
+                            }
+
+                            if (getegid() != getgid()) {
+                                setregid(getegid(), getegid());
+                            }
+                    }
+#endif
             );
 
             std::string s;
@@ -70,10 +82,21 @@ namespace GameAP {
 
             bp::child child_proccess(
                     bp::search_path(PROC_SHELL),
-                    args={SHELL_PREF, cmd},
+                    bp::args={SHELL_PREF, cmd},
                     bp::std_out > out_stream,
                     bp::std_err > err_stream,
                     load_env()
+#ifdef __linux__
+                ,bp::extend::on_exec_setup = [](auto&) {
+                    if (geteuid() != getuid()) {
+                        setreuid(geteuid(), geteuid());
+                    }
+
+                    if (getegid() != getgid()) {
+                        setregid(getegid(), getegid());
+                    }
+                }
+#endif
             );
 
             std::string s;
@@ -98,9 +121,20 @@ namespace GameAP {
         try {
             bp::child child_proccess(
                     bp::search_path(PROC_SHELL),
-                    args={SHELL_PREF, cmd},
+                    bp::args={SHELL_PREF, cmd},
                     (bp::std_out & bp::std_err) > out,
                     load_env()
+#ifdef __linux__
+                    ,bp::extend::on_exec_setup = [](auto&) {
+                        if (geteuid() != getuid()) {
+                            setreuid(geteuid(), geteuid());
+                        }
+
+                        if (getegid() != getgid()) {
+                            setregid(getegid(), getegid());
+                        }
+                    }
+#endif
             );
 
             return child_proccess;
@@ -109,34 +143,16 @@ namespace GameAP {
         }
     }
 
-    void change_euid_egid(const std::string username)
-    {
-#ifdef __linux__
-        if (!username.empty()) {
-            passwd * pwd;
-            pwd = getpwnam(&username[0]);
-
-            if (pwd == nullptr) {
-                GAMEAP_LOG_ERROR << "Invalid user: " << username;
-                return;
-            }
-
-            seteuid(pwd->pw_uid);
-            setegid(pwd->pw_gid);
-        }
-#endif
-    }
-
     bp::environment load_env()
     {
         bp::environment env = static_cast<bp::environment>(boost::this_process::environment());
 
-#ifdef __linux__
-        struct passwd *pw = getpwuid(getuid());
+        #ifdef __linux__
+            struct passwd *pw = getpwuid(geteuid());
 
-        env["HOME"]                     = pw->pw_dir;
-        env["USER"]                     = pw->pw_name;
-#endif
+            env["HOME"]                     = pw->pw_dir;
+            env["USER"]                     = pw->pw_name;
+        #endif
 
         env["GAMEAP_DAEMON_VERSION"]    = GAMEAP_DAEMON_VERSION;
 
@@ -201,6 +217,162 @@ namespace GameAP {
         }
 
         return true;
+    }
+
+    void privileges_down(const std::string & username)
+    {
+        #ifdef __linux__
+                if (!username.empty()) {
+                    passwd * pwd;
+                    pwd = getpwnam(&username[0]);
+
+                    if (pwd == nullptr) {
+                        GAMEAP_LOG_ERROR << "Invalid user: " << username;
+                        return;
+                    }
+
+                    if (pwd->pw_uid != getuid() && seteuid(pwd->pw_uid) == -1) {
+                        GAMEAP_LOG_ERROR << "Failed to set Effective uid (" << pwd->pw_uid
+                                         << "). Username: " << username
+                                         << ". " << strerror(errno);
+                    }
+
+                    if (pwd->pw_gid != getgid() && setegid(pwd->pw_gid) == -1) {
+                        GAMEAP_LOG_ERROR << "Failed to set Effective gid (" << pwd->pw_gid
+                                         << "). Username: " << username
+                                         << ". " << strerror(errno);
+                    }
+                }
+        #endif
+    }
+
+    void privileges_retrieve()
+    {
+        #ifdef __linux__
+            if (geteuid() != getuid() && seteuid(getuid()) == -1) {
+                GAMEAP_LOG_ERROR << "Failed to set Effective uid (" << getuid() << ").";
+            }
+
+            if (getegid() != getgid() && setegid(getgid()) == -1) {
+                GAMEAP_LOG_ERROR << "Failed to set Effective gid (" << getgid() << ").";
+            }
+        #endif
+    }
+
+#ifdef _WIN32
+    std::unordered_map<unsigned int, gsystem_thread*> functions_gsystem_threads;
+#endif
+
+    pid_t run_process(std::function<void (void)> callback)
+    {
+        #ifdef __linux__
+            pid_t pid = fork();
+
+            if (pid == -1) {
+                GAMEAP_LOG_ERROR << "Fork failed\n";
+            }
+
+            if (pid == 0) {
+                callback();
+                exit(0);
+            }
+
+            return pid;
+        #endif
+
+        #ifdef _WIN32
+            gsystem_thread * gsthread = new gsystem_thread;
+            gsthread->result = -1;
+
+            GAMEAP_LOG_VERBOSE << "Running thread";
+
+            gsthread->thread = std::thread([=]() {
+                callback();
+                gsthread->result = 0;
+            });
+
+            pid_t thread_hash = std::hash<std::thread::id>{}(gsthread->thread.get_id());
+            GAMEAP_LOG_VERBOSE << "Thread hash: " << thread_hash;
+
+            functions_gsystem_threads.insert(
+                std::pair<unsigned int, gsystem_thread*>(thread_hash, gsthread)
+            );
+
+            return thread_hash;
+        #endif
+    }
+
+    int child_process_status(pid_t pid)
+    {
+        #ifdef __linux__
+            int status;
+
+            if (waitpid(pid, &status, WNOHANG) > 0) {
+                // Process complete
+
+                return WIFEXITED(status) != 0 ? PROCESS_SUCCESS : PROCESS_FAIL;
+            } else {
+                return PROCESS_WORKING;
+            }
+        #endif
+
+        #ifdef _WIN32
+            auto itr = functions_gsystem_threads.find(pid);
+
+            if (itr == functions_gsystem_threads.end()) {
+                return PROCESS_SUCCESS;
+            }
+
+            if (itr->second->result == 0) {
+                delete (void*)itr->second;
+                functions_gsystem_threads.erase(itr);
+                return PROCESS_SUCCESS;
+            }
+
+            return itr->second->thread.joinable() ? PROCESS_WORKING : PROCESS_FAIL;
+        #endif
+    }
+
+    void * shared_map_memory(size_t size)
+    {
+        #ifdef __linux__
+            void * addr = mmap(nullptr, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+
+            if (addr == MAP_FAILED) {
+                GAMEAP_LOG_ERROR << "Unable to create shared map memory\n";
+                return nullptr;
+            }
+
+            return addr;
+        #endif
+
+        #ifdef _WIN32
+            return malloc(size);
+        #endif
+    }
+
+    void destroy_shared_map_memory(void * ptr, size_t size)
+    {
+        #ifdef __linux__
+            if (munmap(ptr, size) == -1) {
+                GAMEAP_LOG_ERROR << "Unable to destroy shared map memory\n";
+            }
+        #endif
+
+        #ifdef _WIN32
+            free(ptr);
+        #endif
+    }
+
+    void fix_path_slashes(std::string &path)
+    {
+        #ifdef _WIN32
+            std::replace(path.begin(), path.end(), '/', '\\');
+            path = str_replace("\\\\", "\\", path);
+        #else
+            std::replace(path.begin(), path.end(), '\\', '/');
+            path = str_replace("//", "/", path);
+        #endif
     }
 
     // End GameAP namespace

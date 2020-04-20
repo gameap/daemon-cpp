@@ -30,6 +30,25 @@ namespace fs = boost::filesystem;
 
 DedicatedServer::DedicatedServer()
 {
+    this->initialized = false;
+
+    unsigned short tries = 3;
+    unsigned int seconds_to_try = 5;
+
+    while (tries > 0) {
+        if (this->init()) {
+            this->initialized = true;
+            break;
+        }
+
+        std::this_thread::sleep_for(std::chrono::seconds(seconds_to_try));
+        seconds_to_try *= 2;
+        tries--;
+    }
+}
+
+bool DedicatedServer::init()
+{
     Config& config = Config::getInstance();
 
     ds_id = config.ds_id;
@@ -96,7 +115,8 @@ DedicatedServer::DedicatedServer()
     GAMEAP_LOG_DEBUG << "Getting Dedicated server init data";
 
     try {
-        Json::Value jvalue = Gameap::Rest::get("/gdaemon_api/dedicated_servers/get_init_data/" + std::to_string(ds_id));
+        GAMEAP_LOG_VERBOSE << "Getting initial dedicated server data from API...";
+        Json::Value jvalue = Rest::get("/gdaemon_api/dedicated_servers/get_init_data/" + std::to_string(ds_id));
 
         // TODO: Check work path!
 
@@ -137,18 +157,17 @@ DedicatedServer::DedicatedServer()
             script_stop = starter_path + " -t stop -d {dir} -u {user}";
         }
 
-        //if (script_status.empty()) {
-        //    script_status = "gameap-starter -t status -d {dir} -u {user}";
-        //}
+        if (script_status.empty()) {
+            script_status = starter_path + " -t status -d {dir} -u {user}";
+        }
 
-
-    } catch (Gameap::Rest::RestapiException &exception) {
-        // Try later
+    } catch (Rest::RestapiException &exception) {
         GAMEAP_LOG_ERROR << exception.what();
+        return false;
     }
-}
 
-// ---------------------------------------------------------------------
+    return true;
+}
 
 int DedicatedServer::stats_process()
 {
@@ -260,8 +279,6 @@ int DedicatedServer::stats_process()
 
     return 0;
 }
-
-// ---------------------------------------------------------------------
 
 int DedicatedServer::get_net_load(std::map<std::string, netstats> &ifstats)
 {
@@ -394,15 +411,11 @@ int DedicatedServer::get_net_load(std::map<std::string, netstats> &ifstats)
     return 0;
 }
 
-// ---------------------------------------------------------------------
-
 int DedicatedServer::get_ping(ushort &ping)
 {
     ping = 0;
     return ping;
 }
-
-// ---------------------------------------------------------------------
 
 int DedicatedServer::get_cpu_load(std::vector<float> &cpu_percent)
 {
@@ -554,7 +567,7 @@ int DedicatedServer::update_db()
 
         // Cpu
         std::string cpu = "";
-        for (int i = 0; i < item.cpu_load.size(); ++i) {
+        for (unsigned int i = 0; i < item.cpu_load.size(); ++i) {
             cpu +=  boost::str(boost::format("%.2f") % item.cpu_load[i]) + " ";
         }
 
@@ -604,12 +617,15 @@ int DedicatedServer::update_db()
     }
 
     try {
-        Gameap::Rest::post("/gdaemon_api/ds_stats", jupdate_data);
+        GAMEAP_LOG_VERBOSE << "Saving dedicated server statistics on API...";
+        Rest::post("/gdaemon_api/ds_stats", jupdate_data);
         stats.clear();
         last_db_update = time(nullptr);
-    } catch (Gameap::Rest::RestapiException &exception) {
+    } catch (Rest::RestapiException &exception) {
         GAMEAP_LOG_ERROR << "Output updating error: " << exception.what();
     }
+
+    return 0;
 }
 
 std::string DedicatedServer::get_script_cmd(ushort script)

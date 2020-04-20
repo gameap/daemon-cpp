@@ -14,6 +14,10 @@
 #define LOG_MAIN_FILE "main.log"
 #define LOG_ERROR_FILE "error.log"
 
+// Status vars
+bool status_active;
+time_t status_started_time;
+
 namespace fs = boost::filesystem;
 
 SERVICE_STATUS        g_ServiceStatus = { 0 };
@@ -216,7 +220,7 @@ int _tmain (int argc, TCHAR *argv[])
         plog::init<GameAP::MainLog>(plog::verbose, config.output_log.c_str());
         plog::init<GameAP::ErrorLog>(plog::verbose, config.error_log.c_str());
     #endif
-        
+
     // Info
 	GAMEAP_LOG_INFO << "CurrentPath: " << fs::current_path();
 	GAMEAP_LOG_INFO << "Config: " << config.cfg_file;

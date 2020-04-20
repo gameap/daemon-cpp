@@ -11,142 +11,70 @@
 #include "daemon_server.h"
 #include "config.h"
 
-#include "classes/tasks.h"
-#include "classes/task_list.h"
-#include "classes/dedicated_server.h"
 #include "classes/game_servers_list.h"
+#include "classes/gdaemon_tasks.h"
+#include "classes/servers_tasks.h"
+#include "classes/dedicated_server.h"
 
 #include "functions/restapi.h"
-
 #include "status.h"
-
-#ifdef __linux__
-#include <csignal>
-#endif
 
 using namespace GameAP;
 
-// ---------------------------------------------------------------------
-
-int check_tasks()
+void wait_ds_init()
 {
-    TaskList& tasks = TaskList::getInstance();
-    tasks.stop = false;
+    DedicatedServer &deds = DedicatedServer::getInstance();
 
-    tasks.check_working_errors();
+    while (! deds.is_initialized()) {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+}
 
-    std::vector<ulong>      servers_working;
-    std::vector<ulong>      tasks_ended;
-    std::vector<ulong>      tasks_runned;
+void check_tasks()
+{
+    wait_ds_init();
 
-    boost::thread_group     tasks_thrs;
+    // TODO: Coroutines here
+    std::thread server_tasks([&]() {
+        ServersTasks &servers_tasks = ServersTasks::getInstance();
 
-    std::string output = "";
+        while (status_active) {
+            servers_tasks.update();
 
-    while (!tasks.stop) {
-        tasks.update_list();
-        for (auto it = tasks.begin(); !tasks.is_end(it); it = tasks.next(it)) {
-
-            std::vector<ulong>::iterator run_it     = std::find(tasks_runned.begin(), tasks_runned.end(), (**it).get_id());
-            std::vector<ulong>::iterator swork_it    = std::find(servers_working.begin(), servers_working.end(), (**it).get_server_id());
-
-            // Run task
-            if ((**it).get_status() == TASK_WAITING
-                && swork_it == servers_working.end()
-                && run_it == tasks_runned.end()
-                && ((**it).run_after() == 0
-                    || ((**it).run_after() != 0
-                        && std::find(tasks_ended.begin(), tasks_ended.end(), (**it).run_after()) != tasks_ended.end()
-                    )
-                )
-            ) {
-                if ((**it).get_server_id() != 0) {
-                    servers_working.push_back((**it).get_server_id());
-                }
-
-                tasks_thrs.create_thread([=]() {
-                    try {
-                        (**it).run();
-                    } catch (std::exception &e) {
-                        GAMEAP_LOG_ERROR << "Run tasks error: " << e.what();
-                    }
-                });
-
-                tasks_runned.push_back((**it).get_id());
+            if (!servers_tasks.empty()) {
+                servers_tasks.run_next();
             }
 
-            // Check task
-            if ((**it).get_status() == TASK_WORKING
-                || (**it).get_status() == TASK_ERROR
-                || (**it).get_status() == TASK_SUCCESS
-            ) {
-                if (output.empty()) {
-                    try {
-                        output = (**it).get_output();
-                    } catch (std::exception &e) {
-                        GAMEAP_LOG_ERROR << "get_output() error: " << e.what();
-                    }
-                }
+            std::this_thread::sleep_for(std::chrono::seconds(60));
+        }
+    });
 
-                if (output.length() > 0) {
+    GdaemonTasks& gdaemon_tasks = GdaemonTasks::getInstance();
+    gdaemon_tasks.check_after_crash();
 
-                    // Try to update output.
-                    // Erase output after successful update or 5 unsuccessful attempts to update
+    while (status_active) {
+        gdaemon_tasks.update();
 
-                    ushort output_update_tries = 0;
-                    while (output_update_tries < 5) {
 
-                        output_update_tries++;
-
-                        try {
-                            Json::Value jdata;
-                            jdata["output"] = output;
-                            Gameap::Rest::put("/gdaemon_api/tasks/" + std::to_string((**it).get_id()) + "/output", jdata);
-                            break;
-                        } catch (Gameap::Rest::RestapiException &exception) {
-                            GAMEAP_LOG_ERROR << "Output updating error: " << exception.what();
-
-                            std::this_thread::sleep_for(std::chrono::seconds(10));
-                        }
-                    }
-
-                    output.erase();
-                }
-            }
-
-            // End task. Erase data
-            if ((**it).get_status() == TASK_ERROR || (**it).get_status() == TASK_SUCCESS || (**it).get_status() == TASK_CANCELED) {
-                if (output.empty()) {
-                    try {
-                        output = (**it).get_output();
-                    } catch (std::exception &e) {
-                        GAMEAP_LOG_ERROR << "get_output() error: " << e.what();
-                    }
-                }
-
-                if (output.empty()) {
-                    tasks_ended.push_back((**it).get_id());
-                    tasks_runned.erase(run_it);
-                    tasks.delete_task(it);
-
-                    if (swork_it != servers_working.end()) {
-                        servers_working.erase(swork_it);
-                    }
-                }
-            }
+        if (!gdaemon_tasks.empty()) {
+            gdaemon_tasks.run_next();
         }
 
         std::this_thread::sleep_for(std::chrono::seconds(5));
     }
 
-    return 0;
-}
+    if (server_tasks.joinable()) {
+        server_tasks.join();
+    }
 
-// ---------------------------------------------------------------------
+    GAMEAP_LOG_INFO << "Tasks Stopped";
+}
 
 int run_daemon()
 {
     GAMEAP_LOG_INFO << "Starting...";
+    status_active = true;
+    status_started_time = time(nullptr);
 
     #ifdef __linux__
         std::signal(SIGHUP, sighandler);
@@ -172,21 +100,19 @@ int run_daemon()
     );
 
     try {
-        Gameap::Rest::get_token();
-    } catch (Gameap::Rest::RestapiException &exception) {
+        Rest::get_token();
+    } catch (Rest::RestapiException &exception) {
         GAMEAP_LOG_ERROR << exception.what();
         return -1;
     }
 
     // Run Daemon Server
     std::thread daemon_server([&]() {
-        // TODO: Check fails
-        // TODO: Replace tasks.stop to some status checker class or something else
-        TaskList& tasks = TaskList::getInstance();
+        wait_ds_init();
 
         int server_exit_status;
 
-        while (!tasks.stop) {
+        while (status_active) {
             GAMEAP_LOG_INFO << "Running Daemon Server";
             server_exit_status = run_server(config.listen_ip, config.listen_port);
             GAMEAP_LOG_INFO << "Daemon Server stopped (Exit status: " << server_exit_status << ")";
@@ -202,8 +128,17 @@ int run_daemon()
         DedicatedServer &deds = DedicatedServer::getInstance();
         GameServersList &gslist = GameServersList::getInstance();
 
-        TaskList& tasks = TaskList::getInstance();
-        tasks.stop = false;
+        if (! deds.is_initialized()) {
+            GAMEAP_LOG_FATAL << "Failed to initilize dedicated server";
+            status_active = false;
+            exit(2);
+        }
+
+        if (deds.get_work_path().empty()) {
+            GAMEAP_LOG_FATAL << "Invalid dedicated server settings. Empty work path";
+            status_active = false;
+            exit(2);
+        }
 
         if (!boost::filesystem::exists(deds.get_work_path())) {
             boost::filesystem::create_directory(deds.get_work_path());
@@ -214,7 +149,7 @@ int run_daemon()
 
         boost::thread ctsk_thr(check_tasks);
 
-        while (!tasks.stop) {
+        while (status_active) {
             deds.stats_process();
             deds.update_db();
 
@@ -228,7 +163,15 @@ int run_daemon()
         }
     }
 
-    daemon_server.join();
+    if (daemon_server.joinable()) {
+        daemon_server.join();
+    }
+
+#ifdef _WIN32
+    for (auto & thread : functions_gsystem_threads) {
+        thread.second->thread.join();
+    }
+#endif
 
     return 0;
 }

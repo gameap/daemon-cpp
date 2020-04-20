@@ -1,3 +1,6 @@
+#ifndef GDAEMON_CONSTS_H
+#define GDAEMON_CONSTS_H
+
 #ifdef _WIN32
     #define SLH "\\"
 #else
@@ -18,8 +21,10 @@
 #define SUCCESS_STATUS_INT 			0
 #define ERROR_STATUS_INT	       -1
 
-#define GAMEAP_DAEMON_VERSION "2.1.0"
+#define GAMEAP_DAEMON_VERSION "3.0.0"
 
 // State keys
 
 #define STATE_PANEL_TIMEDIFF "gameap:timediff"
+
+#endif //GDAEMON_CONSTS_H

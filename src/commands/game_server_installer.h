@@ -7,7 +7,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
-#include "cmd_output.h"
+#include "commands/output/base_output.h"
 
 #define INST_NO_SOURCE      0
 #define INST_FROM_LOCREP    1
@@ -35,7 +35,7 @@ namespace GameAP {
 
     class GameServerInstaller {
         public:
-            GameServerInstaller(const std::shared_ptr<CmdOutput>& cmd_output)
+            GameServerInstaller(const std::shared_ptr<BaseOutput>& cmd_output)
                 : m_cmd_output{cmd_output}
             {
                 m_game_source_type = INST_NO_SOURCE;
@@ -50,7 +50,7 @@ namespace GameAP {
             std::string m_mod_localrep;
             std::string m_mod_remrep;
 
-            std::string m_steam_app_id;
+            unsigned int m_steam_app_id;
             std::string m_steam_app_set_config;
 
             /**
@@ -62,6 +62,12 @@ namespace GameAP {
              * Server path owner
              */
             std::string m_user;
+
+            /**
+             * Set user and down privileges
+             * @param username
+             */
+            void set_user(const std::string & user);
 
             /**
              * Run installation of server
@@ -86,7 +92,7 @@ namespace GameAP {
             std::unordered_set<int> m_ignored_game_source;
             std::unordered_set<int> m_ignored_mod_source;
 
-            std::shared_ptr<CmdOutput> m_cmd_output;
+            std::shared_ptr<BaseOutput> m_cmd_output;
 
             int _detect_sources();
             void _detect_game_source();

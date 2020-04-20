@@ -3,8 +3,8 @@ The server management daemon
 
 Branches        | Build         |
 ----------------|-------------- | 
-develop         |[![Build Status](https://travis-ci.org/gameap/GDaemon2.svg?branch=develop)](https://travis-ci.org/gameap/GDaemon2)       |
-master          |[![Build Status](https://travis-ci.org/gameap/GDaemon2.svg?branch=master)](https://travis-ci.org/gameap/GDaemon2)        |
+develop         |[![Build Status](https://travis-ci.org/gameap/daemon.svg?branch=develop)](https://travis-ci.org/gameap/daemon)       |
+master          |[![Build Status](https://travis-ci.org/gameap/daemon.svg?branch=master)](https://travis-ci.org/gameap/daemon)        |
 
 - [Compiling](#compiling)
   - [Dependencies](#dependencies)
@@ -22,7 +22,7 @@ master          |[![Build Status](https://travis-ci.org/gameap/GDaemon2.svg?bran
 * [Rest Client C++](https://github.com/mrtazz/restclient-cpp)
 * CURL Library
 * [Json C++ Library](https://github.com/open-source-parsers/jsoncpp)
-* Boost Libraries (>= 1.66.0): Boost System, Boost Filesystem, Boost Iostreams, Boost Thread, Boost Process
+* Boost Libraries (>= 1.67.0): Boost System, Boost Filesystem, Boost Iostreams, Boost Thread, Boost Process
 * [PLog](https://github.com/SergiusTheBest/plog) >= 1.1.5
 
 #### Tests
@@ -32,8 +32,8 @@ master          |[![Build Status](https://travis-ci.org/gameap/GDaemon2.svg?bran
 ### Compiling on Linux
 
 ```
-git clone https://github.com/gameap/GDaemon2
-cd GDaemon2
+git clone https://github.com/gameap/daemon
+cd daemon
 cmake .
 make gameap-daemon
 ```
@@ -77,6 +77,7 @@ Configuration file: daemon.cfg
 | listen_port               | no (default 31717)    | integer   | Listen port
 | api_host                  | yes                   | string    | API Host
 | api_key                   | yes                   | string    | API Key
+| log_level                 | no                    | string    | Logging level (verbose, debug, info, warning, error, fatal)
 
 
 ### SSL/TLS

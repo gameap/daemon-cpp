@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "classes/cmd_output.h"
+#include "commands/output/cmd_output.h"
 
 namespace GameAP {
     TEST(cmd_output, append_get_clear_test)

@@ -1,23 +1,23 @@
 language: cpp
 sudo: required
-dist: trusty
+dist: bionic
 compiler:
 - g++
 os:
 - linux
-script: cmake . && cmake --build .
+script: cmake . -DBUILD_TESTING=ON && cmake --build . && ctest
 addons:
   apt:
     update: true
     sources:
       - ubuntu-toolchain-r-test
       - sourceline: 'ppa:mhier/libboost-latest'
-      - sourceline: 'deb http://packages.gameap.ru/ubuntu trusty main'
+      - sourceline: 'deb http://packages.gameap.ru/ubuntu bionic main'
         key_url: 'http://packages.gameap.ru/gameap-rep.gpg.key'
     packages:
       - cmake
-      - gcc-4.8
-      - g++-4.8
+      - gcc-6
+      - g++-6
       - libboost1.67-dev
       - libbinn-dev
       - librestclientcpp-dev
