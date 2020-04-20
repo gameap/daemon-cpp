@@ -169,7 +169,7 @@ int run_daemon()
 
 #ifdef _WIN32
     for (auto & thread : functions_gsystem_threads) {
-        thread.second.join();
+        thread.second->thread.join();
     }
 #endif
 

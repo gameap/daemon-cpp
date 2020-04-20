@@ -41,7 +41,7 @@ namespace GameAP {
         std::thread thread;
     };
 
-    extern std::unordered_map<unsigned int, *gsystem_thread> functions_gsystem_threads;
+    extern std::unordered_map<unsigned int, gsystem_thread*> functions_gsystem_threads;
 #endif
 
     pid_t run_process(std::function<void (void)> callback);

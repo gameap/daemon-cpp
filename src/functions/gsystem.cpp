@@ -259,7 +259,7 @@ namespace GameAP {
     }
 
 #ifdef _WIN32
-    std::unordered_map<unsigned int, *gsystem_thread> functions_gsystem_threads;
+    std::unordered_map<unsigned int, gsystem_thread*> functions_gsystem_threads;
 #endif
 
     pid_t run_process(std::function<void (void)> callback)
@@ -280,18 +280,20 @@ namespace GameAP {
         #endif
 
         #ifdef _WIN32
-            gsystem_thread * gsystem_thread = new gsystem_thread{-1};
-            std::thread thread([&callback, &gsystem_thread]() {
+            gsystem_thread * gsthread = new gsystem_thread;
+            gsthread->result = -1;
+
+            std::thread thread([&callback, &gsthread]() {
                 callback();
-                gsystem_thread.result = 0;
+                gsthread->result = 0;
             });
 
-            gsystem_thread.thread = std::move(thread);
+            gsthread->thread = std::move(thread);
         
             pid_t thread_hash = std::hash<std::thread::id>{}(thread.get_id());
 
             functions_gsystem_threads.insert(
-                std::pair<unsigned int, gsystem_thread>(thread_hash, gsystem_thread)
+                std::pair<unsigned int, gsystem_thread*>(thread_hash, gsthread)
             );
 
             return thread_hash;
@@ -319,13 +321,13 @@ namespace GameAP {
                 return PROCESS_SUCCESS;
             }
 
-            if (itr->second.result == 0) {
+            if (itr->second->result == 0) {
                 delete itr->second;
                 functions_gsystem_threads.erase(itr);
                 return PROCESS_SUCCESS;
             }
 
-            return itr->second.thread.joinable() ? PROCESS_WORKING : PROCESS_FAIL;
+            return itr->second->thread.joinable() ? PROCESS_WORKING : PROCESS_FAIL;
         #endif
     }
 
