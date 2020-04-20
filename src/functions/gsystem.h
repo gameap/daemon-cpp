@@ -51,6 +51,6 @@ namespace GameAP {
     void * shared_map_memory(size_t size);
     void destroy_shared_map_memory(void * ptr, size_t size);
 
-    std::string fix_path_slashes(std::string &path);
+    void fix_path_slashes(std::string &path);
 }
 #endif //GDAEMON_GSYSTEM_H
