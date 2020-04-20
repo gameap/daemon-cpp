@@ -146,11 +146,11 @@ bool DedicatedServer::init()
 #endif
 
         if (script_start.empty()) {
-            script_start = starter_path + " -t start -d {dir} -c \"{command}\"";
+            script_start = starter_path + " -t start -d {dir} -u {user} -c \"{command}\"";
         }
 
         if (script_restart.empty()) {
-            script_restart = starter_path + " -t restart -d {dir} -c \"{command}\"";
+            script_restart = starter_path + " -t restart -d {dir} -u {user} -c \"{command}\"";
         }
 
         if (script_stop.empty()) {
@@ -158,7 +158,7 @@ bool DedicatedServer::init()
         }
 
         if (script_status.empty()) {
-            script_status = starter_path + " -t status -d {dir}";
+            script_status = starter_path + " -t status -d {dir} -u {user}";
         }
 
     } catch (Rest::RestapiException &exception) {

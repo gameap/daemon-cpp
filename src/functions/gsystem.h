@@ -36,7 +36,12 @@ namespace GameAP {
     );
 
 #ifdef _WIN32
-    extern std::unordered_map<unsigned int, std::thread> functions_gsystem_threads;
+    struct gsystem_thread {
+        int result;
+        std::thread thread;
+    };
+
+    extern std::unordered_map<unsigned int, *gsystem_thread> functions_gsystem_threads;
 #endif
 
     pid_t run_process(std::function<void (void)> callback);
