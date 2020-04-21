@@ -34,7 +34,7 @@ master          |[![Build Status](https://travis-ci.org/gameap/daemon.svg?branch
 See [build scripts](/build_scripts) for your distribution.
 
 ```
-git clone https://github.com/gameap/daemon
+git clone --recurse-submodules https://github.com/gameap/daemon
 cd daemon
 cmake .
 make gameap-daemon

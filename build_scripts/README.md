@@ -27,7 +27,7 @@ Building GameAP Daemon on Debian Buster
 
 ```bash
 cd ~
-git clone https://github.com/gameap/daemon
+git clone --recurse-submodules https://github.com/gameap/daemon
 mkdir daemon/build
 export ROOTDIR=$(pwd)/daemon/build
 cd daemon/build

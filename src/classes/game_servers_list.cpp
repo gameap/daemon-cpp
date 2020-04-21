@@ -109,7 +109,7 @@ void GameServersList::stats_process()
 
     for (auto const& server : this->servers_list) {
         Json::Value jserver;
-        jserver["id"] = static_cast<unsigned long long>(server.second->id);
+        jserver["id"] = static_cast<Json::UInt64>(server.second->id);
 
         if (server.second->installed == Server::SERVER_INSTALLED) {
             GameServerCmd game_server_cmd = GameServerCmd(GameServerCmd::STATUS, server.second->id);
@@ -156,7 +156,7 @@ void GameServersList::sync_all()
 
     for (auto const& server : this->servers_list) {
         Json::Value jserver;
-        jserver["id"] = static_cast<unsigned long long>(server.second->id);
+        jserver["id"] = static_cast<Json::UInt64>(server.second->id);
 
         time_t last_process_check = server.second->last_process_check - time_diff;
 
