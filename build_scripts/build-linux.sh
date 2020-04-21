@@ -7,14 +7,14 @@ set -o pipefail
 
 ROOTDIR=$(pwd)
 
-# Compile GCC 7
-# wget http://mirror.linux-ia64.org/gnu/gcc/releases/gcc-7.4.0/gcc-7.4.0.tar.gz
-# tar -xvf gcc-7.4.0.tar.gz
-# cd gcc-7.4.0
-# ./contrib/download_prerequisites
-# mkdir objdir && cd objdir
-# $PWD/../configure --enable-multilib --disable-shared --with-newlib
-# make
+# Compile GCC 9
+wget http://mirror.linux-ia64.org/gnu/gcc/releases/gcc-9.3.0/gcc-9.3.0.tar.gz
+tar -xvf gcc-9.3.0.tar.gz
+cd gcc-9.3.0
+./contrib/download_prerequisites
+mkdir objdir && cd objdir
+$PWD/../configure --enable-multilib --disable-shared --with-newlib
+make
 
 # Download CMake
 wget https://cmake.org/files/v3.10/cmake-3.10.3-Linux-x86_64.tar.gz
@@ -23,9 +23,9 @@ cp -R cmake-3.10.3-Linux-x86_64/* /
 
 # Compile Boost
 cd $ROOTDIR
-wget http://packages.gameap.ru/others/boost_1_65_1.tar.gz
-tar -xvf boost_1_65_1.tar.gz
-cd boost_1_65_1
+wget http://packages.gameap.ru/others/boost_1_70_0.tar.gz
+tar -xvf boost_1_70_0.tar.gz
+cd boost_1_70_1
 ./bootstrap.sh
 ./b2 install --link=static
 
@@ -54,9 +54,9 @@ make install
 
 # Compile Curl Library
 cd $ROOTDIR
-wget https://curl.haxx.se/download/curl-7.63.0.tar.gz
-tar -xvf curl-7.63.0.tar.gz
-cd curl-7.63.0
+wget https://curl.haxx.se/download/curl-7.69.1.tar.gz
+tar -xvf curl-7.69.1.tar.gz
+cd curl-7.69.1
 cmake -DCMAKE_USE_OPENSSL=on .
 make
 make install

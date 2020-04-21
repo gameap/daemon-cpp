@@ -31,6 +31,8 @@ master          |[![Build Status](https://travis-ci.org/gameap/daemon.svg?branch
 
 ### Compiling on Linux
 
+See [build scripts](/build_scripts) for your distribution.
+
 ```
 git clone https://github.com/gameap/daemon
 cd daemon
