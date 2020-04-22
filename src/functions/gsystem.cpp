@@ -231,14 +231,14 @@ namespace GameAP {
                         return;
                     }
 
-                    if (pwd->pw_uid != getuid() && seteuid(pwd->pw_uid) == -1) {
-                        GAMEAP_LOG_ERROR << "Failed to set Effective uid (" << pwd->pw_uid
+                    if (pwd->pw_gid != getgid() && setegid(pwd->pw_gid) == -1) {
+                        GAMEAP_LOG_ERROR << "Failed to set Effective gid (" << pwd->pw_gid
                                          << "). Username: " << username
                                          << ". " << strerror(errno);
                     }
 
-                    if (pwd->pw_gid != getgid() && setegid(pwd->pw_gid) == -1) {
-                        GAMEAP_LOG_ERROR << "Failed to set Effective gid (" << pwd->pw_gid
+                    if (pwd->pw_uid != getuid() && seteuid(pwd->pw_uid) == -1) {
+                        GAMEAP_LOG_ERROR << "Failed to set Effective uid (" << pwd->pw_uid
                                          << "). Username: " << username
                                          << ". " << strerror(errno);
                     }
