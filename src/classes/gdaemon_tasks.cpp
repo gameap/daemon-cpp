@@ -6,6 +6,7 @@
 #include <commands/dedicated_server_cmd.h>
 
 #include "functions/restapi.h"
+#include "functions/gstring.h"
 #include "log.h"
 
 using namespace GameAP;
@@ -61,43 +62,43 @@ void GdaemonTasks::update()
     }
 
     for (auto jtask: jvalue) {
-        if (this->exists_tasks.find(jtask["id"].asUInt()) != this->exists_tasks.end()) {
+        if (this->exists_tasks.find(getJsonUInt(jtask["id"])) != this->exists_tasks.end()) {
             continue;
         }
 
         if (jtask["task"].asString() == "") {
             GAMEAP_LOG_WARNING
-                        << "Empty task. TaskID: " << jtask["id"].asUInt()
-                        << " StatusNum: " << jtask["status_num"].asUInt();
+                        << "Empty task. TaskID: " << getJsonUInt(jtask["id"])
+                        << " StatusNum: " << getJsonUInt(jtask["status_num"]);
             continue;
         }
 
-        if (jtask["status_num"].asUInt() != TASK_WAITING) {
+        if (getJsonUInt(jtask["status_num"]) != TASK_WAITING) {
             GAMEAP_LOG_WARNING
-                        << "Invalid task status num. TaskID: " << jtask["id"].asUInt()
-                        << " StatusNum: " << jtask["status_num"].asUInt();
+                        << "Invalid task status num. TaskID: " << getJsonUInt(jtask["id"])
+                        << " StatusNum: " << getJsonUInt(jtask["status_num"]);
             continue;
         }
 
         GameServersList& gslist = GameServersList::getInstance();
-        Server* server = gslist.get_server(jtask["server_id"].asLargestUInt());
+        Server* server = gslist.get_server(getJsonUInt(jtask["server_id"]));
 
         if (server == nullptr) {
-            GAMEAP_LOG_ERROR << "Invalid game server. ID: " << jtask["server_id"].asLargestUInt();
+            GAMEAP_LOG_ERROR << "Invalid game server. ID: " << getJsonUInt(jtask["server_id"]);
             continue;
         }
 
         auto task = std::make_shared<GdaemonTask>(GdaemonTask{
-                jtask["id"].asUInt(),
-                static_cast<unsigned int>(jtask["run_aft_id"].asLargestUInt()),
-                static_cast<unsigned int>(jtask["server_id"].asLargestUInt()),
+                getJsonUInt(jtask["id"]),
+                getJsonUInt(jtask["run_aft_id"]),
+                getJsonUInt(jtask["server_id"]),
                 server,
                 jtask["task"].asString(),
                 jtask["cmd"].isNull() ? "" : jtask["cmd"].asCString(),
                 GdaemonTask::WAITING // (ushort)(*itr)["status"].asUInt()
         });
 
-        this->exists_tasks.insert(jtask["id"].asUInt());
+        this->exists_tasks.insert(getJsonUInt(jtask["id"]));
 
         this->tasks.push(task);
     }
@@ -117,21 +118,21 @@ void GdaemonTasks::check_after_crash()
     }
 
     for (auto jtask: jvalue) {
-        if (this->exists_tasks.find(jtask["id"].asUInt()) != this->exists_tasks.end()) {
+        if (this->exists_tasks.find(getJsonUInt(jtask["id"])) != this->exists_tasks.end()) {
             continue;
         }
 
         if (jtask["task"].asString() == "") {
             GAMEAP_LOG_WARNING
-                        << "Empty task. TaskID: " << jtask["id"].asUInt()
-                        << " StatusNum: " << jtask["status_num"].asUInt();
+                        << "Empty task. TaskID: " << getJsonUInt(jtask["id"])
+                        << " StatusNum: " << getJsonUInt(jtask["status_num"]);
             continue;
         }
 
-        if (jtask["status_num"].asUInt() != TASK_WORKING) {
+        if (getJsonUInt(jtask["status_num"]) != TASK_WORKING) {
             GAMEAP_LOG_WARNING
-                        << "Invalid task status num. TaskID: " << jtask["id"].asUInt()
-                        << " StatusNum: " << jtask["status_num"].asUInt();
+                        << "Invalid task status num. TaskID: " << getJsonUInt(jtask["id"])
+                        << " StatusNum: " << getJsonUInt(jtask["status_num"]);
             continue;
         }
 
@@ -139,21 +140,21 @@ void GdaemonTasks::check_after_crash()
         Server* server = gslist.get_server(jtask["server_id"].asLargestUInt());
 
         if (server == nullptr) {
-            GAMEAP_LOG_ERROR << "Invalid game server. ID: " << jtask["server_id"].asLargestUInt();
+            GAMEAP_LOG_ERROR << "Invalid game server. ID: " << getJsonUInt(jtask["server_id"]);
             continue;
         }
 
         auto task = std::make_shared<GdaemonTask>(GdaemonTask{
-                jtask["id"].asUInt(),
-                static_cast<unsigned int>(jtask["run_aft_id"].asLargestUInt()),
-                static_cast<unsigned int>(jtask["server_id"].asLargestUInt()),
+                getJsonUInt(jtask["id"]),
+                getJsonUInt(jtask["run_aft_id"]),
+                getJsonUInt(jtask["server_id"]),
                 server,
                 jtask["task"].asString(),
                 jtask["cmd"].isNull() ? "" : jtask["cmd"].asCString(),
                 GdaemonTask::WAITING // Change status to WAITING
         });
 
-        this->exists_tasks.insert(jtask["id"].asUInt());
+        this->exists_tasks.insert(task->id);
 
         this->tasks.push(task);
     }

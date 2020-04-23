@@ -212,20 +212,20 @@ void ServersTasks::update()
     }
 
     for(auto jtask: jvalue) {
-        if (this->exists_tasks.find(jtask["id"].asUInt()) != this->exists_tasks.end()) {
+        if (this->exists_tasks.find(getJsonUInt(jtask["id"])) != this->exists_tasks.end()) {
             continue;
         }
 
-        this->exists_tasks.insert(jtask["id"].asUInt());
+        this->exists_tasks.insert(getJsonUInt(jtask["id"]));
 
         auto task = std::make_shared<ServerTask>(ServerTask{
             ServerTask::WAITING,
-            jtask["id"].asUInt(),
+            getJsonUInt(jtask["id"]),
             this->convert_command(jtask["command"].asString()),
-            jtask["server_id"].asUInt(),
-            static_cast<unsigned short>(jtask["repeat"].asUInt()),
-            jtask["repeat_period"].asUInt(),
-            jtask["counter"].asUInt(),
+            getJsonUInt(jtask["server_id"]),
+            static_cast<unsigned short>(getJsonUInt(jtask["repeat"])),
+            getJsonUInt(jtask["repeat_period"]),
+            getJsonUInt(jtask["counter"]),
             human_to_timestamp(jtask["execute_date"].asString()),
             jtask["payload"].asString()
         });
@@ -248,10 +248,10 @@ void ServersTasks::sync_from_api(std::shared_ptr<ServerTask> &task)
     }
 
     task->command       = this->convert_command(jtask["command"].asString());
-    task->server_id     = jtask["server_id"].asUInt();
-    task->repeat        = static_cast<unsigned short>(jtask["repeat"].asUInt());
-    task->repeat_period = jtask["repeat_period"].asUInt();
-    task->counter       = jtask["counter"].asUInt();
+    task->server_id     = getJsonUInt(jtask["server_id"]);
+    task->repeat        = static_cast<unsigned short>(getJsonUInt(jtask["repeat"]));
+    task->repeat_period = getJsonUInt(jtask["repeat_period"]);
+    task->counter       = getJsonUInt(jtask["counter"]);
     task->execute_date  = human_to_timestamp(jtask["execute_date"].asString());
     task->payload       = jtask["payload"].asString();
 }

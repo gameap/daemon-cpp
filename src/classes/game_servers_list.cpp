@@ -38,9 +38,9 @@ int GameServersList::update_list()
 
             // TODO: Improve
             std::shared_ptr<Server> server = std::make_shared<Server>(Server{
-                jserver["id"].asUInt(),
+                getJsonUInt(jserver["id"]),
                 jserver["enabled"].asBool(),
-                static_cast<Server::install_status>(jserver["installed"].asUInt()),
+                static_cast<Server::install_status>(getJsonUInt(jserver["installed"])),
                 jserver["blocked"].asBool(),
                 jserver["name"].asString(),
                 jserver["uuid"].asString(),
@@ -57,7 +57,7 @@ int GameServersList::update_list()
                     ""
                 },
                 GameMod{
-                    jserver["game_mod_id"].asUInt(),
+                    getJsonUInt(jserver["game_mod_id"]),
                     "",
                     "",
                     "",
@@ -65,9 +65,9 @@ int GameServersList::update_list()
                     ""
                 },
                 jserver["server_ip"].asString(),
-                static_cast<unsigned short>(jserver["server_port"].asUInt()),
-                static_cast<unsigned short>(jserver["query_port"].asUInt()),
-                static_cast<unsigned short>(jserver["rcon_port"].asUInt()),
+                getJsonUInt(jserver["server_port"]),
+                getJsonUInt(jserver["query_port"]),
+                getJsonUInt(jserver["rcon_port"]),
                 jserver["dir"].asString(),
                 jserver["su_user"].asString(),
                 jserver["start_command"].asString(),
@@ -275,7 +275,7 @@ void GameServersList::sync_from_api(ulong server_id)
 
     if (updated_at > server->updated_at) {
         server->enabled     = jserver["enabled"].asBool();
-        server->installed   = static_cast<Server::install_status>(jserver["installed"].asUInt());
+        server->installed   = static_cast<Server::install_status>(getJsonUInt(jserver["installed"]));
         server->blocked     = jserver["blocked"].asBool();
     }
 
@@ -291,14 +291,14 @@ void GameServersList::sync_from_api(ulong server_id)
         jserver["game"]["name"].asString(),
         jserver["game"]["engine"].asString(),
         jserver["game"]["engine_version"].asString(),
-        jserver["game"]["steam_app_id"].asUInt(),
+        getJsonUInt(jserver["game"]["steam_app_id"]),
         jserver["game"]["steam_app_set_config"].asString(),
         jserver["game"]["remote_repository"].asString(),
         jserver["game"]["local_repository"].asString()
     };
 
     server->game_mod = GameMod{
-        jserver["game_mod"]["id"].asUInt(),
+        getJsonUInt(jserver["game_mod"]["id"]),
         jserver["game_mod"]["name"].asString(),
         jserver["game_mod"]["remote_repository"].asString(),
         jserver["game_mod"]["local_repository"].asString(),

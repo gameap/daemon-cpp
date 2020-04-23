@@ -8,6 +8,7 @@
 #include "restapi.h"
 #include "config.h"
 #include "state.h"
+#include "gstring.h"
 
 namespace GameAP {
     Rest::RestapiException::RestapiException(std::string const& msg) : msg_(msg) {}
@@ -71,7 +72,7 @@ namespace GameAP {
 
                 if (!jvalue["timestamp"].isNull()) {
                     time_t panel_time = jvalue["timestamp"].isUInt()
-                                             ? jvalue["timestamp"].asUInt()
+                                             ? getJsonUInt(jvalue["timestamp"])
                                              : time(nullptr);
 
                     time_t diff = time(nullptr) - panel_time;
