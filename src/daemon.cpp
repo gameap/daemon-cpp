@@ -147,7 +147,9 @@ int run_daemon()
         // Change working directory
         boost::filesystem::current_path(deds.get_work_path());
 
-        boost::thread ctsk_thr(check_tasks);
+        std::thread check_tasks_thread([]() {
+            check_tasks();
+        });
 
         while (status_active) {
             deds.stats_process();
@@ -161,6 +163,8 @@ int run_daemon()
 
             std::this_thread::sleep_for(std::chrono::seconds(30));
         }
+
+        check_tasks_thread.join();
     }
 
     if (daemon_server.joinable()) {

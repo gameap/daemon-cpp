@@ -6,8 +6,6 @@
 #include <unordered_map>
 #include <memory>
 
-#include <boost/thread.hpp>
-
 #include "commands/game_server_cmd.h"
 #include "models/gdaemon_task.h"
 
@@ -91,9 +89,6 @@ namespace GameAP {
              * CMD Child processes pids
              */
             std::unordered_map<unsigned int, pid_t> cmd_processes;
-
-            // TODO: Remove after replace to coroutines
-            boost::thread_group cmds_threads;
 
             /**
              * Start new task

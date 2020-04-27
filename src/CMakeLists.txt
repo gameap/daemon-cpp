@@ -30,9 +30,9 @@ endif()
 
 if (BUILD_STATIC_BOOST)
     set(Boost_USE_STATIC_LIBS ON)
-    find_package(Boost REQUIRED COMPONENTS system filesystem iostreams thread)
+    find_package(Boost REQUIRED COMPONENTS system filesystem iostreams)
 else()
-    find_package(Boost REQUIRED COMPONENTS system filesystem iostreams thread)
+    find_package(Boost REQUIRED COMPONENTS system filesystem iostreams)
 endif()
 
 if(NOT Boost_FOUND)
@@ -42,7 +42,6 @@ endif()
 
 if ("${Boost_LIBRARIES}" STREQUAL "")
     set(BOOST_LIBS
-            Boost::thread
             Boost::system
             Boost::filesystem
             Boost::iostreams

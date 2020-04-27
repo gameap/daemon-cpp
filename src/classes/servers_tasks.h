@@ -7,8 +7,6 @@
 #include <unordered_set>
 #include <unordered_map>
 
-#include <boost/thread.hpp>
-
 #include "models/server_task.h"
 #include "commands/game_server_cmd.h"
 
@@ -57,9 +55,6 @@ namespace GameAP {
 
             unsigned int cache_ttl;
             std::unordered_map<unsigned int, time_t> last_sync;
-
-            // TODO: Remove after replace to coroutines
-            boost::thread_group cmds_threads;
 
             void start(std::shared_ptr<ServerTask> &task);
             void proceed(std::shared_ptr<ServerTask> &task);
