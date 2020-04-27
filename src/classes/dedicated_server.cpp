@@ -616,6 +616,10 @@ int DedicatedServer::update_db()
         jupdate_data.append(jstats);
     }
 
+    if (jupdate_data.empty()) {
+        return 0;
+    }
+
     try {
         GAMEAP_LOG_VERBOSE << "Saving dedicated server statistics on API...";
         Rest::post("/gdaemon_api/ds_stats", jupdate_data);
