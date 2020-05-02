@@ -80,12 +80,18 @@ void GdaemonTasks::update()
             continue;
         }
 
-        GameServersList& gslist = GameServersList::getInstance();
-        Server* server = gslist.get_server(getJsonUInt(jtask["server_id"]));
+        unsigned long server_id = jtask["server_id"].asLargestUInt();
 
-        if (server == nullptr) {
-            GAMEAP_LOG_ERROR << "Invalid game server. ID: " << getJsonUInt(jtask["server_id"]);
-            continue;
+        Server* server = nullptr;
+
+        if (server_id > 0) {
+            GameServersList& gslist = GameServersList::getInstance();
+            server = gslist.get_server(server_id);
+
+            if (server == nullptr) {
+                GAMEAP_LOG_ERROR << "Invalid game server. ID: " << getJsonUInt(jtask["server_id"]);
+                continue;
+            }
         }
 
         auto task = std::make_shared<GdaemonTask>(GdaemonTask{
@@ -136,12 +142,18 @@ void GdaemonTasks::check_after_crash()
             continue;
         }
 
-        GameServersList& gslist = GameServersList::getInstance();
-        Server* server = gslist.get_server(jtask["server_id"].asLargestUInt());
+        unsigned long server_id = jtask["server_id"].asLargestUInt();
 
-        if (server == nullptr) {
-            GAMEAP_LOG_ERROR << "Invalid game server. ID: " << getJsonUInt(jtask["server_id"]);
-            continue;
+        Server* server = nullptr;
+
+        if (server_id > 0) {
+            GameServersList& gslist = GameServersList::getInstance();
+            server = gslist.get_server(server_id);
+
+            if (server == nullptr) {
+                GAMEAP_LOG_ERROR << "Invalid game server. ID: " << getJsonUInt(jtask["server_id"]);
+                continue;
+            }
         }
 
         auto task = std::make_shared<GdaemonTask>(GdaemonTask{
@@ -155,7 +167,6 @@ void GdaemonTasks::check_after_crash()
         });
 
         this->exists_tasks.insert(task->id);
-
         this->tasks.push(task);
     }
 }
