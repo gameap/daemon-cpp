@@ -230,7 +230,9 @@ void GdaemonTasks::start(std::shared_ptr<GdaemonTask> &task)
         new (cmd) GameServerCmd(GameServerCmd::DELETE, task->server_id);
     }
     else if (! strcmp(task->task.c_str(), GAME_SERVER_EXECUTE)) {
-        cmd = new DedicatedServerCmd{DedicatedServerCmd::CMD_EXECUTE};
+        cmd = (DedicatedServerCmd*)shared_map_memory(sizeof(DedicatedServerCmd));
+        new (cmd) DedicatedServerCmd(DedicatedServerCmd::CMD_EXECUTE);
+
         cmd->set_option(DedicatedServerCmd::OPTION_SHELL_COMMAND, task->cmd);
     }
     else {
