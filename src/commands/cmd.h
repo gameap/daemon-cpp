@@ -4,7 +4,9 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
+#include "commands/output/ipc_cmd_output.h"
 #include "functions/gsystem.h"
+#include "log.h"
 
 namespace fs = boost::filesystem;
 
@@ -90,6 +92,21 @@ namespace GameAP {
                 this->m_output->append(boost::str(boost::format("\nExited with %1%\n") % exit_code));
 
                 return exit_code;
+            }
+
+            void create_output()
+            {
+                IpcCmdOutput* output_ptr = (IpcCmdOutput*)shared_map_memory(sizeof(IpcCmdOutput));
+
+                if (output_ptr == nullptr) {
+                    GAMEAP_LOG_ERROR << "Unable to create shared map memory";
+                    this->m_output->append("Unable to create shared map memory");
+
+                    this->m_complete = true;
+                    this->m_result = false;
+                } else {
+                    this->m_output = std::shared_ptr<IpcCmdOutput>(new (output_ptr) IpcCmdOutput(), [](IpcCmdOutput*) {});
+                }
             }
 
             /**

@@ -3,7 +3,6 @@
 
 #include <boost/filesystem.hpp>
 
-#include "commands/output/ipc_cmd_output.h"
 #include "models/server.h"
 #include "classes/game_servers_list.h"
 #include "cmd.h"
@@ -79,8 +78,6 @@ namespace GameAP {
         private:
             void replace_shortcodes(std::string &command);
             int unprivileged_exec(std::string &command);
-
-            void create_output();
     };
 }
 #endif //GDAEMON_GAME_SERVER_CMD_H

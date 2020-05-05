@@ -41,7 +41,6 @@ void GameServerCmd::_execute()
 
         case STOP:
         case KILL:
-            this->m_output->append("_execute");
             this->m_result = this->stop();
             break;
 
@@ -290,19 +289,4 @@ void GameServerCmd::error_handler(const std::exception & exception)
 
     this->m_complete = true;
     this->m_result = false;
-}
-
-void GameServerCmd::create_output()
-{
-    IpcCmdOutput* output_ptr = (IpcCmdOutput*)shared_map_memory(sizeof(IpcCmdOutput));
-
-    if (output_ptr == nullptr) {
-        GAMEAP_LOG_DEBUG << "Unable to create shared map memory";
-        this->m_output->append("Unable to create shared map memory");
-
-        this->m_complete = true;
-        this->m_result = false;
-    } else {
-        this->m_output = std::shared_ptr<IpcCmdOutput>(new (output_ptr) IpcCmdOutput(), [](IpcCmdOutput*) {});
-    }
 }
