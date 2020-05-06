@@ -285,6 +285,11 @@ void GameServersList::sync_from_api(ulong server_id)
     server->uuid        = jserver["uuid"].asString();
     server->uuid_short  = jserver["uuid_short"].asString();
 
+    server->start_command           = jserver["start_command"].asString();
+    server->stop_command            = jserver["stop_command"].asString();
+    server->force_stop_command      = jserver["force_stop_command"].asString();
+    server->restart_command         = jserver["restart_command"].asString();
+
     server->game = Game{
         jserver["game"]["code"].asString(),
         jserver["game"]["start_code"].asString(),
