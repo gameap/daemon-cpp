@@ -12,6 +12,8 @@ steps:
       - cmake .. -DBUILD_STATIC_BOOST=on -DSYSCTL_DAEMON=on
       - cmake --build .
       - mkdir -p gameap-daemon/{bin,lib}
+      - ls -al ./
+      - ls -al ./gameap-daemon
       - mv ./bin/gameap-daemon ./gameap-daemon/bin/
       - cp /opt/gcc-9.3.0/lib64/libstdc++.so ./gameap-daemon/lib/
       - cp /opt/gcc-9.3.0/lib64/libstdc++.so.6 ./gameap-daemon/lib/
