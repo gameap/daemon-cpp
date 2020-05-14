@@ -1,0 +1,35 @@
+kind: pipeline
+type: docker
+name: build-debian-jessie
+
+steps:
+  - name: build
+    image: knik/gdaemon-build:jessie
+    commands:
+      - mkdir build && cd build
+      - cmake .. -DBUILD_STATIC_BOOST=on -DSYSCTL_DAEMON=on
+      - cmake --build .
+      - mkdir gameap-daemon/{bin,lib}
+      - mv ./bin/gameap-daemon ./gameap-daemon/bin/
+      - cp /opt/gcc-9.3.0/lib64/libstdc++.so ./gameap-daemon/lib/
+      - cp /opt/gcc-9.3.0/lib64/libstdc++.so.6 ./gameap-daemon/lib/
+      - cp /opt/gcc-9.3.0/lib64/libstdc++.so.6.0.28 ./gameap-daemon/lib/
+      - tar czf gameap-daemon-jessie.tar.gz gameap-daemon
+
+  - name: publish
+    image: cschlosser/drone-ftps
+    environment:
+      FTP_USERNAME:
+        from_secret: ftp_username
+      FTP_PASSWORD:
+        from_secret: ftp_password
+    settings:
+      hostname: packages.gameap.ru:21
+      secrets: [ ftp_username, ftp_password ]
+      secure: false
+      src_dir: /build/gameap-daemon
+      dest_dir: /gameap-daemon
+      chmod: false
+      include:
+        - ^.*tar\.gz$
+        - ^.*zip$
