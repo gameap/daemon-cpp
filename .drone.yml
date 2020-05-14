@@ -14,9 +14,9 @@ steps:
       - mkdir -p gameap-daemon/bin
       - mkdir -p gameap-daemon/lib
       - mv ./bin/gameap-daemon ./gameap-daemon/bin/
-      - cp /opt/gcc-9.3.0/lib64/libstdc++.so ./gameap-daemon/lib/
-      - cp /opt/gcc-9.3.0/lib64/libstdc++.so.6 ./gameap-daemon/lib/
-      - cp /opt/gcc-9.3.0/lib64/libstdc++.so.6.0.28 ./gameap-daemon/lib/
+      - cp -a /opt/gcc-9.3.0/lib64/libstdc++.so ./gameap-daemon/lib/
+      - cp -a /opt/gcc-9.3.0/lib64/libstdc++.so.6 ./gameap-daemon/lib/
+      - cp -a /opt/gcc-9.3.0/lib64/libstdc++.so.6.0.28 ./gameap-daemon/lib/
       - mkdir publish
       - tar czf publish/gameap-daemon-jessie.tar.gz gameap-daemon
 
