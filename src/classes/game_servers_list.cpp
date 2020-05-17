@@ -65,9 +65,9 @@ int GameServersList::update_list()
                     ""
                 },
                 jserver["server_ip"].asString(),
-                getJsonUInt(jserver["server_port"]),
-                getJsonUInt(jserver["query_port"]),
-                getJsonUInt(jserver["rcon_port"]),
+                static_cast<unsigned short>(getJsonUInt(jserver["server_port"])),
+                static_cast<unsigned short>(getJsonUInt(jserver["query_port"])),
+                static_cast<unsigned short>(getJsonUInt(jserver["rcon_port"])),
                 jserver["dir"].asString(),
                 jserver["su_user"].asString(),
                 jserver["start_command"].asString(),
