@@ -55,7 +55,6 @@ install:
   - vcpkg install boost-system:%platform%-windows
                   boost-filesystem:%platform%-windows
                   boost-iostreams:%platform%-windows
-                  boost-thread:%platform%-windows
                   boost-process:%platform%-windows
                   boost-property-tree:%platform%-windows
 
