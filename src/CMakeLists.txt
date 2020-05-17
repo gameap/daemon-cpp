@@ -30,7 +30,10 @@ endif()
 
 if (BUILD_STATIC_BOOST)
     set(Boost_USE_STATIC_LIBS ON)
-    find_package(Boost REQUIRED COMPONENTS system filesystem iostreams)
+endif()
+
+if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    find_package(Boost REQUIRED COMPONENTS system filesystem iostreams date_time)
 else()
     find_package(Boost REQUIRED COMPONENTS system filesystem iostreams)
 endif()
