@@ -265,6 +265,7 @@ void GameServerCmd::replace_shortcodes(std::string &command)
     command = str_replace("{port}", std::to_string(this->m_server->connect_port), command);
     command = str_replace("{query_port}", std::to_string(this->m_server->query_port), command);
     command = str_replace("{rcon_port}", std::to_string(this->m_server->rcon_port), command);
+    command = str_replace("{rcon_password}", this->m_server->rcon_password, command);
 
     command = str_replace("{user}", this->m_server->user, command);
 
