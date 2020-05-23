@@ -331,24 +331,28 @@ void GameServersList::sync_from_api(ulong server_id)
     }
 
     Json::Value jserver_vars = jserver["vars"];
-    for (auto const& key: jserver_vars.getMemberNames()) {
-        auto jvar = jserver_vars[key];
+    GAMEAP_LOG_VERBOSE << "Server Vars: " << jserver_vars;
 
-        if (jvar.isString()) {
-            if (vars.find(key) == vars.end()) {
-                vars.insert(std::pair<std::string, std::string>(key, jvar.asString()));
-            } else {
-                vars[key] = jvar.asString();
+    if (!jserver_vars.empty()) {
+        for (auto const& key: jserver_vars.getMemberNames()) {
+            auto jvar = jserver_vars[key];
+
+            if (jvar.isString()) {
+                if (vars.find(key) == vars.end()) {
+                    vars.insert(std::pair<std::string, std::string>(key, jvar.asString()));
+                } else {
+                    vars[key] = jvar.asString();
+                }
             }
-        }
-        else if (jvar.isInt()) {
-            if (vars.find(key) == vars.end()) {
-                vars.insert(std::pair<std::string, std::string>(key, std::to_string(jvar.asInt())));
+            else if (jvar.isInt()) {
+                if (vars.find(key) == vars.end()) {
+                    vars.insert(std::pair<std::string, std::string>(key, std::to_string(jvar.asInt())));
+                } else {
+                    vars[key] = std::to_string(jvar.asInt());
+                }
             } else {
-                vars[key] = std::to_string(jvar.asInt());
+                GAMEAP_LOG_ERROR << "Unknown alias type: " << jvar;
             }
-        } else {
-            GAMEAP_LOG_ERROR << "Unknown alias type: " << jvar;
         }
     }
 

@@ -20,8 +20,6 @@ namespace GameAP {
     std::string Rest::m_api_token = "";
     int Rest::m_errors_count = 0;
 
-    std::timed_mutex Rest::m_mutex;
-
     /**
      * Get Token. Set Token to variable api_token
      *
@@ -30,8 +28,6 @@ namespace GameAP {
     int Rest::get_token()
     {
         Config& config = Config::getInstance();
-
-        mutex_lock();
         auto conn = RestClient::Connection(config.api_host);
 
         std::string uri = "/gdaemon_api/get_token";
@@ -42,7 +38,6 @@ namespace GameAP {
         conn.FollowRedirects(true, 3);
 
         RestClient::Response response = conn.get(uri);
-        mutex_unlock();
 
         if (response.code != 200) {
             GAMEAP_LOG_ERROR << "RestClient HTTP response code (GET): " << response.code;
@@ -100,8 +95,6 @@ namespace GameAP {
     Json::Value Rest::get(const std::string& uri)
     {
         Config& config = Config::getInstance();
-
-        mutex_lock();
         auto conn = RestClient::Connection(config.api_host);
 
         conn.AppendHeader("X-Auth-Token", m_api_token);
@@ -112,7 +105,6 @@ namespace GameAP {
         conn.FollowRedirects(true, 3);
 
         RestClient::Response response = conn.get(uri);
-        mutex_unlock();
 
         if (response.code != 200) {
             if (response.code == 401) {
@@ -158,7 +150,6 @@ namespace GameAP {
 
         Json::FastWriter jwriter;
 
-        mutex_lock();
         auto conn = RestClient::Connection(config.api_host);
 
         conn.AppendHeader("X-Auth-Token", m_api_token);
@@ -171,7 +162,6 @@ namespace GameAP {
 
         std::string write_data = jwriter.write(data);
         RestClient::Response response = conn.post(uri, write_data);
-        mutex_unlock();
 
         if (response.code == 201) {
             m_errors_count = 0;
@@ -224,8 +214,6 @@ namespace GameAP {
         Config& config = Config::getInstance();
 
         Json::FastWriter jwriter;
-
-        mutex_lock();
         auto conn = RestClient::Connection(config.api_host);
 
         conn.AppendHeader("X-Auth-Token", m_api_token);
@@ -238,7 +226,6 @@ namespace GameAP {
 
         std::string write_data = jwriter.write(data);
         RestClient::Response response = conn.put(uri, write_data);
-        mutex_unlock();
 
         if (response.code == 200) {
             m_errors_count = 0;
@@ -280,8 +267,6 @@ namespace GameAP {
         Config& config = Config::getInstance();
 
         Json::FastWriter jwriter;
-
-        mutex_lock();
         auto conn = RestClient::Connection(config.api_host);
 
         conn.AppendHeader("X-Auth-Token", m_api_token);
@@ -294,7 +279,6 @@ namespace GameAP {
 
         std::string write_data = jwriter.write(data);
         RestClient::Response response = conn.patch(uri, write_data);
-        mutex_unlock();
 
         if (response.code == 200) {
             GAMEAP_LOG_DEBUG << "API. Resource Updated";
@@ -320,17 +304,5 @@ namespace GameAP {
 
             throw Rest::RestapiException("RestClient error");
         }
-    }
-
-    void Rest::mutex_lock()
-    {
-        if (! m_mutex.try_lock_for(std::chrono::seconds(10))) {
-            m_mutex.unlock();
-        }
-    }
-
-    void Rest::mutex_unlock()
-    {
-        m_mutex.unlock();
     }
 }
