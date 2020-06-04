@@ -147,7 +147,7 @@ int GameServerInstaller::_detect_sources()
                 m_mod_source_type = INST_NO_SOURCE;
             }
         } else {
-            game_source_detected = true;
+            mod_source_detected = true;
         }
     }
     
