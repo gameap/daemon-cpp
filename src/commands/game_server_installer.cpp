@@ -125,9 +125,9 @@ int GameServerInstaller::_detect_sources()
             if (m_game_type == INST_TYPE_INVALID) {
                 m_ignored_game_source.insert(m_game_source_type);
                 m_game_source_type = INST_NO_SOURCE;
-            } else {
-                game_source_detected = true;
             }
+        } else {
+            game_source_detected = true;
         }
     }
 
@@ -145,9 +145,9 @@ int GameServerInstaller::_detect_sources()
             if (m_mod_type == INST_TYPE_INVALID) {
                 m_ignored_mod_source.insert(m_mod_source_type);
                 m_mod_source_type = INST_NO_SOURCE;
-            } else {
-                mod_source_detected = true;
             }
+        } else {
+            game_source_detected = true;
         }
     }
     
