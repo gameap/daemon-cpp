@@ -55,7 +55,6 @@ void check_tasks()
     while (status_active) {
         gdaemon_tasks.update();
 
-
         if (!gdaemon_tasks.empty()) {
             gdaemon_tasks.run_next();
         }

@@ -128,10 +128,7 @@ void GameServersList::stats_process()
             jserver["process_active"]       = server.second->process_active ? 1 : 0;
         }
 
-        jserver["installed"]                = server.second->installed;
         jupdate_data.append(jserver);
-
-        server.second->updated_at = time(nullptr);
     }
 
     if (! jupdate_data.empty()) {
@@ -153,7 +150,7 @@ void GameServersList::sync_all()
 
     time_t time_diff = str_timediff.empty()
        ? 0
-       : std::stol(str_timediff, 0, 10);
+       : std::stol(str_timediff, nullptr, 10);
 
     for (auto const& server : this->servers_list) {
         Json::Value jserver;
@@ -241,6 +238,7 @@ void GameServersList::set_install_status(unsigned long server_id, Server::instal
     }
 
     this->servers_list[server_id]->installed = status;
+    this->servers_list[server_id]->updated_at = time(nullptr);
     this->sync_all();
 }
 
@@ -311,6 +309,14 @@ void GameServersList::sync_from_api(ulong server_id)
         jserver["game_mod"]["default_start_cmd_linux"].asString(),
         jserver["game_mod"]["default_start_cmd_windows"].asString()
     };
+
+    server->ip = jserver["server_ip"].asString();
+
+    server->rcon_password       = jserver["rcon"].asString();
+    server->start_command       = jserver["start_command"].asString();
+    server->stop_command        = jserver["stop_command"].asString();
+    server->force_stop_command  = jserver["force_stop_command"].asString();
+    server->restart_command     = jserver["restart_command"].asString();
 
     Json::Value jvars = jserver["game_mod"]["vars"];
     std::unordered_map<std::string, std::string> vars;
