@@ -195,7 +195,7 @@ void FileServerSess::cmd_process()
 
     if (!binn_list_get_uint8(m_read_binn, 1, &command)) {
         binn_free(m_read_binn);
-        response_msg(FSERV_STATUS_ERROR, "Invalid Binn data: reading command failed", true);
+        response_msg(FSERV_STATUS_ERROR, "Binn parse error: reading command failed", true);
         return;
     }
 
@@ -209,11 +209,14 @@ void FileServerSess::cmd_process()
 
         case FSERV_FILESEND: {
             // File send
+            if (!binn_list_get_uint8(m_read_binn, 2, &m_sendfile_mode)) {
+                response_msg(FSERV_STATUS_ERROR, "Binn parse error: invalid sendfile mode", true);
+                break;
+            }
+
             char * fname;
-            if (!binn_list_get_uint8(m_read_binn, 2, &m_sendfile_mode)
-                || !binn_list_get_str(m_read_binn, 3, &fname)
-                    ) {
-                response_msg(FSERV_STATUS_ERROR, "Invalid Binn data", true);
+            if (!binn_list_get_str(m_read_binn, 3, &fname)) {
+                response_msg(FSERV_STATUS_ERROR, "Binn parse error: invalid filename", true);
                 break;
             }
 
@@ -229,13 +232,21 @@ void FileServerSess::cmd_process()
                 uint chmod;
 
                 uint64 fsize;
-                if (!binn_list_get_uint64(m_read_binn, 4, &fsize)
-                    || !binn_list_get_bool(m_read_binn, 5, &make_dir)
-                    || !binn_list_get_uint8(m_read_binn, 6, (unsigned char *)&chmod)
-                 ) {
-                    response_msg(FSERV_STATUS_ERROR, "Invalid Binn data", true);
+
+                if (!binn_list_get_uint64(m_read_binn, 4, &fsize)) {
+                    response_msg(FSERV_STATUS_ERROR, "Binn parse error: invalid filesize", true);
                     break;
                 }
+
+                if (!binn_list_get_bool(m_read_binn, 5, &make_dir)) {
+                    response_msg(FSERV_STATUS_ERROR, "Binn parse error: invalid makedir value", true);
+                    break;
+                }
+                if (!binn_list_get_uint8(m_read_binn, 6, (unsigned char *)&chmod)) {
+                    response_msg(FSERV_STATUS_ERROR, "Binn parse error: invalid chmod", true);
+                    break;
+                }
+
                 m_filesize = fsize;
 
                 open_output_file();
@@ -270,10 +281,13 @@ void FileServerSess::cmd_process()
             char *dir;
             unsigned char type;
 
-            if (!binn_list_get_str(m_read_binn, 2, &dir)
-                || !binn_list_get_uint8(m_read_binn, 3, &type)
-             ) {
-                response_msg(FSERV_STATUS_ERROR, "Invalid Binn data", true);
+            if (!binn_list_get_str(m_read_binn, 2, &dir)) {
+                response_msg(FSERV_STATUS_ERROR, "Binn parse error: invalid dir value", true);
+                break;
+            }
+
+            if (!binn_list_get_uint8(m_read_binn, 3, &type)) {
+                response_msg(FSERV_STATUS_ERROR, "Binn parse error: invalid type value", true);
                 break;
             }
 
@@ -355,7 +369,7 @@ void FileServerSess::cmd_process()
 
             char *path;
             if (!binn_list_get_str(m_read_binn, 2, &path)) {
-                response_msg(FSERV_STATUS_ERROR, "Invalid Binn data", true);
+                response_msg(FSERV_STATUS_ERROR, "Binn parse error: invalid path", true);
                 break;
             }
 
@@ -385,21 +399,25 @@ void FileServerSess::cmd_process()
             char *newfile;
             BOOL copy;
 
-            if (!binn_list_get_str(m_read_binn, 2, &oldfile)
-                || !binn_list_get_str(m_read_binn, 3, &newfile)
-                || !binn_list_get_bool(m_read_binn, 4, &copy)
-             ) {
-                response_msg(FSERV_STATUS_ERROR, "Invalid Binn data", true);
+            if (!binn_list_get_str(m_read_binn, 2, &oldfile)) {
+                response_msg(FSERV_STATUS_ERROR, "Binn parse error: invalid oldfile value", true);
                 break;
             }
 
+            if (!binn_list_get_str(m_read_binn, 3, &newfile)) {
+                response_msg(FSERV_STATUS_ERROR, "Binn parse error: invalid newfile value", true);
+                break;
+            }
+
+            if (!binn_list_get_bool(m_read_binn, 4, &copy)) {
+                response_msg(FSERV_STATUS_ERROR, "Binn parse error: invalid copy value", true);
+                break;
+            }
 
             try {
                 if (copy) {
-                    // Copy
                     fs::copy(oldfile, newfile);
                 } else {
-                    // Move
                     fs::rename(oldfile, newfile);
                 }
             }
@@ -411,9 +429,6 @@ void FileServerSess::cmd_process()
 
             write_ok();
 
-            // delete oldfile;
-            // delete newfile;
-
             break;
         };
 
@@ -421,10 +436,13 @@ void FileServerSess::cmd_process()
             char *file;
             BOOL recursive ;
 
-            if (!binn_list_get_str(m_read_binn, 2, &file)
-                || !binn_list_get_bool(m_read_binn, 3, &recursive)
-             ) {
-                response_msg(FSERV_STATUS_ERROR, "Invalid Binn data", true);
+            if (!binn_list_get_str(m_read_binn, 2, &file)) {
+                response_msg(FSERV_STATUS_ERROR, "Binn parse error: invalid file value", true);
+                break;
+            }
+
+            if (!binn_list_get_bool(m_read_binn, 3, &recursive)) {
+                response_msg(FSERV_STATUS_ERROR, "Binn parse error: invalid recursive value", true);
                 break;
             }
 
@@ -460,7 +478,7 @@ void FileServerSess::cmd_process()
             char *file;
 
             if (!binn_list_get_str(m_read_binn, 2, &file)) {
-                response_msg(FSERV_STATUS_ERROR, "Invalid Binn data", true);
+                response_msg(FSERV_STATUS_ERROR, "Binn parse error: invalid file value", true);
                 break;
             }
 
@@ -530,10 +548,13 @@ void FileServerSess::cmd_process()
             char *file;
             ushort permissions;
 
-            if (!binn_list_get_str(m_read_binn, 2, &file)
-                || !binn_list_get_uint16(m_read_binn, 3, &permissions)
-             ) {
-                response_msg(FSERV_STATUS_ERROR, "Invalid Binn data", true);
+            if (!binn_list_get_str(m_read_binn, 2, &file)) {
+                response_msg(FSERV_STATUS_ERROR, "Binn parse error: invalid file value", true);
+                break;
+            }
+
+            if (!binn_list_get_uint16(m_read_binn, 3, &permissions)) {
+                response_msg(FSERV_STATUS_ERROR, "Binn parse error: invalid permissions value", true);
                 break;
             }
 
