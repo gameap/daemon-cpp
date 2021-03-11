@@ -229,7 +229,7 @@ void FileServerSess::cmd_process()
 
             if (m_sendfile_mode == FSERV_FILE_DOWNLOAD) {
                 BOOL make_dir;
-                uint chmod;
+                unsigned short chmod;
 
                 uint64 fsize;
 
@@ -242,7 +242,7 @@ void FileServerSess::cmd_process()
                     response_msg(FSERV_STATUS_ERROR, "Binn parse error: invalid makedir value", true);
                     break;
                 }
-                if (!binn_list_get_uint8(m_read_binn, 6, (unsigned char *)&chmod)) {
+                if (!binn_list_get_uint16(m_read_binn, 6, &chmod)) {
                     response_msg(FSERV_STATUS_ERROR, "Binn parse error: invalid chmod", true);
                     break;
                 }
