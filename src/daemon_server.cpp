@@ -1,4 +1,5 @@
 #include <chrono>
+#include <boost/bind.hpp>
 
 #include "log.h"
 #include "consts.h"

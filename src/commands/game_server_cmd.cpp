@@ -41,7 +41,6 @@ void GameServerCmd::_execute()
 
         case STOP:
         case KILL:
-            this->m_output->append("_execute");
             this->m_result = this->stop();
             break;
 
@@ -266,6 +265,7 @@ void GameServerCmd::replace_shortcodes(std::string &command)
     command = str_replace("{port}", std::to_string(this->m_server->connect_port), command);
     command = str_replace("{query_port}", std::to_string(this->m_server->query_port), command);
     command = str_replace("{rcon_port}", std::to_string(this->m_server->rcon_port), command);
+    command = str_replace("{rcon_password}", this->m_server->rcon_password, command);
 
     command = str_replace("{user}", this->m_server->user, command);
 
@@ -290,19 +290,4 @@ void GameServerCmd::error_handler(const std::exception & exception)
 
     this->m_complete = true;
     this->m_result = false;
-}
-
-void GameServerCmd::create_output()
-{
-    IpcCmdOutput* output_ptr = (IpcCmdOutput*)shared_map_memory(sizeof(IpcCmdOutput));
-
-    if (output_ptr == nullptr) {
-        GAMEAP_LOG_DEBUG << "Unable to create shared map memory";
-        this->m_output->append("Unable to create shared map memory");
-
-        this->m_complete = true;
-        this->m_result = false;
-    } else {
-        this->m_output = std::shared_ptr<IpcCmdOutput>(new (output_ptr) IpcCmdOutput(), [](IpcCmdOutput*) {});
-    }
 }

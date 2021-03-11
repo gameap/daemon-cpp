@@ -119,30 +119,38 @@ int GameServerInstaller::_detect_sources()
             return ERROR_STATUS_INT;
         }
 
-        if (m_game_source_type == INST_FROM_LOCREP
-            && _detect_localrep_type(_get_game_source()) == INST_TYPE_INVALID
-        ) {
-            m_ignored_game_source.insert(m_game_source_type);
-            m_game_source_type = INST_NO_SOURCE;
-        } else {
+        if (m_game_source_type == INST_FROM_LOCREP) {
+            m_game_type = _detect_localrep_type(_get_game_source());
+
+            if (m_game_type == INST_TYPE_INVALID) {
+                m_ignored_game_source.insert(m_game_source_type);
+                m_game_source_type = INST_NO_SOURCE;
+            }
+        }
+
+        if (m_game_source_type != INST_NO_SOURCE) {
             game_source_detected = true;
         }
     }
 
     bool mod_source_detected = false;
-    while (!mod_source_detected) {
+    while (! mod_source_detected) {
         _detect_mod_source();
 
         if (m_mod_source_type == INST_NO_SOURCE) {
             break;
         }
 
-        if (m_mod_source_type == INST_FROM_LOCREP
-            && _detect_localrep_type(_get_mod_source()) == INST_TYPE_INVALID
-        ) {
-            m_ignored_mod_source.insert(m_mod_source_type);
-            m_mod_source_type = INST_NO_SOURCE;
-        } else {
+        if (m_mod_source_type == INST_FROM_LOCREP) {
+            m_mod_type = _detect_localrep_type(_get_mod_source());
+
+            if (m_mod_type == INST_TYPE_INVALID) {
+                m_ignored_mod_source.insert(m_mod_source_type);
+                m_mod_source_type = INST_NO_SOURCE;
+            }
+        }
+
+        if (m_mod_source_type != INST_NO_SOURCE) {
             mod_source_detected = true;
         }
     }

@@ -204,6 +204,14 @@ int main(int argc, char** argv)
     std::string put_env = "PATH=" + path_env;
     putenv(&put_env[0]);
 
+    for (int i = 0; i < argc - 1; i++) {
+        if (std::string(argv[i]) == "-c") {
+            // Config file
+            config.cfg_file = std::string(argv[i + 1]);
+            i++;
+        }
+    }
+
     #ifdef CONSOLE_LOG
         static plog::ColorConsoleAppender<plog::TxtFormatter> consoleAppender;
         plog::init<GameAP::MainLog>(plog::verbose, &consoleAppender);
@@ -236,14 +244,6 @@ int main(int argc, char** argv)
                 config.error_log,
                 boost::str(boost::format("%1%error_%2%.log") % log_directory % buffer_time)
             );
-        }
-
-        for (int i = 0; i < argc - 1; i++) {
-            if (std::string(argv[i]) == "-c") {
-                // Config file
-                config.cfg_file = std::string(argv[i + 1]);
-                i++;
-            }
         }
 
         plog::init<GameAP::MainLog>(plog::verbose, config.output_log.c_str());

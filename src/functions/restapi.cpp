@@ -1,3 +1,5 @@
+#include "restapi.h"
+
 #include <memory>
 
 #include <restclient-cpp/restclient.h>
@@ -8,6 +10,7 @@
 #include "restapi.h"
 #include "config.h"
 #include "state.h"
+#include "gstring.h"
 
 namespace GameAP {
     Rest::RestapiException::RestapiException(std::string const& msg) : msg_(msg) {}
@@ -25,7 +28,6 @@ namespace GameAP {
     int Rest::get_token()
     {
         Config& config = Config::getInstance();
-
         auto conn = RestClient::Connection(config.api_host);
 
         std::string uri = "/gdaemon_api/get_token";
@@ -39,7 +41,7 @@ namespace GameAP {
 
         if (response.code != 200) {
             GAMEAP_LOG_ERROR << "RestClient HTTP response code (GET): " << response.code;
-            GAMEAP_LOG_ERROR << "URL: " << config.api_host << uri;
+            GAMEAP_LOG_DEBUG_ERROR << "URL: " << config.api_host << uri;
 
             if (!response.body.empty()) {
                 if (response.body.length() > 200) {
@@ -50,7 +52,6 @@ namespace GameAP {
             }
 
             m_errors_count++;
-
             throw Rest::RestapiException("RestClient error. Token getting error.");
         } else {
             m_errors_count = 0;
@@ -71,7 +72,7 @@ namespace GameAP {
 
                 if (!jvalue["timestamp"].isNull()) {
                     time_t panel_time = jvalue["timestamp"].isUInt()
-                                             ? jvalue["timestamp"].asUInt()
+                                             ? getJsonUInt(jvalue["timestamp"])
                                              : time(nullptr);
 
                     time_t diff = time(nullptr) - panel_time;
@@ -94,7 +95,6 @@ namespace GameAP {
     Json::Value Rest::get(const std::string& uri)
     {
         Config& config = Config::getInstance();
-
         auto conn = RestClient::Connection(config.api_host);
 
         conn.AppendHeader("X-Auth-Token", m_api_token);
@@ -114,7 +114,7 @@ namespace GameAP {
             m_errors_count++;
 
             GAMEAP_LOG_ERROR << "RestClient HTTP response code (GET): " << response.code;
-            GAMEAP_LOG_ERROR << "URL: " << config.api_host << uri;
+            GAMEAP_LOG_DEBUG_ERROR << "URL: " << config.api_host << uri;
 
             if (!response.body.empty()) {
                 if (response.body.length() > 200) {
@@ -168,12 +168,12 @@ namespace GameAP {
             GAMEAP_LOG_DEBUG << "API. Resource Created";
         } else if (response.code == 422) {
             GAMEAP_LOG_ERROR << "RestClient HTTP response code (POST): " << response.code;
-            GAMEAP_LOG_ERROR << "URL: " << config.api_host << uri;
+            GAMEAP_LOG_DEBUG_ERROR << "URL: " << config.api_host << uri;
 
             Json::Value jvalue;
             Json::Reader jreader(Json::Features::strictMode());
 
-            GAMEAP_LOG_ERROR << "RestClient Request: " << write_data;
+            GAMEAP_LOG_DEBUG_ERROR << "RestClient Request: " << write_data;
 
             if (jreader.parse(response.body, jvalue, false)) {
                 GAMEAP_LOG_DEBUG_ERROR << "Error: " << jvalue["message"].asString();
@@ -189,7 +189,8 @@ namespace GameAP {
             m_errors_count++;
 
             GAMEAP_LOG_ERROR << "RestClient HTTP response code (POST): " << response.code;
-            GAMEAP_LOG_ERROR << "URL: " << config.api_host << uri;
+            GAMEAP_LOG_DEBUG_ERROR << "URL: " << config.api_host << uri;
+            GAMEAP_LOG_VERBOSE_ERROR << "RestClient Request: " << write_data;
 
             if (!response.body.empty()) {
                 if (response.body.length() > 200) {
@@ -213,7 +214,6 @@ namespace GameAP {
         Config& config = Config::getInstance();
 
         Json::FastWriter jwriter;
-
         auto conn = RestClient::Connection(config.api_host);
 
         conn.AppendHeader("X-Auth-Token", m_api_token);
@@ -241,9 +241,9 @@ namespace GameAP {
             m_errors_count++;
 
             GAMEAP_LOG_ERROR << "RestClient HTTP response code (PUT): " << response.code;
-            GAMEAP_LOG_ERROR << "URL: " << config.api_host << uri;
+            GAMEAP_LOG_DEBUG_ERROR << "URL: " << config.api_host << uri;
 
-            GAMEAP_LOG_DEBUG_ERROR << "RestClient Request: " << write_data;
+            GAMEAP_LOG_VERBOSE_ERROR << "RestClient Request: " << write_data;
 
             if (!response.body.empty()) {
                 if (response.body.length() > 200) {
@@ -267,7 +267,6 @@ namespace GameAP {
         Config& config = Config::getInstance();
 
         Json::FastWriter jwriter;
-
         auto conn = RestClient::Connection(config.api_host);
 
         conn.AppendHeader("X-Auth-Token", m_api_token);
@@ -291,9 +290,9 @@ namespace GameAP {
             }
 
             GAMEAP_LOG_ERROR << "RestClient HTTP response code (PATCH): " << response.code;
-            GAMEAP_LOG_ERROR << "URL: " << config.api_host << uri;
+            GAMEAP_LOG_DEBUG_ERROR << "URL: " << config.api_host << uri;
 
-            GAMEAP_LOG_DEBUG_ERROR << "RestClient Request: " << write_data;
+            GAMEAP_LOG_VERBOSE_ERROR << "RestClient Request: " << write_data;
 
             if (!response.body.empty()) {
                 if (response.body.length() > 200) {

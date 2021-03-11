@@ -38,9 +38,9 @@ int GameServersList::update_list()
 
             // TODO: Improve
             std::shared_ptr<Server> server = std::make_shared<Server>(Server{
-                jserver["id"].asUInt(),
+                getJsonUInt(jserver["id"]),
                 jserver["enabled"].asBool(),
-                static_cast<Server::install_status>(jserver["installed"].asUInt()),
+                static_cast<Server::install_status>(getJsonUInt(jserver["installed"])),
                 jserver["blocked"].asBool(),
                 jserver["name"].asString(),
                 jserver["uuid"].asString(),
@@ -57,7 +57,7 @@ int GameServersList::update_list()
                     ""
                 },
                 GameMod{
-                    jserver["game_mod_id"].asUInt(),
+                    getJsonUInt(jserver["game_mod_id"]),
                     "",
                     "",
                     "",
@@ -65,9 +65,10 @@ int GameServersList::update_list()
                     ""
                 },
                 jserver["server_ip"].asString(),
-                static_cast<unsigned short>(jserver["server_port"].asUInt()),
-                static_cast<unsigned short>(jserver["query_port"].asUInt()),
-                static_cast<unsigned short>(jserver["rcon_port"].asUInt()),
+                static_cast<unsigned short>(getJsonUInt(jserver["server_port"])),
+                static_cast<unsigned short>(getJsonUInt(jserver["query_port"])),
+                static_cast<unsigned short>(getJsonUInt(jserver["rcon_port"])),
+                jserver["rcon"].asString(),
                 jserver["dir"].asString(),
                 jserver["su_user"].asString(),
                 jserver["start_command"].asString(),
@@ -109,7 +110,7 @@ void GameServersList::stats_process()
 
     for (auto const& server : this->servers_list) {
         Json::Value jserver;
-        jserver["id"] = static_cast<unsigned long long>(server.second->id);
+        jserver["id"] = static_cast<Json::UInt64>(server.second->id);
 
         if (server.second->installed == Server::SERVER_INSTALLED) {
             GameServerCmd game_server_cmd = GameServerCmd(GameServerCmd::STATUS, server.second->id);
@@ -127,10 +128,7 @@ void GameServersList::stats_process()
             jserver["process_active"]       = server.second->process_active ? 1 : 0;
         }
 
-        jserver["installed"]                = server.second->installed;
         jupdate_data.append(jserver);
-
-        server.second->updated_at = time(nullptr);
     }
 
     if (! jupdate_data.empty()) {
@@ -152,11 +150,11 @@ void GameServersList::sync_all()
 
     time_t time_diff = str_timediff.empty()
        ? 0
-       : std::stol(str_timediff, 0, 10);
+       : std::stol(str_timediff, nullptr, 10);
 
     for (auto const& server : this->servers_list) {
         Json::Value jserver;
-        jserver["id"] = static_cast<unsigned long long>(server.second->id);
+        jserver["id"] = static_cast<Json::UInt64>(server.second->id);
 
         time_t last_process_check = server.second->last_process_check - time_diff;
 
@@ -240,6 +238,7 @@ void GameServersList::set_install_status(unsigned long server_id, Server::instal
     }
 
     this->servers_list[server_id]->installed = status;
+    this->servers_list[server_id]->updated_at = time(nullptr);
     this->sync_all();
 }
 
@@ -275,7 +274,7 @@ void GameServersList::sync_from_api(ulong server_id)
 
     if (updated_at > server->updated_at) {
         server->enabled     = jserver["enabled"].asBool();
-        server->installed   = static_cast<Server::install_status>(jserver["installed"].asUInt());
+        server->installed   = static_cast<Server::install_status>(getJsonUInt(jserver["installed"]));
         server->blocked     = jserver["blocked"].asBool();
     }
 
@@ -285,26 +284,39 @@ void GameServersList::sync_from_api(ulong server_id)
     server->uuid        = jserver["uuid"].asString();
     server->uuid_short  = jserver["uuid_short"].asString();
 
+    server->start_command           = jserver["start_command"].asString();
+    server->stop_command            = jserver["stop_command"].asString();
+    server->force_stop_command      = jserver["force_stop_command"].asString();
+    server->restart_command         = jserver["restart_command"].asString();
+
     server->game = Game{
         jserver["game"]["code"].asString(),
         jserver["game"]["start_code"].asString(),
         jserver["game"]["name"].asString(),
         jserver["game"]["engine"].asString(),
         jserver["game"]["engine_version"].asString(),
-        jserver["game"]["steam_app_id"].asUInt(),
+        getJsonUInt(jserver["game"]["steam_app_id"]),
         jserver["game"]["steam_app_set_config"].asString(),
         jserver["game"]["remote_repository"].asString(),
         jserver["game"]["local_repository"].asString()
     };
 
     server->game_mod = GameMod{
-        jserver["game_mod"]["id"].asUInt(),
+        getJsonUInt(jserver["game_mod"]["id"]),
         jserver["game_mod"]["name"].asString(),
         jserver["game_mod"]["remote_repository"].asString(),
         jserver["game_mod"]["local_repository"].asString(),
         jserver["game_mod"]["default_start_cmd_linux"].asString(),
         jserver["game_mod"]["default_start_cmd_windows"].asString()
     };
+
+    server->ip = jserver["server_ip"].asString();
+
+    server->rcon_password       = jserver["rcon"].asString();
+    server->start_command       = jserver["start_command"].asString();
+    server->stop_command        = jserver["stop_command"].asString();
+    server->force_stop_command  = jserver["force_stop_command"].asString();
+    server->restart_command     = jserver["restart_command"].asString();
 
     Json::Value jvars = jserver["game_mod"]["vars"];
     std::unordered_map<std::string, std::string> vars;
@@ -325,24 +337,28 @@ void GameServersList::sync_from_api(ulong server_id)
     }
 
     Json::Value jserver_vars = jserver["vars"];
-    for (auto const& key: jserver_vars.getMemberNames()) {
-        auto jvar = jserver_vars[key];
+    GAMEAP_LOG_VERBOSE << "Server Vars: " << jserver_vars;
 
-        if (jvar.isString()) {
-            if (vars.find(key) == vars.end()) {
-                vars.insert(std::pair<std::string, std::string>(key, jvar.asString()));
-            } else {
-                vars[key] = jvar.asString();
+    if (!jserver_vars.empty()) {
+        for (auto const& key: jserver_vars.getMemberNames()) {
+            auto jvar = jserver_vars[key];
+
+            if (jvar.isString()) {
+                if (vars.find(key) == vars.end()) {
+                    vars.insert(std::pair<std::string, std::string>(key, jvar.asString()));
+                } else {
+                    vars[key] = jvar.asString();
+                }
             }
-        }
-        else if (jvar.isInt()) {
-            if (vars.find(key) == vars.end()) {
-                vars.insert(std::pair<std::string, std::string>(key, std::to_string(jvar.asInt())));
+            else if (jvar.isInt()) {
+                if (vars.find(key) == vars.end()) {
+                    vars.insert(std::pair<std::string, std::string>(key, std::to_string(jvar.asInt())));
+                } else {
+                    vars[key] = std::to_string(jvar.asInt());
+                }
             } else {
-                vars[key] = std::to_string(jvar.asInt());
+                GAMEAP_LOG_ERROR << "Unknown alias type: " << jvar;
             }
-        } else {
-            GAMEAP_LOG_ERROR << "Unknown alias type: " << jvar;
         }
     }
 

@@ -9,31 +9,32 @@
 
 #include <json/json.h>
 
-
 namespace GameAP {
 
     class Rest {
-    public:
-        class RestapiException : public std::exception {
         public:
-            RestapiException(std::string const &msg);
+            class RestapiException : public std::exception {
+            public:
+                RestapiException(std::string const &msg);
 
-            ~RestapiException() override;
+                ~RestapiException() override;
 
-            char const *what() const throw() override;
+                char const *what() const throw() override;
 
-        protected:
-            std::string msg_;
-        };
+            protected:
+                std::string msg_;
+            };
 
-        static int get_token();
-        static Json::Value get(const std::string &uri);
-        static void post(const std::string &uri, Json::Value data);
-        static void put(const std::string &uri, Json::Value data);
-        static void patch(const std::string &uri, Json::Value data);
-    private:
-        static std::string m_api_token;
-        static int m_errors_count;
+            static int get_token();
+            static Json::Value get(const std::string &uri);
+            static void post(const std::string &uri, Json::Value data);
+            static void put(const std::string &uri, Json::Value data);
+            static void patch(const std::string &uri, Json::Value data);
+        private:
+            static constexpr unsigned char CMD_EXECUTE = 1;
+
+            static std::string m_api_token;
+            static int m_errors_count;
     };
 }
 

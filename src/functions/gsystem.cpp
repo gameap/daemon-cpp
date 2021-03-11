@@ -26,6 +26,23 @@ namespace GameAP {
 
     namespace bp = boost::process;
 
+#ifdef __linux__
+    struct forget_privileges : bp::extend::handler
+    {
+        template<typename Executor>
+        void on_exec_setup(Executor &) const
+        {
+            if (geteuid() != getuid()) {
+                setreuid(geteuid(), geteuid());
+            }
+
+            if (getegid() != getgid()) {
+                setregid(getegid(), getegid());
+            }
+        }
+    };
+#endif
+
     int exec(const std::string cmd, std::function<void (std::string)> callback)
     {
         int exit_code = -1;
@@ -44,15 +61,7 @@ namespace GameAP {
                     (bp::std_out & bp::std_err) > out_stream,
                     load_env()
 #ifdef __linux__
-                    ,bp::extend::on_exec_setup=[](auto&) {
-                            if (geteuid() != getuid()) {
-                                setreuid(geteuid(), geteuid());
-                            }
-
-                            if (getegid() != getgid()) {
-                                setregid(getegid(), getegid());
-                            }
-                    }
+                    ,forget_privileges()
 #endif
             );
 
@@ -87,15 +96,7 @@ namespace GameAP {
                     bp::std_err > err_stream,
                     load_env()
 #ifdef __linux__
-                ,bp::extend::on_exec_setup = [](auto&) {
-                    if (geteuid() != getuid()) {
-                        setreuid(geteuid(), geteuid());
-                    }
-
-                    if (getegid() != getgid()) {
-                        setregid(getegid(), getegid());
-                    }
-                }
+                    ,forget_privileges()
 #endif
             );
 
@@ -125,15 +126,7 @@ namespace GameAP {
                     (bp::std_out & bp::std_err) > out,
                     load_env()
 #ifdef __linux__
-                    ,bp::extend::on_exec_setup = [](auto&) {
-                        if (geteuid() != getuid()) {
-                            setreuid(geteuid(), geteuid());
-                        }
-
-                        if (getegid() != getgid()) {
-                            setregid(getegid(), getegid());
-                        }
-                    }
+                    ,forget_privileges()
 #endif
             );
 
@@ -231,14 +224,14 @@ namespace GameAP {
                         return;
                     }
 
-                    if (pwd->pw_uid != getuid() && seteuid(pwd->pw_uid) == -1) {
-                        GAMEAP_LOG_ERROR << "Failed to set Effective uid (" << pwd->pw_uid
+                    if (pwd->pw_gid != getgid() && setegid(pwd->pw_gid) == -1) {
+                        GAMEAP_LOG_ERROR << "Failed to set Effective gid (" << pwd->pw_gid
                                          << "). Username: " << username
                                          << ". " << strerror(errno);
                     }
 
-                    if (pwd->pw_gid != getgid() && setegid(pwd->pw_gid) == -1) {
-                        GAMEAP_LOG_ERROR << "Failed to set Effective gid (" << pwd->pw_gid
+                    if (pwd->pw_uid != getuid() && seteuid(pwd->pw_uid) == -1) {
+                        GAMEAP_LOG_ERROR << "Failed to set Effective uid (" << pwd->pw_uid
                                          << "). Username: " << username
                                          << ". " << strerror(errno);
                     }

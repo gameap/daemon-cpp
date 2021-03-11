@@ -31,7 +31,6 @@
 
 #include <fstream>
 
-#include <boost/thread.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 

@@ -10,8 +10,9 @@ namespace GameAP {
             DedicatedServerCmd(unsigned char command)
             {
                 m_command = command;
-                m_output = std::make_shared<CmdOutput>();
                 m_complete = false;
+
+                this->create_output();
             };
 
             void destroy() { };

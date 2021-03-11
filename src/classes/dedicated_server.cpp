@@ -65,7 +65,7 @@ bool DedicatedServer::init()
     GAMEAP_LOG_DEBUG << "db_update_period: " << db_update_period;
 
 	// get cpu count
-    cpu_count = boost::thread::hardware_concurrency();
+    cpu_count = std::thread::hardware_concurrency();
 
 	#ifdef _WIN32
         MEMORYSTATUSEX statex;
@@ -614,6 +614,10 @@ int DedicatedServer::update_db()
         jstats["time"] = buffer;
 
         jupdate_data.append(jstats);
+    }
+
+    if (jupdate_data.empty()) {
+        return 0;
     }
 
     try {

@@ -8,3 +8,5 @@
 /CMakeCache.txt
 /cmake_install.cmake
 /.vs/
+/cmake-build-debug-remote-host/
+/cmake-build-release-remote-host/

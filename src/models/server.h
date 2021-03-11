@@ -31,6 +31,8 @@ namespace GameAP {
         unsigned short query_port;
         unsigned short rcon_port;
 
+        std::string rcon_password;
+
         std::string dir;
         std::string user;
 
